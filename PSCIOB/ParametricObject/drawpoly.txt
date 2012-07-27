@@ -1,0 +1,103 @@
+
+//Draws a filled polygon to the image (bitmap)
+
+x => liste des coordonnées x des sommets
+y => liste des coordonnées y des sommets
+n = nb de sommets
+c = 'couleur'
+
+besoin de w = largeur de l'image
+
+
+
+void CImg::fillpoly(double *x, double *y, int n, int c)
+{
+	struct vertice{
+		double y0,x0,y1,m;	//m <=> direction de la normale
+		//x0, y0 : coordonnées du sommet courant
+		//y1, m => indique le sommet 'suivant'
+		//avec y0<y1
+	};
+	vertice *v;	// liste des 'vertice'
+	v=(vertice*)malloc(n*sizeof(vertice));
+	int *vl,al[20];
+	vl=(int*)malloc(n*sizeof(int)); //vecteur d'indices ordonnant les 'vertices'
+	int i,j,k=0,vertproc=0,actnum=0,yline;
+	
+	//-> coordonnée => indices des pixels
+	for(i=0;i<n;i++){x[i]=floor(x[i]);y[i]=floor(y[i]);}
+	
+	//calcul des vertice (dans v)
+	for(i=0;i<n-1;i++){
+		if((int)y[i]<(int)y[i+1]){
+			v[k].y0=y[i];
+			v[k].x0=x[i];
+			v[k].y1=y[i+1];
+			v[k].m=1.0/((y[i]-y[i+1]+0.0)/(x[i]-x[i+1]));
+			k++;
+		}
+		else if( (int)y[i+1]<(int)y[i]) {
+			v[k].y0=y[i+1];
+			v[k].x0=x[i+1];
+			v[k].y1=y[i];
+			v[k].m=1.0/((y[i+1]-y[i]+0.0)/(x[i+1]-x[i]));
+			k++;
+		}
+		vl[i]=i;
+	}
+	
+	//dernier element
+	vl[n-1]=n-1;
+	if((int)y[n-1]<(int)y[0]) {
+		v[k].y0=y[n-1];
+		v[k].x0=x[n-1];
+		v[k].y1=y[0];
+		v[k].m=1.0/((y[n-1]-y[0]+0.0)/(x[n-1]-x[0]));
+	}
+	else if((int)y[0]<(int)y[n-1]){
+	v[k].y0=y[0];v[k].x0=x[0];v[k].y1=y[n-1];v[k].m=1.0/((y[0]-y[n-1]+0.0)/(x[0]-x[n-1]));
+	}
+	
+	
+	////
+	n=k+1;
+	bool bb;
+	//tri des vertice par y decroissant
+	do{
+		bb=true;
+		for(i=0;i<n-1;i++) if(v[vl[i]].y0>v[vl[i+1]].y0) { k=vl[i];vl[i]=vl[i+1];vl[i+1]=k;bb=false; }
+	}while(!bb);
+	
+	//on commence 'en haut'
+	
+	//principe: reperer les 2 aretes impliquées dans le contour
+	//pour une ligne donnée (=yline ; j = coordonnée x courante), identifier le point sur chaque arete, et remplir les pixels entre ces deux points.
+	
+	yline=(int)v[vl[0]].y0;
+	while(v[vl[vertproc]].y0-yline<1){al[actnum]=vl[vertproc];actnum++;vertproc++;}
+	BYTE *ip=(BYTE*)(img)+yline*w;
+	//tracer les lignes une à une jusqu'"en bas" du polygon
+	do{
+		//drawline
+		
+		if(yline>0)
+			for(i=0;i<actnum/2;i++){
+				for(j=(v[al[2*i]].x0>0?v[al[2*i]].x0:0);j<(v[al[2*i+1]].x0<w?v[al[2*i+1]].x0:w);*(ip+j++)=c);	//pixel intérieur
+			}
+		//incline
+		yline++;ip+=w;
+		//remove finished segments
+		for(i=0;i<actnum;i++)if(v[al[i]].y1<=yline){al[i]=al[actnum-1];actnum--;i--;}
+		//update X
+		for(i=0;i<actnum;i++){v[al[i]].x0+=v[al[i]].m;}
+		//add segments
+		while((vertproc<n)&&(v[vl[vertproc]].y0-yline<1))
+			{al[actnum]=vl[vertproc];actnum++;vertproc++;}
+		//sort al on x
+		do{
+			bb=true;
+			for(i=0;i<actnum-1;i++)if(v[al[i]].x0>v[al[i+1]].x0){k=al[i];al[i]=al[i+1];al[i+1]=k;bb=false;}
+		}while(!bb);
+	}while((yline<h)&(actnum>0));
+	free(v);free(vl);
+}

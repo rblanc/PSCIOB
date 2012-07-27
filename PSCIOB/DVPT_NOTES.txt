@@ -1,0 +1,52 @@
+1/ Costs cache
+	ObjectPrior -- OK
+		- this is handled exclusively by the scene, it is computed upon request, stored, and invalidated when the object is modified
+	
+	WARNING: Implementation of compound single object cost function (which combines sub-functions)	
+		If/when implementing such a function, care must be taken of the cached value
+		the function should check if the cache is valid.
+		If not, it should collect the individuals costs from sub-functions, and INVALIDATE the cache after each call to a subfunction, so that these can work as expected!
+
+	OffContext DataCosts 
+		- computed by the cost function (SingleObjectSceneToImageCostFunction)
+		- stored in the scene container -> the ObjectDataContainer over which the scene is templated must be able to hold this data (compile-time error otherwise)
+		- invalidation:
+			* Modification of the sensor => the sensor asks the scene to invalidate the costs (useful if one wants to optimize the sensor parameters)
+			* Modification of the cost function => the user IS responsible for invalidating the cache!
+			* Modification of the object itself => invalidate the cache for this object - this is done automatically by scene->ModifyObjectParameters()
+		
+	InContext DataCosts *** NOT IMPLEMENTED YET
+		- computed by the SingleObjectSceneToImageCostFunction
+		- stored in the scene container
+		- invalidation:
+			* Modification of the object, sensor or cost function -> OK, this is done the same way as with OffContext Costs
+			* Modification of the object visibility when other objects are removed / added / modified
+				a: intersection -> easy to detect
+				b: modification of the visibility of the object (in the case of 3D/2D sensors)
+				c: modifications in the 'surroundings' of the object (as seen by the sensor)
+			
+			suggestions: 
+				The sensor should be responsible for detecting those modifications and for invalidating the corresponding object costs
+				This should be done whenever an object is added / removed from the scene ==> the sensor image will then be updated automatically at each modification of the scene
+				-> the scene should have a pointer to the sensor, and a flag
+				-> if the flag is on, the scene should ask the sensor to update itself (at the end of ->AddOBject, ->RemoveObject, ->ModifyObjectParameters)
+				-> the sensor should have a flag to invalidate the InContext data of all objects that have a modified visibility. (but perserve the OffContext...)
+								
+				-> The 'size' of the surrounding is typically defined by the cost function -> SingleObjectSceneToImageCostFunction should pass that information to the sensor.
+
+
+				
+2/ TODO --- COMPUTE THE SURROUNDINGS VERY FAST.... 
+	from a labelObject
+	create an itk filter...?
+	
+	allocate 1 image, the size of the object or a bit larger... (how to do that fast?)
+	For each pixel of the object,
+		Browse the structuring Element and write all pixels around in the image
+	End
+	For each pixel of the object,
+		Remove the pixel from the image
+	End
+	
+	Convert to a pixelSet
+	

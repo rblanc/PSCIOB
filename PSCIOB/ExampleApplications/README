@@ -1,0 +1,2 @@
+this is a toy application, generating a synthetic image with a few ellipses,
+and detecting them by optimizing a cost function involving shape priors, intersections, and image similarity, using RJMCMC in a simulated annealing scheme.

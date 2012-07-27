@@ -1,0 +1,103 @@
+/*! \mainpage PScIOb - Parametric Scenes of Interacting Objects
+ *
+ * \section intro_sec Introduction
+ *
+ * The library builds on a set of interlinked concepts, the main objective being to manipulate a scene containing an arbitrary number of parametric objects.
+ * The library is massively relying on templates (dimension of the objects, appearance type, etc...) and thus intended to be fairly generic.
+ *
+ * The "objects" themselves are the core of the library, with methods to represent them as physical objects through mesh or image-based representations.
+ * The objects are parameters, i.e. a restricted number of parameters entirely characterize their shape and appearance.
+ * The "scene" is a collection of objects within a given domain of space.
+ * A scene may be observed through a "sensor", to produce an image.
+ * Cost functions may be associated to individual objects (e.g. likelihood of the object parameters), to pair-wise interaction (e.g. overlaps, distance-based potentials, ...), to global characteristics of the scene (e.g. density of objects), or goodness-of-fit terms reflecting the similarity of a synthetic image of the scene (thanks to a sensor) and some reference image, ...
+ * A number of optimization strategies and methods are also implemented, which manipulates the different objects (number of objects in the scene, parameters of the objects, of the sensor, etc...) to optimize specified goal functions.
+ *
+ * \section install_sec Installation
+ *
+ * The library has been tested on MSVC 6, MSVC 2008 Express.
+ * It requires CMake (built with 2.8.7), ITK (tested with v4.0), VTK (tested with v5.10)
+ * 
+ * Step by step instruction for building on Windows with Visual Studio :
+ *
+ * step 0: check that you have a C++ compiler... You can get Visual C++ Express for free, in your favorite language, on Microsoft website.
+ *
+ * step 1: install cmake ( http://www.cmake.org/cmake/resources/software.html ) ; the installer works just fine.
+ *
+ * step 2: install ITK and VTK ( http://www.itk.org/ and http://www.vtk.org/ )
+ *
+ * get the latest release for the website, or from the git repository (the software Git Extensions - http://sourceforge.net/projects/gitextensions/ works fine). Follow the instructions on the websites to compile both libraries (Note: this may take a couple of hours, especially if you choose to build all tests and examples...). Don't forget, when configuring the projects with CMake, that you can specify the install path (field CMAKE_INSTALL_PREFIX). After compiling the projects with Visual Studio, you may select the project name INSTALL, right-click and "Generate" the solution. This will copy the headers, library, and dlls to the folder specified in this CMAKE_INSTALL_PREFIX field. I recommand compiling the libraries in Release mode ; if you are reading, you probably won't want to debug anything inside ITK or VTK in the near future.
+ *
+ * In both cases, check your PATH environment variable and make sure it contains the path to ITK and VTK (e.g. myDirectory/ITK-install/bin and myDirectory/VTK-install/bin)
+ *
+ * step 3: build the DeformableModel library. Using Cmake, specify the current folder as the source directory
+ * - Set the build path as you wish, e.g. PSCIOB-build
+ * - Configure
+ * - Check the path to ITK & VTK, and the installation directory.
+ * - Check the corresponding boxes if you wish to build the tests and example applications
+ * - Generate
+ *
+ * Open the .sln file generated in your build directory. Select the compilation mode (Release runs *much* faster than debug...), compile
+ * Select the project named INSTALL, and generate it
+ *
+ * \section organisation_sec Organisation of the code
+ *
+ * Classes implementing the various concepts described below are grouped into directories with corresponding names.
+ * There is typically one virtual base class per concept, enforcing an interface.
+ *
+ * \section object_sec Concept of Objects:
+ * The base concept is that of object. The base class here is ParametricObject
+ * 
+ * A parametric object is a physical, n-dimensional entity. It typically has parameters describing its position in space (e.g. translations, rotations, scale), its shape, and possibly its appearance (e.g. texture).
+ * 
+ * An object can be represented through different means, essentially as a:
+ * -	mesh ; using VTKPolyData
+ * -	a binary image ; using an itk::Image<unsigned char, D>
+ * -	a label map containing a single label object (itk::LabelObject ; itk::LabelMap)
+ * -	a textured image ; using an itk::Image<TAppearance, D> 
+ * (no concrete class use textures yet...)
+ * 
+ * Some parameters may be invalid for a given object (e.g. negative lengths). If an attempt is done to set invalid object parameters, a flag is raised... (see SetParameters() )
+ * 
+ * \section scene_sec Concept of Scene, or ObjectCollection:
+ *
+ * A scene represents a collection of objects. The base class is BaseScene
+ * Different types of objects can be represented in a same scene.
+ * An object in a scene is characterized by more information than just the object parameters. This is handled through a container, ObjectInScene, which depends on the template parameters of the Scene
+ * In this container are stored a unique identifier for each object, and various temporary/cache variables.
+ * Objects in the scene should only be modified through the handles provided by the scene itself => ModifyObjectParameters ; RemoveObject ; AddObject
+ * 
+ * The different types of object present, or potentially present in the scene are handled through the class ObjectTypesLibrary. A scene always has such an object within its members. Additionnally to listing the available object types, this class is able to generate new objects of a given type, and associate useful probability density functions related to the parameters of an object type (e.g. a likelihood generating the random parameters when creating a new object, or computing an object likelihood, or proposing small random perturbations of the parameters)
+ * 
+ * Interactions between objects are monitored on the fly, when objects are added, modified or removed from the scene, thanks to a member deriving from ObjectInteractionManager.
+ * For most scenes, the default manager does absolutely nothing, but can be replaced by a specialized manager which e.g. checks for intersections between the objects.
+ * Interaction manager generally require specific structures to be defined in the ObjectInScene, and therefore have some requirements about the template parameters of the scene.
+ * 
+ *
+ * \section sensor_sec Concept of Sensor:
+ * 
+ * A scene, though represented in digital format (an typically through an image) is conceptualized as a 'real world', physical model. Its observation is modelled through the concept of Sensor, with base class ImageSensor_Base, which generates a synthetic image of a scene.
+ * 
+ * The two main outputs of a sensor are an image, and an image of the object labels (? classification of the output image). The sensor may have different characteristics, such as its resolution, acquisition noise, perspective effects (e.g. camera), etc...
+ * 
+ * Additionally, the sensor may be asked to generate an Off-Context image of an object: a pair of image + label image of a single object contained in the scene, as if this object were alone in the scene (to avoid overlaps, shadowing, front/background effects, etc...)
+ * 
+ * \section costfunctions_sec Concept of Cost(s):
+ * 
+ * Several types of 'costs' may be attached to various concepts of the library. The base class here is CostFunction_Base. Those are typically exemplified through the SceneEnergy class, and comprise:
+ * -	SceneGlobalPrior_Base : global cost attached to the scene (e.g. number of objects, density, etc.)
+ * -	Single cost attached to each object, only based on their parameters. This is represented through a likelihood function of all parameters of the object. All objects of a given type share the same likelihood function, typically stored in the corresponding entry of the ObjectTypesLibrary (pdf: PDF_OBJECTLIKELIHOOD)
+ * -	Interaction cost ObjectInteractionManager ; the manager is in charge of detecting interacting objects (intersection are automatically managed by the scene itself), and associate a (non-zero) cost to an interacting pair. These interaction costs are maintained in the cache of ObjectInSceneContainer
+ * -	Data cost, with base class SensedSceneToImageMetric_Base, this one compares a synthetic image of the scene, produced by a sensor, and compares it with a reference image (either globally, or in an individual-object-based way -> SingleObjectSceneToImageMetric_Base). Contrary to the other three terms, these objects are not attached to the scene. TODO: use a different cost function for different types of objects ; combine different types of data costs (average single object data cost + whole synthetic image vs reference image similary)
+ * 
+ * The SceneEnergy, a cost function among others, provides a linear combination of these 4 terms (possibly not using some of them...).
+ * 
+ * \section optimizationmanager_sec Concept of OptimizationManager:
+ * 
+ * =>	defines what to optimize
+ * 
+ * 
+ * \section optimizer_sec Concept of Optimizer:
+ * 
+ * =>	defines how to optimize
+ * 	
+ */

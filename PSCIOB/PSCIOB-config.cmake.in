@@ -1,0 +1,20 @@
+SET (PSCIOB_VERSION_STRING @PSCIOB_VERSION@)
+SET (PSCIOB_VERSION_MAJOR  @PSCIOB_MAJOR_VERSION@)
+SET (PSCIOB_VERSION_MINOR  @PSCIOB_MINOR_VERSION@)
+
+SET(PSCIOB_SUBDIRS CostFunctions ParametricObject GeometricShapes ObjectCollection ObjectInteractionPriors OptimizationManager Optimizer PoseTransforms ReversibleSceneModifierKernels SceneGlobalPriors Sensors)
+
+SET(PSCIOB_DIR @CMAKE_INSTALL_PREFIX@)
+
+SET(PSCIOB_INCLUDE_DIRS  @CMAKE_INSTALL_PREFIX@/include/PSCIOB)
+foreach(dir ${PSCIOB_SUBDIRS})
+	SET(curdir @CMAKE_INSTALL_PREFIX@/include/PSCIOB/${dir})
+	LIST(APPEND PSCIOB_INCLUDE_DIRS ${curdir})
+endforeach(dir)
+
+SET(PSCIOB_LIBRARY_DIR @CMAKE_INSTALL_PREFIX@/lib/)
+SET(PSCIOB_LIBRARIES PSCIOB) 
+
+
+
+
