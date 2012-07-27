@@ -1,0 +1,70 @@
+Parametric Scenes of Interacting Objects (PSIOB) 
+is a library intended to facilitate the manipulation of 2D or 3D scenes composed of parametric objects in interaction.
+
+The library builds upon a number of concepts, implemented through (generally virtual) base classes, and specialized instances.
+
+* The base concept is that of a parametric object (ParametricObject), e.g. a sphere, a 2D ellipse, or more complex geometrical objects characterized by a set of parameters which controls its pose, shape, possibly its texture.
+(In future versions, it would be interesting to implement statistical shape models, e.g. wrapping the Statismo framework ; another direction is to add parametric (statistical?) textures to the shapes)
+
+* The second core concept is that of scene (BaseScene), which is in its simplest form a collection of objects.
+A scene defines a bounded domain in 2D or 3D, and associate to each object in it a unique identifier.
+While the primary function of a scene is to host a number of objects, as an interface to visualization, it has additional important functionalities.
+1/ Using a specialized ObjectInteractionManager, the scene can monitor interaction between objects, such as overlaps.
+2/ The scene is capable of associate different kinds of information to the objects, either as individuals or as groups.
+	- each object in the scene is wrapped in a ObjectInScene container, which can be parametrized through the template parameters of BaseScene
+	- a library of object types (ObjectTypesLibrary) is maintained, and can be modified, which is used to associate probability distribution functions to each type of object present in the scene (e.g. a pdf for evaluating the likelihood of the parameters of an object, or a pdf for generating a new random object from a prescribed distribution)	
+	- energy potentials may be assigned to the objects, one related to the likelihood of its parameter, and a second to the interactions an object may have with each other object in the scene.
+3/ A global prior (SceneGlobalPrior_Base) can be attached to the scene
+4/ todo for future version, specific object insertion policies should be implemented, e.g. for managing periodic boundary conditions on the scene (such that an object partially outside the scene is present on the other side...)
+
+* As such, the scene does not offer much visualization possibilities. A sensor class (ImageSensor_Base) is necessary to generate proper images of the scene.
+The sensor is itself a parametric object.
+
+* Cost functions are used to associate costs to single objects, part or whole of the scene, possibly with respect to a reference image provided for this purpose.
+
+* The main idea behind PSIOB is to generate scene which optimize various criteria : compact scene without any overlaps between the objects, detecting objects visible on a reference image, ...
+The optimization framework consists of optimizers (Optimizer_Base), and optimization managers (OptimizationManager_Base). The idea is that the optimizer implements the HOW to optimize, while the optimization manager tells the optimizer WHAT to optimize.
+
+
+-------------
+Dependencies:
+-------------
+PSIOB requires the following libraries to be installed:
+ITK (www.itk.org) - tested with version 4.0 
+VTK (www.vtk.org) - tested with version 5.10
+
+The library can be compiled using CMake (www.cmake.org)
+
+In particular for 3D scenes, typical outputs are 3D images (.nii) or meshes (vtkPolydata, .vtk). Those can, for example, be visualized using 3D Slicer (www.slicer.org)
+
+-------------
+Installation:
+-------------
+
+Using CMake
+1/ Select the current directory as the source directory
+2/ Define your build directory (e.g. ../PSIOB-build)
+3/ Configure
+3/ Check if you wish to build the tests and example applications
+4/ Verify that the proposed installation directory suits you (CMAKE_INSTALL_PREFIX)
+5/ Generate
+
+6/ Go to the build directory, compile, and install 
+   with Visual Studio 2008 / 2010 Express: open the PSCIOB.sln file ; check the compile setting (Debug/Release) ; when it has compiled, right-click on the INSTALL project, and select build it.
+   not tested under Linux, however, "make" followed by "make install" should work 
+
+
+-------
+Author: 
+-------
+Remi Blanc
+
+
+--------
+License:
+--------
+PSIOB itself is licensed under a BSD-style license (see ./License.txt). 
+However, it relies on other open source projects, which are distributed under different licenses.
+In particular, it is shipped with a version of Clipper (http://www.angusj.com/delphi/clipper.php)
+You will find a copy of the respective license agreements in the folder ./GeneralUtils/3rdParty. 
+
