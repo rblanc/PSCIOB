@@ -96,15 +96,15 @@ public:
 	template<class TScene> friend class SceneObjectIterator;
 
 	/** Standard class typedefs. */
-	typedef BaseScene						Self;
-	typedef itk::LightObject				Superclass;
-	typedef itk::SmartPointer<Self>			Pointer;
-	typedef itk::SmartPointer<const Self>	ConstPointer;
+	typedef BaseScene                     Self;
+	typedef itk::LightObject              Superclass;
+	typedef itk::SmartPointer<Self>       Pointer;
+	typedef itk::SmartPointer<const Self> ConstPointer;
 	/** Base Types to which all inherited classes can refer */
-	typedef Self							BaseClass;
-	typedef Pointer							BaseClassPointer;
+	typedef Self                          BaseClass;
+	typedef Pointer                       BaseClassPointer;
 	/** Run-time type information (and related methods). */
-	itkTypeMacro(BaseScene,itk::LightObject);
+	itkTypeMacro(BaseScene, itk::LightObject);
 
 	/** Dimensionality of the scene, and of the objects within 
 	* (pure 2D objects cannot be cast in 3D space, this would necessitate providing a third coordinate - even if it would be a constant) 

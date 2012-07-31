@@ -219,6 +219,7 @@ public:
 		std::set<IDType> setPotentialOverlappingObjects;
 		m_tree->AddObject(objectPtr, setPotentialOverlappingObjects);
 		//for all potentially overlapping objects, compute the interaction.
+		if (!m_monitorInteractionsOnTheFly) return;
 		for (std::set<IDType>::iterator it = setPotentialOverlappingObjects.begin() ; it != setPotentialOverlappingObjects.end() ; it++) {
 			if (objectPtr->id == *it) { continue; }
 			if ( !TestBoundingBoxesIntersection_NoCheck(objectPtr->obj->GetPhysicalBoundingBox(), m_scene->GetObject(*it)->obj->GetPhysicalBoundingBox()) ) continue;
@@ -235,7 +236,7 @@ public:
 	/** Remove an object, from the tree, and clean the corresponding interactions. */
 	inline void RemoveObject(ObjectInScene *objectPtr) {
 		m_tree->RemoveObject(objectPtr); 
-
+		if (!m_monitorInteractionsOnTheFly) return;
 		for (ObjectInteractionMapType::iterator it = objectPtr->interactionData.begin() ; it != objectPtr->interactionData.end() ; ++it) {
 			//??keep this sanity check??
 

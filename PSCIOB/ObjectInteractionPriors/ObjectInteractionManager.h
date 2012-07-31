@@ -92,6 +92,7 @@ public:
 
 	/** Add an object to the Interaction Manager */
 	virtual void AddObject(ObjectInScene *objectPtr) {
+		if (!m_monitorInteractionsOnTheFly) return;
 		//test all objects of the scene
 		SceneObjectIterator<SceneType> it(m_scene);
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
@@ -113,6 +114,7 @@ public:
 	* May be overloaded by child classes
 	*/
 	virtual void RemoveObject(ObjectInScene *objectPtr) {
+		if (!m_monitorInteractionsOnTheFly) return;
 		for (ObjectInteractionMapType::iterator it = objectPtr->interactionData.begin() ; it != objectPtr->interactionData.end() ; ++it) {
 			//??keep this sanity check??
 			//if ( m_scene->GetObject( it->first )->interactionData.erase( objectPtr->id ) ==0 ) throw DeformableModelException( "ObjectInteractionManager::RemoveObject found a non-bilateral interaction... should never happen!" + stringify(objectPtr->id) + " and " + stringify(it->first) ); 
@@ -123,6 +125,7 @@ public:
 
 	/** Update the interaction of an object after a change in its parameters */
 	virtual void ModifyObjectParameters(ObjectInScene *objectPtr, ObjectInScene *newObject) {
+		if (!m_monitorInteractionsOnTheFly) return;
 		//test all objects of the scene
 		SceneObjectIterator<SceneType> it(m_scene);
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
@@ -198,16 +201,55 @@ public:
 		}
 	}
 
+	/** Turn off interaction monitoring 
+	* Remove all existing interaction data, and stop monitoring them
+	* This can be useful for collective re-arrangement algorithms, where multiple objects are modified 'simultaneously'
+	*/
+	void TurnOffInteractionManagement() {
+		m_monitorInteractionsOnTheFly=true;
+		SceneObjectIterator<SceneType> it(m_scene);
+		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
+			it.GetObject()->interactionData.clear();
+		}
+		
+	}
+	
+	/** Turn on interaction monitoring (nothing happens if it is already ON)
+	* Recompute all existing interaction data, and turn on their on-the-fly monitoring
+	* This can be useful for collective re-arrangement algorithms, where multiple objects are modified 'simultaneously'	
+	*/
+	void TurnOnInteractionManagement() {
+		if (!m_monitorInteractionsOnTheFly) {
+			m_monitorInteractionsOnTheFly=true;
+			SceneObjectIterator<SceneType> it1(m_scene), it2(m_scene);
+			for (it1.GoToBegin() ; !it1.IsAtEnd() ; ++it1) {
+				for (it2 = ++it1 ; !it2.IsAtEnd() ; ++it2) {
+					if ( !TestBoundingBoxesIntersection_NoCheck(it1.GetObject()->obj->GetPhysicalBoundingBox(), it2.GetObject()->obj->GetPhysicalBoundingBox()) ) continue;
+					//if the bboxes intersect, then do the exact test.
+					InteractionDataType interactionData;
+					ComputePairWiseObjectInteractionData(it1.GetObject(), it2.GetObject(), interactionData);
+					if ( !interactionData.interactionCostFlag ) continue;
+					//Register the interaction, bilaterally: store the information in both objects
+					it1.GetObject()->interactionData[it2.GetID()] = interactionData;
+					it2.GetObject()->interactionData[it1.GetID()] = interactionData;
+				}
+			}			
+		}
+	}
+	
+	
 protected:	
 	ObjectInteractionManager() {
 		m_scene = 0;
 		m_costFunction = static_cast<PairWiseIntersectionCostFunction*>(PairWiseOverlapDiceCoefficient::New().GetPointer()); //default is the dice coefficient.
+		m_monitorInteractionsOnTheFly = true;
 	};
 	virtual ~ObjectInteractionManager() {};	
 
 	typename SceneType::Pointer m_scene;
 	PairWiseIntersectionCostFunction::Pointer m_costFunction;
 	InteractionDataType m_emptyInteraction;
+	bool m_monitorInteractionsOnTheFly;
 
 private:
 	ObjectInteractionManager(const Self&);	//purposely not implemented

@@ -2,7 +2,9 @@ SET (PSCIOB_VERSION_STRING @PSCIOB_VERSION@)
 SET (PSCIOB_VERSION_MAJOR  @PSCIOB_MAJOR_VERSION@)
 SET (PSCIOB_VERSION_MINOR  @PSCIOB_MINOR_VERSION@)
 
-SET(PSCIOB_SUBDIRS CostFunctions ParametricObject GeometricShapes ObjectCollection ObjectInteractionPriors OptimizationManager Optimizer PoseTransforms ReversibleSceneModifierKernels SceneGlobalPriors Sensors)
+SET(PSCIOB_SUBDIRS CostFunctions GeometricShapes ForceBiasedAlgorithm ObjectCollection ObjectInteractionPriors OptimizationManager Optimizer ParametricObject PoseTransforms ReversibleSceneModifierKernels SceneGlobalPriors Sensors
+#add any new directory created in the source dir
+)
 
 SET(PSCIOB_DIR @CMAKE_INSTALL_PREFIX@)
 

@@ -1,5 +1,5 @@
 
-SET(PSCIOB_SUBDIRS CostFunctions ParametricObject GeometricShapes ObjectCollection ObjectInteractionPriors OptimizationManager Optimizer PoseTransforms ReversibleSceneModifierKernels SceneGlobalPriors Sensors
+SET(PSCIOB_SUBDIRS CostFunctions GeometricShapes ForceBiasedAlgorithm ObjectCollection ObjectInteractionPriors OptimizationManager Optimizer ParametricObject PoseTransforms ReversibleSceneModifierKernels SceneGlobalPriors Sensors
 #add any new directory created in the source dir
 )
 
