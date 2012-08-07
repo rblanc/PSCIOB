@@ -27,11 +27,8 @@
 
 /**
  * \file shape3DCylinder.h
- * \author Cédric Chapoullié 
+ * \author Cédric Chapoullié, Rémi Blanc
  * \date 13. October 2011
- * \brief shape3DCylinder: 2 parameters: radius of the basis, length of the cylinder
- * TODO: there is a mismatch between the direction of the cylinder in the vtk and image representations (90° rotation)
- *
 */
 
 #ifndef SHAPE3DCYLINDER_H_
@@ -42,6 +39,12 @@
 
 namespace psciob {
 
+/** 
+ * \class shape3DCylinder
+ * \brief shape3DCylinder is a class for generating a cylinder, usually in combination with a PoseTransform
+ * cylinder centered at (0,0,0), with unit diameter (d), and extruded along the y direction (length h)
+ * 1 parameters = elongation ( = h/d >0 ), elongation
+*/
 
 class shape3DCylinder : public BinaryShape<3> { //: public ParametricShape {
 public:
@@ -67,20 +70,7 @@ public:
 	/** Check Validity of the parameters, returns false if parameters are not valid */
 	inline bool CheckParameters(const vnl_vector<double> &p) const;
 
-	/** Set the radius of the cylinder */
-	void SetRadius(float p) { 
-		if (p<0) throw DeformableModelException("Error in shape3DCylinder: trying to set a negative radius!!");
-		if ( abs(m_parameters(0)-p)>TINY ) Modified();
-		m_parameters(0) = p;
-	} 
-
-	/** Set the height of the cylinder */
-	void SetHeight(float p) { 
-		if (p<0) throw DeformableModelException("Error in shape3DCylinder: trying to set a negative height!!");
-		if ( abs(m_parameters(0)-p)>TINY ) Modified();
-		m_parameters(1) = p;
-	}
-
+	/** Number of vertices of the base disk approximating the shape */
 	void SetVTKPolyDataResolution(unsigned int res);
 
 	/** Takes a single parameter, corresponding to the angular resolution */
@@ -93,13 +83,13 @@ public:
 
 	/** Physical bounding box of the object */
 	vnl_vector<double> GetPhysicalBoundingBox() {
-		if (!m_physicalBBoxUpToDate) {				
-			m_physicalBoundingBox(0) = -m_parameters(0); //xmin
-			m_physicalBoundingBox(1) = +m_parameters(0); //xmax
-			m_physicalBoundingBox(2) = -m_parameters(1)/2.0; //ymin
-			m_physicalBoundingBox(3) = +m_parameters(1)/2.0; //ymax
-			m_physicalBoundingBox(4) = -m_parameters(0); //zmin
-			m_physicalBoundingBox(5) = +m_parameters(0); //zmax
+		if (!m_physicalBBoxUpToDate) {
+			m_physicalBoundingBox(0) = -1.0/2.0; //xmin
+			m_physicalBoundingBox(1) = +1.0/2.0; //xmax
+			m_physicalBoundingBox(2) = -m_parameters(0)/2.0; //ymin
+			m_physicalBoundingBox(3) = +m_parameters(0)/2.0; //ymax
+			m_physicalBoundingBox(4) = -1.0/2.0; //zmin
+			m_physicalBoundingBox(5) = +1.0/2.0; //zmax
 			m_physicalBBoxUpToDate=true;
 		}
 		return m_physicalBoundingBox;
@@ -108,18 +98,22 @@ public:
 	/** Get the corresponding representation of the object */
 	vtkPolyData* GetObjectAsVTKPolyData();
 
+	//
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {}
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {}
+
 protected:
 	shape3DCylinder();
 	virtual ~shape3DCylinder() {};
 
 	static const std::string m_name;
-	static const unsigned int m_nbParams = 2;
+	static const unsigned int m_nbParams = 1;
 
 	unsigned int m_Resolution;
 	vtkSmartPointer<vtkCylinderSource> m_cylinderSource;
 
 private:
-	shape3DCylinder(const Self&);				//purposely not implemented
+	shape3DCylinder(const Self&);           //purposely not implemented
 	const Self & operator=( const Self & );	//purposely not implemented
 };
 

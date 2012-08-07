@@ -58,8 +58,7 @@ vnl_vector<double> shape2DEllipse::GetDefaultParameters() const {
 inline 
 bool shape2DEllipse::CheckParameters(const vnl_vector<double> &p) const {
 	if (p.size()!=m_nbParams) return false;
-	if (p(0)<TINY) return false;//long length must be positive
-	if (p(1)<1) return false;	//elongation must be >=1
+	if (p(0)<1) return false;	//elongation must be >=1
 	return true;
 }
 
@@ -80,7 +79,7 @@ vtkPolyData* shape2DEllipse::GetObjectAsVTKPolyData() {
 
 		GetPhysicalBoundingBox();
 		//points must be ordered
-		double theta, longaxis = m_parameters(0) * m_parameters(1);
+		double theta, longaxis = 0.5 * m_parameters(0);
 		vtkIdType segm[2];
 
 		//1st point
@@ -88,7 +87,7 @@ vtkPolyData* shape2DEllipse::GetObjectAsVTKPolyData() {
 		//all points and all segments but the last
 		for (unsigned i=1 ; i<m_thetaResolution ; i++) {
 			theta = 2.0*i*PI/((double)m_thetaResolution);
-			points->InsertNextPoint( longaxis*cos(theta), m_parameters(0)*sin(theta), 0 ); 
+			points->InsertNextPoint( longaxis*cos(theta), 0.5*sin(theta), 0 ); 
 			segm[0] = i-1; 	segm[1] = i; cells->InsertNextCell(2, segm);
 		}
 		//last segment
@@ -105,21 +104,3 @@ vtkPolyData* shape2DEllipse::GetObjectAsVTKPolyData() {
 	return m_outputPolyData;
 }
 
-
-////
-//void shape2DEllipse::UpdateBinaryImage_Internal() {
-//	AllocateITKImageFromPhysicalBoundingBoxAndSpacing<BinaryImageType>( this->GetPhysicalBoundingBox(), this->GetImageSpacing(), m_internalBinaryImage );
-//
-//	BinaryImageType::PointType pointCoords;
-//	double d2, b2 = m_parameters(0)*m_parameters(0), a2 = b2*m_parameters(1)*m_parameters(1);
-//	typedef itk::ImageRegionIteratorWithIndex< BinaryImageType > IteratorType;
-//	IteratorType it( m_internalBinaryImage, m_internalBinaryImage->GetLargestPossibleRegion() );
-//	it.GoToBegin();
-//	while(!it.IsAtEnd()) {
-//		m_internalBinaryImage->TransformIndexToPhysicalPoint(it.GetIndex(), pointCoords);
-//		d2 = pointCoords[0]*pointCoords[0]/a2 + pointCoords[1]*pointCoords[1]/b2;
-//		if ( d2<=1 ) it.Set(1); //for a point, all pixels in the pixelBoundingBox should be ON
-//		else it.Set(0);
-//		++it;
-//	}
-//}

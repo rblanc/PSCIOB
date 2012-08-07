@@ -29,10 +29,6 @@
  * \file shape2DEllipse.h
  * \author Rémi Blanc 
  * \date 29. August 2011
- * 
- * \brief shape2DEllipse: 2 parameters = short axis & elongation (elongation = long/small axis >=1)
- * these are the half-length... ; the long axis is horizontal
- *
 */
 
 #ifndef SHAPE2DELLIPSE_H_
@@ -41,6 +37,13 @@
 #include "BinaryShape.h"
 
 namespace psciob {
+
+/** 
+ * \class shape2DEllipse
+ * \brief shape2DEllipse is a class for generating an ellipse, usually in combination with a PoseTransform
+ * ellipse centered at (0,0), with short diameter = 1 oriented in the vertical direction (long axis is horizontal)
+ * 1 parameters = elongation (elongation = long/small axis >=1)
+*/
 
 class shape2DEllipse : public BinaryShape<2> {
 public:
@@ -66,7 +69,6 @@ public:
 	/** Check Validity of the parameters, returns false if parameters are not valid */
 	inline bool CheckParameters(const vnl_vector<double> &p) const;
 
-
 	/** Number of vertices of the polygon approximating the shape */
 	void SetVTKPolyDataResolution(unsigned int theta);
 
@@ -84,11 +86,11 @@ public:
 	/** Gets the object bounding box */
 	vnl_vector<double> GetPhysicalBoundingBox() {
 		if (!m_physicalBBoxUpToDate) {			
-			double longaxis = m_parameters(0) * m_parameters(1);
+			double longaxis = 0.5 * m_parameters(0);
 			m_physicalBoundingBox(0) = -longaxis; //xmin
 			m_physicalBoundingBox(1) = +longaxis; //xmax
-			m_physicalBoundingBox(2) = -m_parameters(0); //ymin
-			m_physicalBoundingBox(3) = +m_parameters(0); //ymax
+			m_physicalBoundingBox(2) = -0.5; //ymin
+			m_physicalBoundingBox(3) = +0.5; //ymax
 			m_physicalBBoxUpToDate = true;
 		}
 		return m_physicalBoundingBox;
@@ -97,12 +99,16 @@ public:
 	/** Get the corresponding representation of the object */
 	vtkPolyData* GetObjectAsVTKPolyData();
 
+	//
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {}
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {}
+
 protected:
 	shape2DEllipse();
 	~shape2DEllipse() {}
 
 	static const std::string m_name;
-	static const unsigned int m_nbParams = 2;
+	static const unsigned int m_nbParams = 1;
 
 	unsigned int m_thetaResolution; //nb of points of the polygon approximating the disk
 

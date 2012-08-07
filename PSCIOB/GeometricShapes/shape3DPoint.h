@@ -29,7 +29,6 @@
  * \file shape3DPoint.h
  * \author Rémi Blanc 
  * \date 25. July 2011
- * \brief shape3DPoint: 0 parameters
 */
 
 #ifndef SHAPE3DPOINT_H_
@@ -39,6 +38,11 @@
 
 namespace psciob {
 
+/** 
+ * \class shape3DPoint
+ * \brief shape3DPoint is a class for generating a point, usually in combination with a PoseTransform
+ * point centered at (0,0,0)
+*/
 
 class shape3DPoint : public BinaryShape<3> {
 public:
@@ -53,7 +57,7 @@ public:
 
 	/** Give Information about Self */
 	std::string GetClassName()		const	{return m_name;}
-	void PrintInfo() const { std::cout<<"shape3DPoint with parameters: "<<m_parameters<<std::endl; }
+	void PrintInfo() const { std::cout<<"shape3DPoint "<<std::endl; }
 
 	/** Get Number of parameters */
 	inline unsigned int GetNumberOfParameters() const {return m_nbParams;}
@@ -79,6 +83,10 @@ public:
 
 	/** Get the corresponding representation of the object */
 	vtkPolyData* GetObjectAsVTKPolyData();
+
+	//
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {}
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {}
 
 protected:
 	shape3DPoint();

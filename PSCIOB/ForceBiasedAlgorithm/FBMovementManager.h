@@ -42,7 +42,11 @@ namespace psciob {
 
 /** \brief FBMovementManager
 *
-* This is the default movement manager for the ForceBiasedAlgorithm, which only proposes translations
+* This is the default movement manager for the ForceBiasedAlgorithm, which only proposes translations, and scaling
+* Translation is straightforward, as the first Dimension parameters of the objects correspond to translation
+* The direction of the translation is simply set as the direction which links both object centers. 
+* In this implementation, the amount of translation is 1 unit, multiplied by a parameter (translation factor)
+* For non-unit scaling, the user must indicate which parameter (for each object type) corresponds to scale.
 */
 
 //DEV: Child classes should implement a system similar to the ObjectTypesLibrary, to associate 
@@ -59,66 +63,80 @@ public:
 	itkNewMacro(Self);
 
 	typedef TScene                                     SceneType;
+	static const unsigned int Dimension              = SceneType::Dimension;
 	typedef typename SceneType::IDType                 IDType;
 	typedef typename SceneType::ObjectTypesLibraryType ObjectTypesLibraryType;
 	typedef typename SceneType::DeformableObjectType   ObjectType;
-
-	/** Attach a scene to the algorithm */
-	void SetScene(SceneType* scene) { m_scene = scene; }
-
-	/** Set the maximum number of iterations for the method IterateUntilConvergence - default is 1e10 */
-	void SetMaximumNumberOfIterations(unsigned n) {m_maxNbIteration=n;}
-
-	/** Get the maximum number of iterations for the method IterateUntilConvergence - default is 1e10 */
-	unsigned GetMaximumNumberOfIterations() { return m_maxNbIteration;}
+	typedef typename SceneType::InteractionDataType    InteractionDataType;
 	
-	/** Set the scaling coefficient, to be applied at the end of each iteration 
+	/** Attach a scene to the algorithm */
+	void SetScene(SceneType* scene) { 
+		m_scene = scene; 
+	}
+
+	/** Set the scaling factor, to be applied at the end of each iteration 
 	* Values should be in ]0,1] ; if the input is outside this range, value 1 is set instead
 	* If the value is 1 (default behavior), no scaling is applied
 	* Otherwise, it should be specified, for each object type, which is the coefficient that performs scaling... this is done through the object movement manager...
 	*/
-	void SetScalingAmount(double s) {
+	void SetScalingFactor(double s) {
 		if (s<=0) {m_scaleFactor=1;return;}
 		if (s>=1) {m_scaleFactor=1;return;}
 		m_scaleFactor = s;
 	}
 	
-	/** Get the value of the scaling parameter */
-	double GetScalingAmount() {return m_scaleFactor;}
+	/** Get the value of the scaling factor */
+	double GetScalingFactor() { return m_scaleFactor; }
 
-
-	/** Applies a single iteration of the algorithm */
-	bool ApplyOneIteration() {
-		
-	
+	/** Set the translation factor, multiplying the default translation vector */
+	void SetTranslationFactor(double f) {
+		if (f<=0) {m_translationFactor=1;return;}
+		m_translationFactor = f;
 	}
 	
-	/** Iterate until convergence 
-	* returns -1 if it exited after reaching the maximum number of allowed iterations
-	* and 1 otherwise.
+	/** Get the value of the translation factor */
+	double GetTranslationFactor() {return m_translationFactor;}
+
+	
+	/** update the proposed move with respect to a new overlap
+	* \param currentMove is the current vector of parameters describing the move (would-be object parameters)
+	* \param id1 is the id of the object to be moved
+	* \param id2 is the id of the overlapping object
+	* \param overlapData is the structure containing the overlap information.
+	* In this class, a simple unit translation is applied, in the direction joining the center of both objects.
 	*/
-	int IterateUntilConvergence() {
-		if (!m_scene) throw DeformableModelException("FBMovementManager::IterateUntilConvergence -- the scene must be set first.");
-		unsigned nbIter=0;
-		int converged = 0;
-		while (converged==0) {
-			nbIter++;
-			if (nbIter>=m_maxNbIteration) { converged = -1; break; }			
-			if (!this->ApplyOneIteration()) converged = 1;			
-		}
-		return converged;
+	virtual vnl_vector<double> UpdateMove(const vnl_vector<double> &currentMove, IDType id1, IDType id2, InteractionDataType overlapData) {
+		vnl_vector<double> t(Dimension), proposedMove = currentMove;
+		t = m_translationFactor * (m_scene->GetParametersOfObject(id1).extract(Dimension) - m_scene->GetParametersOfObject(id2).extract(Dimension)).normalize();
+		for (unsigned i=0 ; i<Dimension ; i++) proposedMove(i)+=t(i);
+	
+		//idea: a flag could be used here to apply rotation on request...
+		//for this, as for scaling, the user should indicate which parameter(s) correspond to rotation...
+		return proposedMove;
 	}
-
+	
+	/** 	*/
+	vnl_vector<double> GetScaledParameters(IDType id, const vnl_vector<double> &currentMove) {
+		vnl_vector<double> proposedMove = currentMove;
+		if (m_scaleFactor!=1) {
+			//check this
+			m_scene->GetObject(id)->obj->ApplyScalingToParameters(m_scaleFactor, proposedMove);
+		}
+		return proposedMove;
+	}
 
 protected:
 	FBMovementManager() : m_scaleFactor(1), m_translationFactor(1) {
 		m_scene = 0;
+		m_identityMove.set_size(Dimension); m_identityMove.fill(0); //translation only in this case.
 	};
 	~FBMovementManager() {};
 
-	typename SceneType::Pointer m_scene;
+    typename SceneType::Pointer m_scene;
 	double m_scaleFactor;
 	double m_translationFactor;
+	//bool m_scaleInfoSet; //flag indicating whether all the necessary information is available -> e.g. which parameters correspond to scale
+	vnl_vector<double> m_identityMove;
 
 private:
 	FBMovementManager(const Self&);      //purposely not implemented

@@ -62,10 +62,6 @@ template < unsigned int VDimension, class TAppearance>
 inline
 vnl_matrix<double> PoseTransform<VDimension, TAppearance>::GetInverseTransformMatrix() {
 	return vnl_matrix_inverse<double>(this->GetTransformMatrix());
-	//if (!m_inverseMatrixUptodate) { 
-	//	m_inverseTransformMatrix = vnl_matrix_inverse<double>(this->GetTransformMatrix()); m_inverseMatrixUptodate = true; 
-	//}
-	//return m_inverseTransformMatrix; 
 } 
 
 
@@ -74,8 +70,6 @@ template < unsigned int VDimension, class TAppearance>
 bool PoseTransform<VDimension, TAppearance>::SetTransformationMatrix(const vnl_matrix<double> &mat) {//WARNING: verify that this is an authorized transformation ; this requires to decompose the input transform into the parametric space, reconstruct the matrix, and compare if it is similar
 	if ( (mat.rows() != mat.cols()) || (mat.rows() != m_transformMatrix.rows()) ) return false;
 	m_parameters = GetParametersFromMatrix(mat);
-	//m_transformMatrix = mat; m_transformMatrixUptodate = true;
-	//m_inverseMatrixUptodate = false; 
 	return true;
 }
 
@@ -84,9 +78,8 @@ bool PoseTransform<VDimension, TAppearance>::SetTransformationMatrix(const vnl_m
 //Scale
 template < unsigned int VDimension, class TAppearance> 
 bool PoseTransform<VDimension, TAppearance>::Scale(double scale) {
-	throw DeformableModelException("PoseTransform::Scale - not re-implemented... - should add checks whether this is an allowed transformation...");
 	vnl_matrix<double> mat(VDimension+1, VDimension+1);
-	mat.set_identity();		for (unsigned i=0 ; i<VDimension ; i++) { mat(i,i) = scale; }
+	mat.fill(0);		for (unsigned i=0 ; i<VDimension ; i++) { mat(i,i) = scale; }
 	return Compose_Internal(mat);
 }
 
@@ -94,13 +87,30 @@ bool PoseTransform<VDimension, TAppearance>::Scale(double scale) {
 //Scale
 template < unsigned int VDimension, class TAppearance> 
 bool PoseTransform<VDimension, TAppearance>::Scale(const vnl_vector<double> &scale) {
-	throw DeformableModelException("PoseTransform::Scale - not re-implemented... - should add checks whether this is an allowed transformation...");
 	if ( scale.size() != VDimension ) { throw DeformableModelException("Error in PoseTransform::Scale : invalid parameter size"); }
 	vnl_matrix<double> mat(VDimension+1, VDimension+1);
-	mat.set_identity();		for (unsigned i=0 ; i<VDimension ; i++) { mat(i,i) = scale(i); }
+	mat.fill(0);		for (unsigned i=0 ; i<VDimension ; i++) { mat(i,i) = scale(i); }
 	return Compose_Internal(mat);
 }
 
+//
+template < unsigned int VDimension, class TAppearance> 
+void PoseTransform<VDimension, TAppearance>::ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {
+	vnl_matrix<double> transformMatrix = GetMatrixFromParameters(params);
+	for (unsigned i=0 ; i<VDimension ; i++) { transformMatrix(i,i) *= scaleFactor; }
+	params = GetParametersFromMatrix(transformMatrix);
+}
+//
+template < unsigned int VDimension, class TAppearance> 
+void PoseTransform<VDimension, TAppearance>::ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {
+	vnl_matrix<double> transformMatrix = GetMatrixFromParameters(params);
+	vnl_matrix<double> tmp_mat = transformMatrix.extract(VDimension,VDimension,0,0);
+	tmp_mat = rot*tmp_mat;
+	for (unsigned i=0 ; i<VDimension ; i++) {
+		for (unsigned j=0 ; j<VDimension ; j++) { transformMatrix(i,j) = tmp_mat(i,j); }
+	}
+	params = GetParametersFromMatrix(transformMatrix);
+}
 
 //Compose -- WARNING: no checks are done on the validity of the matrix
 template < unsigned int VDimension, class TAppearance> 
@@ -127,6 +137,7 @@ bool PoseTransform<VDimension, TAppearance>::ModifyTransformWithParameters(const
 	//Compose_Internal(tmp_mat);
 	return true;
 }
+
 //Compose_Internal -- protected, no validity check are performed ; the method calls Modified without checking if the parameters are really changed <= check this before calling it.
 template < unsigned int VDimension, class TAppearance> 
 bool PoseTransform<VDimension, TAppearance>::Compose_Internal(const vnl_matrix<double> &transf) {
@@ -147,8 +158,6 @@ bool PoseTransform<VDimension, TAppearance>::Compose_Internal(const vnl_matrix<d
 	}
 	
 	m_parameters = GetParametersFromMatrix(transformMatrix);
-	//m_transformMatrixUptodate = true;
-	//m_inverseMatrixUptodate = false; 
 	return true;
 }
 

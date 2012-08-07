@@ -29,8 +29,6 @@
  * \file shape3DCuboid.h
  * \author Rémi Blanc 
  * \date 24. August 2011
- * \brief cuboid: 3 parameters, 3D shape, all faces are rectangles
- * 3 parameters = 3 sides : length X, length Y, length Z
 */
 
 #ifndef SHAPE3DCUBOID_H_
@@ -41,6 +39,13 @@
 
 namespace psciob {
 
+/** 
+ * \class shape3DCuboid
+ * \brief shape3DCuboid is a class for generating a cuboid, usually in combination with a PoseTransform
+ * cuboid centered at (0,0,0), with Z length = 1, X and Y 
+ * 2 parameters = flatness ( = z/sqrt(xy) >0 ), elongation ( = x/(sqrt(yz)) >0 )
+ * => x = pow((b*b)/(a*a), 1/3) ; y = (b*b)/(x*x)
+*/
 
 class shape3DCuboid : public BinaryShape<3> {
 public:
@@ -50,7 +55,7 @@ public:
 	typedef itk::SmartPointer<Self>       Pointer;
 	typedef itk::SmartPointer<const Self> ConstPointer;
 	/** Run-time type information (and related methods). */
-	itkTypeMacro(shape3DCuboid,BinaryShape);
+	itkTypeMacro(shape3DCuboid, BinaryShape);
 	itkNewMacro(Self);
 
 
@@ -72,13 +77,15 @@ public:
 
 	/** Physical bounding box of the object */
 	vnl_vector<double> GetPhysicalBoundingBox() {
-		if (!m_physicalBBoxUpToDate) {				
-			m_physicalBoundingBox(0) = -m_parameters(0)/2.0; //xmin
-			m_physicalBoundingBox(1) = +m_parameters(0)/2.0; //xmax
-			m_physicalBoundingBox(2) = -m_parameters(1)/2.0; //ymin
-			m_physicalBoundingBox(3) = +m_parameters(1)/2.0; //ymax
-			m_physicalBoundingBox(4) = -m_parameters(2)/2.0; //zmin
-			m_physicalBoundingBox(5) = +m_parameters(2)/2.0; //zmax
+		if (!m_physicalBBoxUpToDate) {
+			double x = pow( (m_parameters(1)*m_parameters(1))/(m_parameters(0)*m_parameters(0)), 1.0/3.0);
+			double y = (x*x)/(m_parameters(1)*m_parameters(1));
+			m_physicalBoundingBox(0) = -x/2.0; //xmin
+			m_physicalBoundingBox(1) = +x/2.0; //xmax
+			m_physicalBoundingBox(2) = -y/2.0; //ymin
+			m_physicalBoundingBox(3) = +y/2.0; //ymax
+			m_physicalBoundingBox(4) = -1/2.0; //zmin
+			m_physicalBoundingBox(5) = +1/2.0; //zmax
 			m_physicalBBoxUpToDate=true;
 		}
 		return m_physicalBoundingBox;
@@ -87,12 +94,16 @@ public:
 	/** Get the corresponding representation of the object */
 	vtkPolyData* GetObjectAsVTKPolyData();
 
+	//
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {}
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {}
+
 protected:
 	shape3DCuboid();
 	virtual ~shape3DCuboid() {};
 
 	static const std::string m_name;
-	static const unsigned int m_nbParams = 3;
+	static const unsigned int m_nbParams = 2;
 
 	vtkSmartPointer<vtkCubeSource> m_cubeSource;
 

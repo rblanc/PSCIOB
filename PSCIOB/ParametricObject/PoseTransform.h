@@ -126,8 +126,8 @@ public:
 	bool SetTransformationMatrix(const vnl_matrix<double> &mat); 
 
 	//find a better way to offer such an interface , perhaps traits (inherit the interface?)
-	bool Scale(double scale);
-	bool Scale(const vnl_vector<double> &scale);
+	virtual bool Scale(double scale);
+	virtual bool Scale(const vnl_vector<double> &scale);
 	bool Compose(const vnl_matrix<double> &transf); //should be improved 
 	bool ModifyTransformWithParameters(const vnl_vector<double> &poseParameters);
 protected: 
@@ -136,6 +136,19 @@ protected:
 public:
 	void SetCompositionToPreCompose()  { m_flagPostMultiply=false; } //normal (default) setting, the new part of the transform is applied after the first
 	void SetCompositionToPostCompose() { m_flagPostMultiply=true; }  //inverse, the newly set transform is applied before the existing part of the transform
+
+	/** \param scaling to apply 
+	* \param params is a vector of object parameters 
+	* The function modifies these input parameters such that the new parameters correspond to the scaled object
+	* \warning: no check are perform to verify the validity of the inputs
+	*/
+	virtual void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params);
+	/** \param rotation matrix to apply (pre-compose: rotate the object around its center)
+	* \param params is a vector of object parameters 
+	* The function modifies these input parameters such that the new parameters correspond to the rotated object
+	* \warning: no check are perform to verify the validity of the inputs
+	*/
+	virtual void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params);
 
 
 	/** Get physical, axis-aligned bounding box */
@@ -215,40 +228,9 @@ protected:
 	typename ParametricObject<VDimension, TAppearance>::Pointer m_inputShape;
 
 	bool m_flagPostMultiply;
-	//bool m_transformMatrixUptodate, m_inverseMatrixUptodate;
-	//vnl_vector<double> m_parameters;
-	//vnl_matrix<double> m_transformMatrix, m_inverseTransformMatrix; //3*3 or 4*4 matrix
 
 	InterpolationType m_interpolationType;
 
-	//// protected internal mechanism for setting the parameters, without checking for their validity or their non-novelty
-	//void _SetParameters_NoCheck(const vnl_vector<double> &params) { 
-	//	m_parameters = params; 
-	//	Modified(); 
-	//}
-
-	///** Apply an integer-grid translation, these can be applied very quickly to image representations and avoid recalculating these */
-	//virtual bool _IntegerGridTranslate_NoCheck(const vnl_vector<int> &translation) {
-	//	//always invalidate the polydata 
-	//	m_uptodatePolyData = false;
-	//	m_uptodateTexturedPolyData = false;
-
-	//	double tmp;
-	//	for (unsigned i=0 ; i<Dimension ; i++) {
-	//		tmp = translation(i)*m_imageSpacing[i];
-	//		m_parameters(i) += tmp;
-	//		m_imageOrigin[i] += tmp;
-	//		if (m_physicalBBoxUpToDate) m_physicalBoundingBox(i) += tmp;
-	//		if (m_imageBBoxUpToDate)    m_imageBoundingBox(i)    += tmp;			
-	//	}
-	//	if (m_uptodateBinaryImage)   m_outputBinaryImage->SetOrigin(m_imageOrigin);
-	//	if (m_uptodateTexturedImage) m_outputTexturedImage->SetOrigin(m_imageOrigin);
-	//	if (m_uptodatePixelSet)      m_outputPixelSet->SetOrigin(m_imageOrigin);
-
-	//	Modified();
-
-	//	return true;
-	//}
 
 	/** Get the shape in the requested format */
 	vtkPolyData* _GetObjectAsVTKPolyData_NoCheck() {

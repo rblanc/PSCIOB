@@ -51,6 +51,7 @@ Example_Ellipses2D_Synthese::Example_Ellipses2D_Synthese() {
 	m_noiseImageGenerator = NoiseImageSourceType::New(); m_noiseGenerator = NormalPDF::New();
 	m_addFilter = AddImageFilterType::New();
 
+	m_selection = 0;
 }
 
 
@@ -59,7 +60,7 @@ Example_Ellipses2D_Synthese::Example_Ellipses2D_Synthese() {
 */
 Example_Ellipses2D_Synthese::SceneType* 
 Example_Ellipses2D_Synthese::GetScenePointer() {
-	if (!m_scene) {	GenerateScene_1(); }
+	if (!m_scene) {	GenerateScene(); }
 	return m_scene.GetPointer();
 }
 
@@ -148,15 +149,16 @@ double Example_Ellipses2D_Synthese::GetBlurStd() {
 	return m_blurStd;
 }
 
+//
+void Example_Ellipses2D_Synthese::GenerateScene() {
+	switch (m_selection) {
+		case 0: GenerateScene_0(); break;
+		case 1: GenerateScene_1(); break;
+	}
+}
 
-/** Generate 1st scene example 
-* 50*50 scene, spacing = 1
-* 8 ellipses
-* 1 is partly outside
-* 2 are adjacent
-* 2 are overlapping
-*/
-void Example_Ellipses2D_Synthese::GenerateScene_1() {
+
+void Example_Ellipses2D_Synthese::GenerateScene_0() {
 	m_scene = SceneType::New();
 	vnl_vector<double> sceneBBox(4); 
 	sceneBBox(0) = 0; sceneBBox(1) = 100;
@@ -186,4 +188,58 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	m_image->SetSpacing(labelImage->GetSpacing());
 	m_image->Allocate();
 	m_imageFlag = false;
+}
+
+
+/** 100*100 2D Scene, 50 random ellipses obtained using a FB algorithm (without rotations)
+*/
+#include "ForceBiasedAlgorithm.h"
+
+void Example_Ellipses2D_Synthese::GenerateScene_1() {
+	m_scene = SceneType::New();
+	vnl_vector<double> sceneBBox(4); 
+	sceneBBox(0) = 0; sceneBBox(1) = 100;
+	sceneBBox(2) = 0; sceneBBox(3) = 100;
+
+	m_scene->SetPhysicalDimensions(sceneBBox);
+
+	ObjectType::Pointer sampleEllipse = ObjectType::New();
+	unsigned int typeCode = m_scene->GetObjectTypesLibrary()->RegisterObjectType(sampleEllipse);
+
+	ObjectType::Pointer object = ObjectType::New();
+	psciob::UniformBoxPDF::Pointer uniformTransPDF = psciob::UniformBoxPDF::New();
+	uniformTransPDF->SetBox(sceneBBox);
+	psciob::UniformPDF::Pointer    uniformRadiusPDF= psciob::UniformPDF::New();
+	uniformRadiusPDF->SetParameters(3, 10);
+	psciob::UniformPDF::Pointer    uniformElongPDF = psciob::UniformPDF::New();
+	uniformElongPDF->SetParameters(0.25, 1);
+	psciob::UniformPDF::Pointer    uniformAnglePDF = psciob::UniformPDF::New();
+	uniformAnglePDF->SetParameters(0, PI);
+
+	psciob::IndependentPDFs::Pointer ellipseGenerationPDF = psciob::IndependentPDFs::New();
+	ellipseGenerationPDF->AddMultivariatePDF(uniformTransPDF); ellipseGenerationPDF->AddUnivariatePDF(uniformRadiusPDF);
+	ellipseGenerationPDF->AddUnivariatePDF(uniformElongPDF);   ellipseGenerationPDF->AddUnivariatePDF(uniformAnglePDF);
+
+	m_scene->GetObjectTypesLibrary()->SetObjectPDF(typeCode, psciob::PDF_OBJECTGENERATIONPRIOR, ellipseGenerationPDF);
+
+	//50 random ellipses
+	for (unsigned i=0 ; i<50 ; i++) {
+		m_scene->AddObject(m_scene->GetObjectTypesLibrary()->GenerateNewRandomObject(typeCode));
+	}
+
+	//all examples should end with this code: update the flags, and make sure the memory is allocated for the output image.
+	SceneType::LabelImageType *labelImage = GetScenePointer()->GetSceneAsLabelImage();
+	m_image->SetRegions(labelImage->GetLargestPossibleRegion());
+	m_image->SetOrigin(labelImage->GetOrigin());
+	m_image->SetSpacing(labelImage->GetSpacing());
+	m_image->Allocate();
+	m_imageFlag = false;
+
+
+	psciob::ForceBiasedAlgorithm<SceneType>::Pointer fbAlgo = psciob::ForceBiasedAlgorithm<SceneType>::New();
+	fbAlgo->SetScene(m_scene);
+	fbAlgo->GetMovementManager()->SetScalingFactor(0.98);
+	std::cout<<"Apply FB algo until convergence..."<<std::endl;
+	fbAlgo->IterateUntilConvergence();
+
 }

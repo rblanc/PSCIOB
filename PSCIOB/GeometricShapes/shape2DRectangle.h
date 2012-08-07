@@ -29,7 +29,6 @@
  * \file shape2DRectangle.h
  * \author Rémi Blanc 
  * \date 29. August 2011
- * \brief 2D rectangle: 2 parameters = 2 sides : long length & elongation (elongation = long/small length >=1)
 */
 
 #ifndef SHAPE2DRECTANGLE_H_
@@ -39,6 +38,12 @@
 
 namespace psciob {
 
+/** 
+ * \class shape2DRectangle
+ * \brief shape2DRectangle is a class for generating a rectangle, usually in combination with a PoseTransform
+ * rectangle centered at (0,0), with short length = 1 oriented in the vertical direction (long length is horizontal)
+ * 1 parameters = elongation (elongation = long/small axis >=1)
+*/
 
 class shape2DRectangle : public BinaryShape<2> {
 public:
@@ -71,9 +76,9 @@ public:
 	/** Physical bounding box of the object */
 	vnl_vector<double> GetPhysicalBoundingBox() {
 		if (!m_physicalBBoxUpToDate) {			
-			m_physicalBoundingBox(0) = -m_parameters(0)/2.0; //xmin
-			m_physicalBoundingBox(1) = +m_parameters(0)/2.0; //xmax
-			double width = m_parameters(0) / m_parameters(1);
+			m_physicalBoundingBox(0) = -1.0/2.0; //xmin
+			m_physicalBoundingBox(1) = +1.0/2.0; //xmax
+			double width = 1 * m_parameters(0);
 			m_physicalBoundingBox(2) = -width/2.0; //ymin
 			m_physicalBoundingBox(3) = +width/2.0; //ymax
 			m_physicalBBoxUpToDate = true;
@@ -84,12 +89,16 @@ public:
 	/** Get the corresponding representation of the object */
 	vtkPolyData* GetObjectAsVTKPolyData();
 
+	//
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {}
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {}
+
 protected:
 	shape2DRectangle();
 	~shape2DRectangle() {};
 
 	static const std::string m_name;
-	static const unsigned int m_nbParams = 2;
+	static const unsigned int m_nbParams = 1;
 
 private:
 	shape2DRectangle(const Self&);			//purposely not implemented

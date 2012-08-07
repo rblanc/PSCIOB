@@ -45,7 +45,7 @@ shape3DSphere::shape3DSphere() : BinaryShape<3>() {
 	m_phiResolution=16;		m_sphereSource->SetPhiResolution(m_phiResolution);
 	m_thetaResolution=16;	m_sphereSource->SetThetaResolution(m_thetaResolution);
 	m_sphereSource->SetCenter(0,0,0);
-	m_sphereSource->SetRadius(m_parameters(0));
+	m_sphereSource->SetRadius(0.5);
 
 	m_vtkResolution.set_size(2);
 	m_vtkResolution(0) = m_phiResolution;
@@ -60,7 +60,6 @@ vnl_vector<double> shape3DSphere::GetDefaultParameters() const {
 
 inline 
 bool shape3DSphere::CheckParameters(const vnl_vector<double> &p) const {
-	if ( (p.size()!=m_nbParams) || (p(0)<TINY) ) return false;
 	return true;
 }
 
@@ -79,7 +78,7 @@ void shape3DSphere::SetVTKPolyDataResolution(unsigned int phi, unsigned int thet
 
 vtkPolyData* shape3DSphere::GetObjectAsVTKPolyData() {
 	if (!m_uptodatePolyData) {
-		m_sphereSource->SetRadius(m_parameters(0));
+		m_sphereSource->SetRadius(0.5);
 
 		m_sphereSource->Update();
 		m_outputPolyData = m_sphereSource->GetOutput();
@@ -88,21 +87,3 @@ vtkPolyData* shape3DSphere::GetObjectAsVTKPolyData() {
 	}
 	return m_outputPolyData.GetPointer();
 }
-
-//void shape3DSphere::UpdateBinaryImage_Internal() {
-//	AllocateITKImageFromPhysicalBoundingBoxAndSpacing<BinaryImageType>( this->GetPhysicalBoundingBox(), this->GetImageSpacing(), m_internalBinaryImage );
-//
-//	BinaryImageType::PointType pointCoords;
-//	double d2, d2max = m_parameters(0)*m_parameters(0);
-//	typedef itk::ImageRegionIteratorWithIndex< BinaryImageType > IteratorType;
-//	IteratorType it( m_internalBinaryImage, m_internalBinaryImage->GetLargestPossibleRegion() );
-//	it.GoToBegin();
-//	while(!it.IsAtEnd()) {
-//		m_internalBinaryImage->TransformIndexToPhysicalPoint(it.GetIndex(), pointCoords);
-//		d2 = pointCoords[0]*pointCoords[0] + pointCoords[1]*pointCoords[1] + pointCoords[2]*pointCoords[2];
-//		if ( d2<=d2max ) it.Set(1); //for a point, all pixels in the pixelBoundingBox should be ON
-//		else it.Set(0);
-//		++it;
-//	}
-//}
-//

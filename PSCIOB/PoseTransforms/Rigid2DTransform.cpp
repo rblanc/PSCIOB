@@ -50,7 +50,7 @@ vnl_matrix<double> Rigid2DTransform::GetMatrixFromParameters(const vnl_vector<do
 	vnl_matrix<double> output(m_nbDimensions+1,m_nbDimensions+1); 
 	output.set_identity();
 
-	vnl_matrix<double> rotmat = GetRotationMatrixFromAngle(poseParameters(2));
+	vnl_matrix<double> rotmat = Get2DRotationMatrixFromAngle(poseParameters(2));
 
 	for (unsigned i = 0 ; i<m_nbDimensions ; i++) {
 		output(i,2) = poseParameters(i);	//translations
@@ -70,7 +70,7 @@ vnl_vector<double> Rigid2DTransform::GetParametersFromMatrix(const vnl_matrix<do
 	params(0) = transformMatrix(0,m_nbDimensions);
 	params(1) = transformMatrix(1,m_nbDimensions);
 
-	params(2) = GetAngleFromRotationMatrix(rotmat);
+	params(2) = psciob::GetAngleFrom2DRotationMatrix(rotmat);
 
 	return params;
 }

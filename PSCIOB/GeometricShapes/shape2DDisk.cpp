@@ -50,15 +50,13 @@ shape2DDisk::shape2DDisk() : BinaryShape<2>() {
 
 //default disk parameters: unit radius
 vnl_vector<double> shape2DDisk::GetDefaultParameters() const {
-	vnl_vector<double> p(m_nbParams); p.fill(1);
+	vnl_vector<double> p;
 	return p;
 }
 
 //Check Parameters
 inline 
 bool shape2DDisk::CheckParameters(const vnl_vector<double> &p) const {
-	if (p.size()!=m_nbParams) return false;
-	for (unsigned i=0 ; i<m_nbParams ; i++) { if (p(i)<0) return false; }
 	return true;
 }
 
@@ -83,11 +81,11 @@ vtkPolyData* shape2DDisk::GetObjectAsVTKPolyData() {
 		vtkIdType segm[2];
 
 		//1st point
-		points->InsertNextPoint( m_parameters(0) , 0 , 0 ); 
+		points->InsertNextPoint( 0.5 , 0 , 0 ); 
 		//all points and all segments but the last
 		for (unsigned i=1 ; i<m_thetaResolution ; i++) {
 			theta = 2.0*i*PI/((double)m_thetaResolution);
-			points->InsertNextPoint( m_parameters(0)*cos(theta), m_parameters(0)*sin(theta), 0 ); 
+			points->InsertNextPoint( 0.5*cos(theta), 0.5*sin(theta), 0 ); 
 			segm[0] = i-1; 	segm[1] = i; cells->InsertNextCell(2, segm);
 		}
 		//last segment
@@ -107,22 +105,3 @@ vtkPolyData* shape2DDisk::GetObjectAsVTKPolyData() {
 
 
 
-
-//
-////
-//void shape2DDisk::UpdateBinaryImage_Internal() {
-//	AllocateITKImageFromPhysicalBoundingBoxAndSpacing<BinaryImageType>( this->GetPhysicalBoundingBox(), this->GetImageSpacing(), m_internalBinaryImage );
-//
-//	BinaryImageType::PointType pointCoords;
-//	double d2, d2max = m_parameters(0)*m_parameters(0);
-//	typedef itk::ImageRegionIteratorWithIndex< BinaryImageType > IteratorType;
-//	IteratorType it( m_internalBinaryImage, m_internalBinaryImage->GetLargestPossibleRegion() );
-//	it.GoToBegin();
-//	while(!it.IsAtEnd()) {
-//		m_internalBinaryImage->TransformIndexToPhysicalPoint(it.GetIndex(), pointCoords);
-//		d2 = pointCoords[0]*pointCoords[0] + pointCoords[1]*pointCoords[1];
-//		if ( d2<=d2max ) it.Set(1); //for a point, all pixels in the pixelBoundingBox should be ON
-//		else it.Set(0);
-//		++it;
-//	}
-//}

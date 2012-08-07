@@ -184,6 +184,20 @@ public:
 	/** Apply an integer-grid translation, these can be applied very quickly to image representations and avoid recalculating these */
 	bool IntegerGridTranslate(const vnl_vector<int> &translation);
 
+	/** \param scaling to apply 
+	* \param params is a vector of object parameters 
+	* The function modifies these input parameters such that the new parameters correspond to the scaled object
+	* \warning: no check are perform to verify the validity of the inputs
+	*/
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) { m_transform->ApplyScalingToParameters(scaleFactor, params); }
+	/** \param rotation matrix to apply (pre-compose: rotate the object around its center)
+	* \param params is a vector of object parameters 
+	* The function modifies these input parameters such that the new parameters correspond to the rotated object
+	* \warning: no check are perform to verify the validity of the inputs
+	*/
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) { m_transform->ApplyRotationToParameters(rot, params); }
+	
+	
 	/** Set Resolution parameters for the VTK mesh representation 
 	* Invalidates the mesh-based representations if these changes, as well as the pixel-based representation deriving from a mesh
 	*/

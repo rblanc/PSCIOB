@@ -25,55 +25,48 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \file Abstract2DTransform.h
- * \author Rémi Blanc 
- * \date 27. July 2011
+/*
+* \file TranslationScale3DTransform.cpp
+* \author Rémi Blanc 
+ * \date 7. August 2012
 */
 
-#ifndef ABSTRACT2DTRANSFORM_H_
-#define ABSTRACT2DTRANSFORM_H_
 
-#include "PoseTransform.h"
-#include "2DTransformUtils.h"
+#include "TranslationScale3DTransform.h"
 
-namespace psciob {
-
-/** \class Abstract2DTransform
- * \brief Abstract2DTransform: abstract class for a 2D transfom, inheriting from PoseTransform ; not very useful 
- */
+using namespace psciob;
 
 
-class Abstract2DTransform : public PoseTransform<2> {
-public:
-	/** Standard class typedefs. */
-	typedef Abstract2DTransform				Self;
-	typedef PoseTransform					Superclass;
-	typedef itk::SmartPointer<Self>			Pointer;
-	/** Run-time type information (and related methods). */
-	itkTypeMacro(Abstract2DTransform,PoseTransform);
+const std::string TranslationScale3DTransform::m_name = "TranslationScale3DTransform";
 
-	//WARNING: verify that this is an authorized transformation (overload it in the actual implementation, raising a "unauthorized transformation" exception)
-	bool Rotate(double angle) {
-		vnl_matrix<double> mat(m_nbDimensions+1, m_nbDimensions+1);
-		mat.set_identity();
-		mat.put(0,0, cos(angle));	mat.put(0,1,-sin(angle));
-		mat.put(1,0, sin(angle));	mat.put(1,1, cos(angle));
-		return Compose(mat);
+TranslationScale3DTransform::TranslationScale3DTransform() : Abstract3DTransform() {SetDefaultParameters();}
+
+
+vnl_vector<double> TranslationScale3DTransform::GetDefaultParameters() const {
+	vnl_vector<double> params(m_nbParams); params.fill(0); params(m_nbParams-1)=1;
+	return params;
+}
+
+vnl_matrix<double> TranslationScale3DTransform::GetMatrixFromParameters(const vnl_vector<double> &poseParameters) const {
+	vnl_matrix<double> output(4,4); 
+
+	output.set_identity();
+	for (unsigned i = 0 ; i<3 ; i++) { 
+		output(i,i) = poseParameters(3);
+		output(i,3) = poseParameters(i); 
 	}
 
-protected:
-	Abstract2DTransform() : PoseTransform() {}
-	virtual ~Abstract2DTransform() {};
+	return output;
+}
 
-	static const unsigned int m_nbDimensions = 2;
 
-private:
-	Abstract2DTransform(const Self&);		//purposely not implemented
-	const Self & operator=( const Self & );	//purposely not implemented
+vnl_vector<double> TranslationScale3DTransform::GetParametersFromMatrix(const vnl_matrix<double> &transformMatrix) const {
+	vnl_vector<double> params(m_nbParams);
 
-};
-
-} // namespace psciob
-
-#endif /* ABSTRACT2DTRANSFORM_H_ */
+	params(0) = transformMatrix(0,m_nbDimensions);
+	params(1) = transformMatrix(1,m_nbDimensions);
+	params(2) = transformMatrix(2,m_nbDimensions);
+	params(3) = transformMatrix(0,0); //the first n-1 diagonal components should all be equal!
+	
+	return params;
+}

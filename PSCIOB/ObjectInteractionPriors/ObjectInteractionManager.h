@@ -205,7 +205,7 @@ public:
 	* Remove all existing interaction data, and stop monitoring them
 	* This can be useful for collective re-arrangement algorithms, where multiple objects are modified 'simultaneously'
 	*/
-	void TurnOffInteractionManagement() {
+	virtual void TurnOffInteractionManagement() {
 		m_monitorInteractionsOnTheFly=true;
 		SceneObjectIterator<SceneType> it(m_scene);
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
@@ -218,7 +218,7 @@ public:
 	* Recompute all existing interaction data, and turn on their on-the-fly monitoring
 	* This can be useful for collective re-arrangement algorithms, where multiple objects are modified 'simultaneously'	
 	*/
-	void TurnOnInteractionManagement() {
+	virtual void TurnOnInteractionManagement() {
 		if (!m_monitorInteractionsOnTheFly) {
 			m_monitorInteractionsOnTheFly=true;
 			SceneObjectIterator<SceneType> it1(m_scene), it2(m_scene);

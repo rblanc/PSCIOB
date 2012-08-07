@@ -26,36 +26,36 @@
  */
 
 /**
- * \file Similarity2DTransform.h
+ * \file TranslationScale3DTransform.h
  * \author Rémi Blanc 
- * \date 29. August 2011
- */
+ * \date 7. August 2012
+*/
 
-#ifndef Similarity2DTransform_H_
-#define Similarity2DTransform_H_
+#ifndef TRANSLATIONSCALE3DTRANSFORM_H_
+#define TRANSLATIONSCALE3DTRANSFORM_H_
 
-#include "Abstract2DTransform.h"
+#include "Abstract3DTransform.h"
 
 namespace psciob {
 
-/** \class Similarity2DTransform
- * \brief Similarity2DTransform: 4 parameters: 2 translations (x,y) + 1 rotation + 1 scale 
- */
+/** \class TranslationScale3DTransform
+ * \brief TranslationScale3DTransform: 3 translation parameters + 1 scale parameter
+*/
 
 
-class Similarity2DTransform : public Abstract2DTransform {
+class TranslationScale3DTransform : public Abstract3DTransform {
 public:
 	/** Standard class typedefs. */
-	typedef Similarity2DTransform   Self;
-	typedef Abstract2DTransform     Superclass;
-	typedef itk::SmartPointer<Self> Pointer;
+	typedef TranslationScale3DTransform Self;
+	typedef Abstract3DTransform         Superclass;
+	typedef itk::SmartPointer<Self>     Pointer;
 	/** Run-time type information (and related methods). */
-	itkTypeMacro(Similarity2DTransform,Abstract2DTransform);
+	itkTypeMacro(TranslationScale3DTransform,Abstract3DTransform);
 	itkNewMacro(Self);
 
 	/** Give Information about Self */
 	inline std::string GetClassName()		const	{return m_name;}
-	void PrintInfo() const { std::cout<<"Similarity2DTransform with parameters: "<<m_parameters<<std::endl; }
+	void PrintInfo() const { std::cout<<"TranslationScale3DTransform with parameters: "<<m_parameters<<std::endl; }
 
 	/** Get Number of parameters */
 	inline unsigned int GetNumberOfParameters() const {return m_nbParams;}
@@ -72,26 +72,35 @@ public:
 		return true;
 	}
 
-	bool Scale(const vnl_vector<double> &scale) {
-		if (scale(0)!=scale(1)) {return false;}
-		else {return PoseTransform::Scale(scale(0));}
+
+	bool RotateAroundX(double angle) {return false;}
+	bool RotateAroundY(double angle) {return false;}
+	bool RotateAroundZ(double angle) {return false;}
+	bool RotateAroundAxis(double angle, const vnl_vector<double> &axis){return false;}
+
+	bool Scale(vnl_vector<double> scale) {
+		if ( (scale(0)==scale(1)) && (scale(0)==scale(2)) ) { return PoseTransform::Scale(scale(0)); }
+		else {return false;}
 	}
+	
+	//no rotation for this transform
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {}
 
 
 protected:
-	Similarity2DTransform();
-	virtual ~Similarity2DTransform() {};
+	TranslationScale3DTransform();
+	virtual ~TranslationScale3DTransform() {};
 
 	static const std::string m_name;
-	static const unsigned int m_nbParams = 4; //2 translations, 1 rotation, 1 scale
+	static const unsigned int m_nbParams = 4; //3 translations
 
 private:
-	Similarity2DTransform(const Self&);		//purposely not implemented
-	const Self & operator=( const Self & );	//purposely not implemented
+	TranslationScale3DTransform(const Self&); //purposely not implemented
+	const Self & operator=( const Self & );	  //purposely not implemented
 };
 
 
 
 } // namespace psciob
 
-#endif /* Similarity2DTransform_H_ */
+#endif /* TRANSLATIONSCALE3DTRANSFORM_H_ */

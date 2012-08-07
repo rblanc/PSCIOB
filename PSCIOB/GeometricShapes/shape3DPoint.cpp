@@ -59,10 +59,3 @@ vtkPolyData* shape3DPoint::GetObjectAsVTKPolyData() {
 	}
 	return m_outputPolyData.GetPointer();
 }
-
-//
-//void shape3DPoint::UpdateBinaryImage_Internal() {
-//	AllocateITKImageFromPhysicalBoundingBoxAndSpacing<BinaryImageType>( this->GetPhysicalBoundingBox(), this->GetImageSpacing(), m_internalBinaryImage );
-//
-//	m_internalBinaryImage->FillBuffer(1);
-//}

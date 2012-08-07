@@ -95,10 +95,14 @@ public:
 	/** Get the standard deviation of the gaussian noise which is added to the binary image */
 	double GetBlurStd();
 
-	/** */
+	/** Select generation method 
+	* 0: 50*50 2D scene containing a few ellipses, some of them overlapping
+	* 1: 50 ellipses in a 100*100 scene, using ForceBiased algo with translation (&scaling) only
+	*/
+	void SelectSceneGenerationMethod(unsigned c) {m_selection=c;}
 
-	/** Generate 1st scene example */
-	void GenerateScene_1();
+	/** Generate scene example	*/
+	void GenerateScene();
 
 
 private:
@@ -119,6 +123,13 @@ private:
 	bool m_imageFlag;			//flag indicating whether the output image is uptodate
 	double m_blurStd, m_noiseStd;
 	int m_seed;
+	unsigned m_selection;
+
+	/** Generate deterministic scene example */
+	void GenerateScene_0();
+
+	/** Generate FB scene example */
+	void GenerateScene_1();
 
 };
 

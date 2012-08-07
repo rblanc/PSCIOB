@@ -44,7 +44,7 @@ namespace psciob {
 vnl_matrix<double> Get2DRotationMatrixFromAngle(double angle);
 
 /** */
-inline double GetAngleFrom2DRotationMatrix(const vnl_matrix<double> &mat);
+double GetAngleFrom2DRotationMatrix(const vnl_matrix<double> &mat);
 
 
 } // namespace psciob

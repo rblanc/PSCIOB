@@ -43,9 +43,9 @@ shape3DCuboid::shape3DCuboid() : BinaryShape<3>() {
 	//
 	m_cubeSource = vtkSmartPointer<vtkCubeSource>::New();
 	m_cubeSource->SetCenter(0,0,0);
-	m_cubeSource->SetXLength(m_parameters(0));
-	m_cubeSource->SetYLength(m_parameters(1));
-	m_cubeSource->SetZLength(m_parameters(2));
+	m_cubeSource->SetXLength(1);
+	m_cubeSource->SetYLength(1);
+	m_cubeSource->SetZLength(1);
 }
 
 
@@ -66,9 +66,12 @@ bool shape3DCuboid::CheckParameters(const vnl_vector<double> &p) const {
 
 vtkPolyData* shape3DCuboid::GetObjectAsVTKPolyData() {
 	if (!m_uptodatePolyData) {
-		m_cubeSource->SetXLength(m_parameters(0));
-		m_cubeSource->SetYLength(m_parameters(1));
-		m_cubeSource->SetZLength(m_parameters(2));
+		double x = pow( (m_parameters(1)*m_parameters(1))/(m_parameters(0)*m_parameters(0)), 1.0/3.0);
+		double y = (x*x)/(m_parameters(1)*m_parameters(1));
+
+		m_cubeSource->SetXLength(x);
+		m_cubeSource->SetYLength(y);
+		m_cubeSource->SetZLength(1);
 
 		m_cubeSource->Update();
 		m_outputPolyData = m_cubeSource->GetOutput();
@@ -77,25 +80,3 @@ vtkPolyData* shape3DCuboid::GetObjectAsVTKPolyData() {
 	}
 	return m_outputPolyData.GetPointer();
 }
-
-//
-//void shape3DCuboid::UpdateBinaryImage_Internal() {
-//	AllocateITKImageFromPhysicalBoundingBoxAndSpacing<BinaryImageType>( this->GetPhysicalBoundingBox(), this->GetImageSpacing(), m_internalBinaryImage );
-//
-//	BinaryImageType::PointType pointCoords;
-//	vnl_vector<double> d(m_nbDimensions), dmax(m_nbDimensions);
-//	for (unsigned i=0 ; i<m_nbDimensions ; i++) dmax(i) = m_parameters(i)/2.0;
-//	typedef itk::ImageRegionIteratorWithIndex< BinaryImageType > IteratorType;
-//	IteratorType it( m_internalBinaryImage, m_internalBinaryImage->GetLargestPossibleRegion() );
-//	it.GoToBegin();
-//	BinaryPixelType val;
-//	while(!it.IsAtEnd()) {
-//		m_internalBinaryImage->TransformIndexToPhysicalPoint(it.GetIndex(), pointCoords);
-//		val=1;
-//		for (unsigned i=0 ; i<m_nbDimensions ; i++) {
-//			if (fabs(pointCoords[i])>dmax(i)) {val=0; break;}
-//		}
-//		it.Set(val);
-//		++it;
-//	}
-//}

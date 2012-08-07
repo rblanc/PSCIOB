@@ -45,8 +45,8 @@ shape3DCylinder::shape3DCylinder() : BinaryShape<3>() {
 	m_Resolution=36;		
 	m_cylinderSource->SetResolution(m_Resolution);
 	m_cylinderSource->SetCenter(0,0,0);
-	m_cylinderSource->SetRadius(m_parameters(0));
-	m_cylinderSource->SetHeight(m_parameters(1));
+	m_cylinderSource->SetRadius(1);
+	m_cylinderSource->SetHeight(m_parameters(0));
 
 	m_vtkResolution.set_size(1);
 	m_vtkResolution(0) = m_Resolution;
@@ -77,8 +77,8 @@ void shape3DCylinder::SetVTKPolyDataResolution(unsigned int res) {
 
 vtkPolyData* shape3DCylinder::GetObjectAsVTKPolyData() {
 	if (!m_uptodatePolyData) {
-		m_cylinderSource->SetRadius(m_parameters(0));
-		m_cylinderSource->SetHeight(m_parameters(1));
+		m_cylinderSource->SetRadius(1);
+		m_cylinderSource->SetHeight(m_parameters(0));
 
 		m_cylinderSource->Update();
 		m_outputPolyData = m_cylinderSource->GetOutput();
@@ -88,22 +88,3 @@ vtkPolyData* shape3DCylinder::GetObjectAsVTKPolyData() {
 	return m_outputPolyData.GetPointer();
 }
 
-
-//
-//void shape3DCylinder::UpdateBinaryImage_Internal() {
-//	AllocateITKImageFromPhysicalBoundingBoxAndSpacing<BinaryImageType>( this->GetPhysicalBoundingBox(), this->GetImageSpacing(), m_internalBinaryImage );
-//
-//	BinaryImageType::PointType pointCoords;
-//	double d2, d2max = m_parameters(0)*m_parameters(0);
-//	typedef itk::ImageRegionIteratorWithIndex< BinaryImageType > IteratorType;
-//	IteratorType it( m_internalBinaryImage, m_internalBinaryImage->GetLargestPossibleRegion() );
-//	it.GoToBegin();
-//	while(!it.IsAtEnd()) {
-//		m_internalBinaryImage->TransformIndexToPhysicalPoint(it.GetIndex(), pointCoords);
-//		d2 = pointCoords[0]*pointCoords[0] + pointCoords[2]*pointCoords[2];
-//		if (( d2<=d2max )&&(fabs(pointCoords[1])<(m_parameters(1)/2.0))) it.Set(1); //for a point, all pixels in the pixelBoundingBox should be ON
-//		else it.Set(0);
-//		++it;
-//	}
-//}
-//

@@ -72,13 +72,17 @@ public:
 	}
 
 
-	bool RotateAroundX(double angle)									{throw DeformableModelException("Scale: unauthorized for this transformation-- change that and return false");}
-	bool RotateAroundY(double angle)									{throw DeformableModelException("Scale: unauthorized for this transformation-- change that and return false");}
-	bool RotateAroundZ(double angle)									{throw DeformableModelException("Scale: unauthorized for this transformation-- change that and return false");}
-	bool RotateAroundAxis(double angle, const vnl_vector<double> &axis)	{throw DeformableModelException("Scale: unauthorized for this transformation-- change that and return false");}
-	bool Scale(double scale)											{throw DeformableModelException("Scale: unauthorized for this transformation-- change that and return false");}
-	bool Scale(const vnl_vector<double> &scale)							{throw DeformableModelException("Scale: unauthorized for this transformation-- change that and return false");}
-	
+	bool RotateAroundX(double angle) {return false;}
+	bool RotateAroundY(double angle) {return false;}
+	bool RotateAroundZ(double angle) {return false;}
+	bool RotateAroundAxis(double angle, const vnl_vector<double> &axis){return false;}
+
+	//no scaling or rotation for this transform
+	bool Scale(double scale) {return false;}
+	bool Scale(vnl_vector<double> scale) {return false;}
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {}
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {}
+
 
 protected:
 	Translation3DTransform();

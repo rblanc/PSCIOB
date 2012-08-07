@@ -36,9 +36,9 @@
 #define __FAST2D_WHO_RECTANGLE_H_
 
 #include "Binary2DConvexModel.h"
+#include "2DTransformUtils.h"
 
 namespace psciob {
-
 
 /** 
 * \class Fast2D_WHO_Rectangle
@@ -48,7 +48,6 @@ namespace psciob {
 * length is the dimension along the axis defined by orientation
 * width is the dimension along the perpendicular direction (may be shorter, or longer than length)
 */
-
 
 //CONCRETE CLASS
 class Fast2D_WHO_Rectangle : public Binary2DConvexModel {
@@ -102,6 +101,24 @@ public:
 	
 	/** Get the corresponding representation of the object */
 	vtkPolyData* GetObjectAsVTKPolyData();
+	
+	/** \param scaling to apply 
+	* \param params is a vector of object parameters 
+	* The function modifies these input parameters such that the new parameters correspond to the scaled object
+	* \warning: no check are perform to verify the validity of the inputs
+	*/
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {	
+		params(2)*=scaleFactor;	params(3)*=scaleFactor;	
+	}
+	
+	/** \param rotation matrix to apply (pre-compose: rotate the object around its center)
+	* \param params is a vector of object parameters 
+	* The function modifies these input parameters such that the new parameters correspond to the rotated object
+	* \warning: no check are perform to verify the validity of the inputs
+	*/
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {
+		params(4) += psciob::GetAngleFrom2DRotationMatrix(rot);	
+	}
 
 protected:
 	Fast2D_WHO_Rectangle();

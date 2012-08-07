@@ -72,6 +72,12 @@ public:
 		return true;
 	}
 
+	//no scaling or rotation for this transform
+	bool Scale(double scale) {return false;}
+	bool Scale(vnl_vector<double> scale) {return false;}
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {}
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {}
+	
 protected:
 	Translation2DTransform();
 	virtual ~Translation2DTransform() {};

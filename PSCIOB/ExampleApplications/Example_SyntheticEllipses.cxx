@@ -68,8 +68,9 @@ int main(int argc, char** argv) {
 		unsigned int sceneCode = 1;	double       blurSize  = 0;	double       noisePower= 0;	int          rndSeed   = 0;
 
 		Example_Ellipses2D_Synthese sceneGenerator;
+		sceneGenerator.SelectSceneGenerationMethod(1);
 		switch(sceneCode) {
-			case 1: sceneGenerator.GenerateScene_1(); break;
+			case 1: sceneGenerator.GenerateScene(); break;
 			default: throw DeformableModelException("unknown scene code..."); break;
 		}
 		sceneGenerator.SetBlurStd(blurSize);
@@ -77,7 +78,7 @@ int main(int argc, char** argv) {
 		sceneGenerator.SetNoiseSeed(rndSeed);
 
 		Write2DGreyLevelRescaledImageToFile<Example_Ellipses2D_Synthese::ImageType>("ReferenceImage.png", sceneGenerator.GetImage());
-
+return 1;
 		/*
 		* LOAD THE INPUT IMAGE
 		*/

@@ -40,6 +40,11 @@
 
 namespace psciob {
 
+/** 
+ * \class shape3DSphere
+ * \brief shape3DSphere is a class for generating a sphere, usually in combination with a PoseTransform
+ * unit sphere centered at (0,0,0) ; 0 parameters
+*/
 
 class shape3DSphere : public BinaryShape<3> { //: public ParametricShape {
 public:
@@ -55,7 +60,7 @@ public:
 
 	/** Give Information about Self */
 	std::string GetClassName()		const	{return m_name;}
-	void PrintInfo() const { std::cout<<"shape3DSphere with parameters: "<<m_parameters<<std::endl; }
+	void PrintInfo() const { std::cout<<"shape3DSphere "<<std::endl; }
 
 	/** Get Number of parameters */
 	inline unsigned int GetNumberOfParameters() const {return m_nbParams;}
@@ -66,14 +71,7 @@ public:
 	/** Check Validity of the parameters, returns false if parameters are not valid */
 	inline bool CheckParameters(const vnl_vector<double> &p) const;
 
-	/** */
-	void SetRadius(float p) { 
-		if (p<0) throw DeformableModelException("Error in shape3DSphere: trying to set a negative radius!!");
-		if ( abs(m_parameters(0)-p)>TINY ) Modified();
-		m_parameters(0) = p;
-	} 
-
-	/** */
+	/** number of division in latitude and longitude */
 	void SetVTKPolyDataResolution(unsigned int phi, unsigned int theta);
 
 	/** Takes two parameters, corresponding to the angular resolution (phi, theta) 
@@ -89,12 +87,12 @@ public:
 	/** Physical bounding box of the object */
 	vnl_vector<double> GetPhysicalBoundingBox() {
 		if (!m_physicalBBoxUpToDate) {				
-			m_physicalBoundingBox(0) = -m_parameters(0); //xmin
-			m_physicalBoundingBox(1) = +m_parameters(0); //xmax
-			m_physicalBoundingBox(2) = -m_parameters(0); //ymin
-			m_physicalBoundingBox(3) = +m_parameters(0); //ymax
-			m_physicalBoundingBox(4) = -m_parameters(0); //zmin
-			m_physicalBoundingBox(5) = +m_parameters(0); //zmax
+			m_physicalBoundingBox(0) = -0.5; //xmin
+			m_physicalBoundingBox(1) = +0.5; //xmax
+			m_physicalBoundingBox(2) = -0.5; //ymin
+			m_physicalBoundingBox(3) = +0.5; //ymax
+			m_physicalBoundingBox(4) = -0.5; //zmin
+			m_physicalBoundingBox(5) = +0.5; //zmax
 			m_physicalBBoxUpToDate=true;
 		}
 		return m_physicalBoundingBox;
@@ -103,12 +101,16 @@ public:
 	/** Get the corresponding representation of the object */
 	vtkPolyData* GetObjectAsVTKPolyData();
 
+	//
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {}
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {}
+
 protected:
 	shape3DSphere();
 	virtual ~shape3DSphere() {};
 
 	static const std::string m_name;
-	static const unsigned int m_nbParams = 1;
+	static const unsigned int m_nbParams = 0;
 
 	unsigned int m_phiResolution, m_thetaResolution;
 	vtkSmartPointer<vtkSphereSource> m_sphereSource;

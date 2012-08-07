@@ -29,9 +29,6 @@
  * \file shape2DDisk.h
  * \author Rémi Blanc 
  * \date 29. August 2011
- * 
- * \brief disk shape: 1 parameters = radius
- *
 */
 
 #ifndef SHAPE2DDISK_H_
@@ -40,6 +37,12 @@
 #include "BinaryShape.h"
 
 namespace psciob {
+
+/** 
+ * \class shape2DDisk
+ * \brief shape2DDisk is a class for generating a disk, usually in combination with a PoseTransform
+ * 0 parameters: disk with unit radius, centered at (0,0)
+*/
 
 class shape2DDisk : public BinaryShape<2> {
 public:
@@ -55,7 +58,7 @@ public:
 
 	/** Give Information about Self */
 	std::string GetClassName()		const	{return m_name;}
-	void PrintInfo() const { std::cout<<"shape2DDisk with parameters: "<<m_parameters<<std::endl; }
+	void PrintInfo() const { std::cout<<"shape2DDisk"<<std::endl; }
 
 	/** Get Number of parameters */
 	inline unsigned int GetNumberOfParameters() const {return m_nbParams;}
@@ -65,13 +68,6 @@ public:
 
 	/** Check Validity of the parameters, returns false if parameters are not valid */
 	inline bool CheckParameters(const vnl_vector<double> &p) const;
-
-	/** Set the disk radius */
-	void SetRadius(float p) { 
-		if (p<0) throw DeformableModelException("Error in shape2DDisk: trying to set a negative radius!!");
-		if ( abs(m_parameters(0)-p)>TINY ) Modified();
-		m_parameters(0) = p;
-	} 
 
 	/** Number of vertices of the polygon approximating the shape */
 	void SetVTKPolyDataResolution(unsigned int theta);
@@ -90,10 +86,10 @@ public:
 	/** Gets the object bounding box */
 	vnl_vector<double> GetPhysicalBoundingBox() {
 		if (!m_physicalBBoxUpToDate) {
-			m_physicalBoundingBox(0) = -m_parameters(0); //xmin
-			m_physicalBoundingBox(1) = +m_parameters(0); //xmax
-			m_physicalBoundingBox(2) = -m_parameters(0); //ymin
-			m_physicalBoundingBox(3) = +m_parameters(0); //ymax
+			m_physicalBoundingBox(0) = -0.5; //xmin
+			m_physicalBoundingBox(1) = +0.5; //xmax
+			m_physicalBoundingBox(2) = -0.5; //ymin
+			m_physicalBoundingBox(3) = +0.5; //ymax
 			m_physicalBBoxUpToDate = true;
 		}
 		return m_physicalBoundingBox;
@@ -102,12 +98,16 @@ public:
 	/** Get the corresponding representation of the object */
 	vtkPolyData* GetObjectAsVTKPolyData();
 
+	//
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {}
+	void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) {}
+
 protected:
 	shape2DDisk();
 	~shape2DDisk() {};
 
 	static const std::string m_name;
-	static const unsigned int m_nbParams = 1;
+	static const unsigned int m_nbParams = 0;
 
 	unsigned int m_thetaResolution; //nb of points of the polygon approximating the disk
 

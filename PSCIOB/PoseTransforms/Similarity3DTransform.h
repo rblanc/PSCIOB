@@ -71,12 +71,13 @@ public:
 	/** Check Validity of the parameters, returns false if parameters are not valid */
 	inline bool CheckParameters(const vnl_vector<double> &p) const {
 		if ( p.size() != m_nbParams ) return false;
+		if (p(6)<TINY) return false; //scale must be >0
 		return true;
 	}
 
-	void Scale(vnl_vector<double> scale) {
-		if ( (scale(0)==scale(1)) && (scale(0)==scale(2)) ) PoseTransform::Scale(scale(0));
-		else throw DeformableModelException("Scale: unauthorized for this transformation -- change that and return false");
+	bool Scale(vnl_vector<double> scale) {
+		if ( (scale(0)==scale(1)) && (scale(0)==scale(2)) ) return PoseTransform::Scale(scale(0));
+		else return false;
 	}
 
 

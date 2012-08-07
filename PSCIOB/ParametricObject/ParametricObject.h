@@ -145,6 +145,29 @@ public:
 	*/
 	virtual bool Translate(const vnl_vector<double> &translation);
 
+	/** \param translation is the translation vector to apply 
+	* \param params is a vector of object parameters 
+	* The function modifies these input parameters such that the new parameters correspond to the translated object
+	* \warning: no check are perform to verify the validity of the inputs
+	*/
+	void ApplyTranslationToParameters(const vnl_vector<double> &translation, vnl_vector<double> &params) {
+		for (unsigned i=0 ; i<Dimension ; i++) params(i)+=translation(i);
+	}
+	
+	/** \param scaling to apply 
+	* \param params is a vector of object parameters 
+	* The function modifies these input parameters such that the new parameters correspond to the scaled object
+	* \warning: no check are perform to verify the validity of the inputs
+	*/
+	virtual void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) = 0;
+
+	/** \param rotation matrix to apply (pre-compose: rotate the object around its center)
+	* \param params is a vector of object parameters 
+	* The function modifies these input parameters such that the new parameters correspond to the rotated object
+	* \warning: no check are perform to verify the validity of the inputs
+	*/
+	virtual void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params) = 0;
+	
 	/** Apply an integer-grid translation, these can be applied very quickly to image representations and avoid recalculating these */
 	virtual bool IntegerGridTranslate(const vnl_vector<int> &translation) = 0;
 
@@ -167,7 +190,7 @@ public:
 	virtual void ReleaseMemory_Full() { m_outputPolyData->Initialize(); m_outputBinaryImage->Initialize(); m_outputLabelMap->Initialize(); Modified(); }
 
 	/** Clear memory and resets shape parameters to default */
-	void Reset() { ReleaseMemory_Full(); SetDefaultParameters()(); }
+	void Reset() { ReleaseMemory_Full(); SetDefaultParameters(); }
 
 	/** Get the physical, axis-aligned bounding box
 	* The format is [d1_min d1_max d2_min d2_max ...]

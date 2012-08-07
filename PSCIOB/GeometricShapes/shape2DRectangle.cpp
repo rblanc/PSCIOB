@@ -54,8 +54,7 @@ vnl_vector<double> shape2DRectangle::GetDefaultParameters() const {
 inline 
 bool shape2DRectangle::CheckParameters(const vnl_vector<double> &p) const {
 	if (p.size()!=m_nbParams) return false;
-	if (p(0)<TINY) return false;//long length must be positive
-	if (p(1)<1) return false;	//elongation must be >=1
+	if (p(0)<1) return false;	//elongation must be >=1
 	return true;
 }
 
@@ -90,28 +89,3 @@ vtkPolyData* shape2DRectangle::GetObjectAsVTKPolyData() {
 	return m_outputPolyData.GetPointer();
 }
 
-//
-////
-//void shape2DRectangle::UpdateBinaryImage_Internal() {
-//	AllocateITKImageFromPhysicalBoundingBoxAndSpacing<BinaryImageType>( this->GetPhysicalBoundingBox(), this->GetImageSpacing(), m_internalBinaryImage );
-//
-//	BinaryImageType::PointType pointCoords;
-//	vnl_vector<double> d(m_nbDimensions), dmax(m_nbDimensions);
-//	
-//	dmax(0) = m_parameters(0)/2.0;
-//	dmax(1) = ( m_parameters(0)/m_parameters(1) )/2.0;
-//	
-//	typedef itk::ImageRegionIteratorWithIndex< BinaryImageType > IteratorType;
-//	IteratorType it( m_internalBinaryImage, m_internalBinaryImage->GetLargestPossibleRegion() );
-//	it.GoToBegin();
-//	BinaryPixelType val;
-//	while(!it.IsAtEnd()) { //OPTIMIZATION: normally, filling the LargestPossibleRegion would be sufficient
-//		m_internalBinaryImage->TransformIndexToPhysicalPoint(it.GetIndex(), pointCoords);
-//		val=1;
-//		for (unsigned i=0 ; i<m_nbDimensions ; i++) {
-//			if (fabs(pointCoords[i])>dmax(i)) {val=0; break;}
-//		}
-//		it.Set(val);
-//		++it;
-//	}
-//}

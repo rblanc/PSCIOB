@@ -74,8 +74,10 @@ public:
 		return true;
 	}
 
-	bool Scale(double scale) {throw DeformableModelException("Scale: unauthorized for this transformation -- change that and return false");}
-	bool Scale(const vnl_vector<double> &scale) {throw DeformableModelException("Scale: unauthorized for this transformation -- change that and return false");}
+	//
+	bool Scale(double scale) {return false;}
+	bool Scale(vnl_vector<double> scale) {return false;}
+	void ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {}
 
 
 protected:
