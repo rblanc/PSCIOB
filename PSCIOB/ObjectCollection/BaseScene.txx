@@ -396,12 +396,14 @@ BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>
 	//test if the parameters are different at all and return if nothing needs to be updated
 	if ( (m_arrayObjects[id-1].obj->GetParameters() - p).inf_norm() <TINY ) return true;
 
-	//Create a new structure hosting the object candidate (with blank cache, no need to invalidate anything in particular!)
+	//Create a new structure hosting the object candidate
 	ObjectInScene newObject;
 	newObject.objectTypeId = m_arrayObjects[id-1].objectTypeId;
 	newObject.priority = m_arrayObjects[id-1].priority;
 	newObject.id = id;
 	newObject.obj = m_arrayObjects[id-1].obj->CreateCopy();
+	//copy the objectData and invalidate what needs to be invalidated! this is important to safeguard data that should not be modified regardless of object displacements...
+	newObject.objectData =  m_arrayObjects[id-1].objectData; newObject.objectData.InvalidateData();	
 	if (!newObject.obj->SetParameters( p )) return false;
 
 	//Check for insertion acceptance

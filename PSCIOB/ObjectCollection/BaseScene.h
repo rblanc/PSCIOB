@@ -555,6 +555,7 @@ public:
 
 	/** Get a single vtkPolyData representing the scene, appending all entries */
 	vtkPolyData* GetSceneAsVTKPolyData() {
+		m_appendPolyDataFilter->RemoveAllInputs();
 		for (unsigned i=0 ; i<m_arrayObjects.size() ; i++) {
 			if ( m_arrayObjects[i].id != 0 ) {
 				m_appendPolyDataFilter->AddInput( m_arrayObjects[i].obj->GetObjectAsVTKPolyData() );

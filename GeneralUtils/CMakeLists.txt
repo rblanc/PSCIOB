@@ -72,8 +72,8 @@ SET_TARGET_PROPERTIES(GeneralUtils PROPERTIES LINKER_LANGUAGE CXX)
 #install the target
 install(TARGETS GeneralUtils DESTINATION lib/) 
 #install the cmake configuration for the target
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/GeneralUtils-config.cmake.in  ${CMAKE_CURRENT_BINARY_DIR}/GeneralUtils-config.cmake @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/GeneralUtils-config.cmake DESTINATION lib/cmake/)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/generalutils-config.cmake.in  ${CMAKE_CURRENT_BINARY_DIR}/generalutils-config.cmake @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/generalutils-config.cmake DESTINATION lib/cmake/)
 
 	
 option (BUILD_GeneralUtilsLib_TESTS "Build the Test projects" OFF) 	

@@ -49,6 +49,8 @@
 #include "itkImageRegionIterator.h"
 #include "itkImageRegionIteratorWithIndex.h"
 
+#include "itkBinaryThresholdImageFilter.h" //only for verbose output...
+
 namespace psciob {
 
 /** \brief DynamicMBOD_Optimizer
@@ -86,6 +88,11 @@ public:
 	typedef itk::Image<double, SceneType::Dimension>              BirthMapType;
 	/** The local optimization manager must derive from a SceneOptimizationManager_Base */
 	typedef SceneOptimizationManager_Base<SceneType>     OptimizationManagerType;
+
+	/** Configure the class to output text at each iteration
+	* and to write the birth map
+	*/
+	void SetVerboseMode(bool b) { m_verbose = b; }
 
 	/** Set the maximum number of successive failures to improve things before declaring the convergence 
 	* increase to give more robustness...
@@ -144,11 +151,12 @@ public:
 	}
 
 
-	/** Adds a birth map - if not provided, it is assumed to be constant 
+	/** Set the birth map - if not provided, it is assumed to be constant 
 	* The content of this image can be modified, so that its pixel values sum to the number of pixels in the image.
 	* The image is expected to have the proper size (i.e. cover the same region as the scene) -- unsure what may happen if this is not the case.
+	* \todo: make a copy, so that the input image is not modified?
 	*/
-	void AddBirthMap(typename BirthMapType *img) {
+	void SetBirthMap(typename BirthMapType *img) {
 		m_birthMap = img;
 
 		itk::ImageRegionIterator< BirthMapType > itBM(m_birthMap, m_birthMap->GetLargestPossibleRegion());
@@ -233,8 +241,8 @@ public:
 		//
 		//CONVERGENCE CRITERION => all the objects proposed in the birth step have been killed in the death step.
 		//it is translated here into => the number of objects before and after is the same, and the energy difference is negligible
-clock_t t0=clock(), t1;
-unsigned nbiter = 0;
+		clock_t t0=clock(), t1;
+		unsigned nbiter = 0;
 		while (!converged) {
 			nbiter++;
 			oldEnergy = currentEnergy; oldNb = currentNb; 
@@ -284,7 +292,8 @@ unsigned nbiter = 0;
 					//add it to the local scene
 					tmpLabel = m_localScene->AddObject( tmpObj );	// what about specific object insertion policies??	//should child classes of Scene_Base force specific policies (e.g. label map ; or binary map <-> boolean model ; or ADD mode <-> shot noise, ...)
 					if (tmpLabel==0) continue; //warning: it could happen that the object is not accepted inside the scene.
-initialParam = m_localScene->GetParametersOfObject(tmpLabel);
+
+					initialParam = m_localScene->GetParametersOfObject(tmpLabel);
 					//optimize that object locally
 					m_localOptimizationManager->SelectObject(tmpLabel);
 					m_localOptimizationManager->Optimize();
@@ -300,21 +309,18 @@ initialParam = m_localScene->GetParametersOfObject(tmpLabel);
 						if (endIndex[i]>=BMsize[i]) endIndex[i]=BMsize[i]-1;
 					}
 					newlyBornObjects.insert( NewlyBornObjectEntryType(label, NewlyBornObjectData(itBM.GetIndex(), endIndex)) );
-if (nbiter==1) std::cout<<"   initial params: "<<initialParam<<", initial index: "<<itBM.GetIndex()<<"\n    - after optimization, params = "<<finalParam<<", index: "<<endIndex<<std::endl;
 				}
 			}
-std::cout<<"end of birth step, added "<<newlyBornObjects.size()<<" objects, in "<<(clock()-t1)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+			if (m_verbose) std::cout<<"it"<<nbiter<<" -- birth ("<<newlyBornObjects.size()<<", "<<(clock()-t1)/((double)CLOCKS_PER_SEC)<<" s.)";
 			//
 			//2: sort the objects according to their local costs, and kill sequentially the objects according to their impact on the global cost
 			//
-t1=clock();//std::cout<<"sort objects "<<std::endl;
 			std::sort(listObjects.begin(), listObjects.end(), m_objectCostComparator);
-std::cout<<"sorted the objects in "<<(clock()-t1)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 
 			currentEnergy = m_manager->GetValue();
 			//std::cout<<"ok, sorted the list of objects against their local costs, and iteratively killing them... ; current global energy = "<<m_currentGlobalCost<<std::endl;
 			double a;
-t1=clock();//std::cout<<"killing objects"<<std::endl;
+			t1=clock();//std::cout<<"killing objects"<<std::endl;
 			for (std::vector<ObjectCosts>::iterator it = listObjects.begin() ; it!=listObjects.end() ; ++it) {
 				//std::cout<<"  examining object with label "<<it->id<<", with local cost = "<<it->localCost<<std::endl;
 				if (it->id==0) { std::cout<<"WARNING -- label 0... should never happen!!"<<std::endl; continue; } //keep the warning until the class is tested.
@@ -347,7 +353,7 @@ t1=clock();//std::cout<<"killing objects"<<std::endl;
 				itBM.Set( itBM.Get() * m_BMincreaseRate );
 			}
 
-std::cout<<" ; kill ("<<(clock()-t1)/((double)CLOCKS_PER_SEC)<<"s) -- number of new objects kept: "<<newlyBornObjects.size()<<std::endl;
+			if (m_verbose) std::cout<<", kill ("<<(clock()-t1)/((double)CLOCKS_PER_SEC)<<"s, nb new kept: "<<newlyBornObjects.size();
 
 			//decrease the temperature at each iteration
 			phi = m_coolingFunction->Evaluate(phi); invphi = 1.0/phi;
@@ -368,8 +374,18 @@ std::cout<<" ; kill ("<<(clock()-t1)/((double)CLOCKS_PER_SEC)<<"s) -- number of 
 				else { successiveFailures = 0; }
 			}
 			
-std::cout<<" -- end it. "<<nbiter<<"phi = "<<phi<<", nb obj: "<<m_scene->GetNumberOfObjects()<<" ; energy: "<<currentEnergy<<" (best = "<<bestEnergy<<") ** time: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s"<<std::endl;
-Write2DGreyLevelRescaledImageToFile<BirthMapType>("birthMap_" + stringify(nbiter) + ".png", m_birthMap);
+			if (m_verbose) {
+				std::cout<<", nb obj: "<<m_scene->GetNumberOfObjects()<<" ; energy: "<<currentEnergy<<" (best = "<<bestEnergy<<") ** time: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s"<<std::endl;
+				Write2DGreyLevelRescaledImageToFile<BirthMapType>("birthMap_" + stringify(nbiter) + ".png", m_birthMap);
+				
+				
+				thresholdFilter->SetInput(m_scene->GetSceneAsLabelImage());
+				thresholdFilter->SetLowerThreshold(1); thresholdFilter->SetInsideValue(200); thresholdFilter->SetOutsideValue(0);
+				thresholdFilter->Update();
+				Write2DGreyLevelRescaledImageToFile<SceneType::BinaryImageType>("binaryScene_" + stringify(nbiter) + ".png", thresholdFilter->GetOutput());
+
+				//Write2DGreyLevelRescaledImageToFile<BirthMapType>("binaryScene_" + stringify(nbiter) + ".png", m_birthMap);
+			}
 		}
 
 		return manager->GetValue();	//the manager will return to the best visited state in case this is not the case
@@ -400,8 +416,15 @@ protected:
 		//TODO: add control over these parameters.
 		m_BMdecreaseRate = 0.9;
 		m_BMincreaseRate = 1.5;
+
+		m_verbose = false;
+		thresholdFilter = BinaryThresholdImageFilterType::New();
 	};
 	~DynamicMBOD_Optimizer() {};
+
+	typedef itk::BinaryThresholdImageFilter<typename SceneType::LabelImageType, typename SceneType::BinaryImageType> BinaryThresholdImageFilterType;
+	typename BinaryThresholdImageFilterType::Pointer thresholdFilter;
+
 
 	typedef SingleSceneObjectOptimizationManager<TScene> LocalOptimizationManagerType;
 	typename LocalOptimizationManagerType::Pointer m_localOptimizationManager;
@@ -419,6 +442,7 @@ protected:
 	UniformBoxPDF::Pointer m_translationRndGen;
 
 	double m_BMdecreaseRate, m_BMincreaseRate;
+	bool m_verbose;
 
 	//local structures storing objects ids, and their local costs (according to the provided localOptimizationManager)
 	class ObjectCosts {

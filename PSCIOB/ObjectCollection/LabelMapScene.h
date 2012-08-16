@@ -43,8 +43,8 @@ namespace psciob {
 /** \class LabelMapScene
  * \brief LabelMapScene
  * 
- * add description here
- *
+ * This scene uses the itkLabelObject structure (i.e. a run-length encoded object) to physically represent the objects
+ * Internally, when adding an object, it asks the ParametricObject to update its LabelObject representation, and simply cast it into the scene frame
 */
 
 

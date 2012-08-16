@@ -42,6 +42,7 @@ namespace psciob {
 
 /**\class ObjectData_BaseContainer
 * \brief ObjectData_BaseContainer - abstract base container, defining the interface for all object data storage
+* 
 */
 class ObjectData_BaseContainer {
 public:
@@ -118,6 +119,19 @@ public:
 	std::vector<unsigned long> offContextPixelSet; bool offContextPixelSetFlag;
 };
 
+/**\class ObjectVelocityContainer
+ * \brief container with storage space for a velocity term attached to the object
+*/
+class ObjectVelocityContainer : public ObjectData_BaseContainer {
+public:
+	ObjectVelocityContainer() : m(0), vx(0), vy(0), vz(0), cpt(0), frozen(false) {}
+	inline void InvalidateData() {}
+
+	bool frozen;
+	double vx, vy, vz;
+	double m;
+	int cpt;
+};
 
 //other ideas would be vectors of parameters
 //speed

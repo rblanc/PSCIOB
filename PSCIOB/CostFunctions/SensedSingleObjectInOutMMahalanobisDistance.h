@@ -359,13 +359,9 @@ protected:
 		m_interpolatedReferenceImage = m_filter->GetOutput();
 
 		// ADD THE CODE TO compute m_partialIntegralImage and m_partialIntegralSquaredImage 
-std::cout<<"interpolated the reference image, now computing the integral image..."<<std::endl;
 		m_integralFilter->SetInput(m_interpolatedReferenceImage);
-std::cout<<" updating"<<std::endl;
 		m_integralFilter->Update();
-std::cout<<" updated!"<<std::endl;
 		m_partialIntegralImage = m_integralFilter->GetOutput1();
-std::cout<<" got 1st output..."<<std::endl;
 		m_partialIntegralSquaredImage = m_integralFilter->GetOutput2();
 		//lbip::LinearIntegrationImageAndSquaredImageFilter<ReferenceImageType, IntegralImageType>(m_interpolatedReferenceImage, m_partialIntegralImage, m_partialIntegralSquaredImage);
 

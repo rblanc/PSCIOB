@@ -10,3 +10,6 @@ add_executable (Example_SyntheticEllipses Example_SyntheticEllipses.cxx Example_
 ADD_DEPENDENCIES(Example_SyntheticEllipses PSCIOB)
 target_link_libraries (Example_SyntheticEllipses ${PSCIOB_LIBRARIES} ${GENERALUTILS_LIBRARIES} ${ITK_LIBRARIES} ${VTK_LIBRARIES}) 
 
+add_executable (Example_FallingSpheres Example_FallingSpheres.cxx)
+ADD_DEPENDENCIES(Example_FallingSpheres PSCIOB)
+target_link_libraries (Example_FallingSpheres ${PSCIOB_LIBRARIES} ${GENERALUTILS_LIBRARIES} ${ITK_LIBRARIES} ${VTK_LIBRARIES}) 

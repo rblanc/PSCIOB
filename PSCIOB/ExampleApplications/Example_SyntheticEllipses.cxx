@@ -52,8 +52,8 @@
 using namespace psciob;
 
 //
-//
- 
+// In this example, we synthesize a 2D image representing ellipses
+// and perform their detection using a simple RJ-MCMC chain 
 //
 //
 int main(int argc, char** argv) {
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 		sceneGenerator.SetNoiseSeed(rndSeed);
 
 		Write2DGreyLevelRescaledImageToFile<Example_Ellipses2D_Synthese::ImageType>("ReferenceImage.png", sceneGenerator.GetImage());
-return 1;
+
 		/*
 		* LOAD THE INPUT IMAGE
 		*/
@@ -91,8 +91,6 @@ return 1;
 		/* 
 		* Define the scene 
 		*/
-		//typedef LabelImageScene<2> SceneType;
-		//typedef LabelMapScene<2,unsigned char, unsigned short, ObjectCostsAndPixelSetContainer, PixelSetIntersectionContainer> SceneType;
 		typedef LabelMapScene<2,unsigned char, unsigned short, ObjectCostsContainer, LabelObjectIntersectionContainer<unsigned short, 2>> SceneType;
 
 		SceneType::Pointer scene = SceneType::New();
@@ -124,17 +122,6 @@ return 1;
 
 		scene->GetObjectTypesLibrary()->SetObjectPDF(typeCode, PDF_OBJECTGENERATIONPRIOR, ellipseGenerationPDF);
 		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the generative pdf for ellipses, test sample: "<<ellipseGenerationPDF->DrawSample()<<std::endl; 
 
 		/*
 		* Define a proposal distribution for random modifications of the parameters of an object.
@@ -146,19 +133,6 @@ return 1;
 		MVN_PDF::Pointer ellipseRWPDF = MVN_PDF::New();  ellipseRWPDF->SetParameters(meanRW, covRW);
 		
 		scene->GetObjectTypesLibrary()->SetObjectPDF(typeCode, PDF_RANDOMWALK, ellipseRWPDF);
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
-		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
 		if (verbose) std::cout<<"defined the random walk pdf for ellipses, test sample: "<<ellipseRWPDF->DrawSample()<<std::endl; 
 
 		/* 
@@ -314,7 +288,7 @@ return 1;
 		RandomJumpSAOptimizer<SceneType>::Pointer rjsaOptimizer = RandomJumpSAOptimizer<SceneType>::New();
 		//rjsaOptimizer->SetScene(scene);
 		ScalarFunction_Geometric::Pointer coolingFunction = ScalarFunction_Geometric::New();
-		coolingFunction->SetFactor(0.98); //0.999 //0.9995
+		coolingFunction->SetFactor(0.995); //0.999 //0.9995
 		rjsaOptimizer->SetCoolingFunction(coolingFunction);
 		rjsaOptimizer->SetInitialTemperature(1);
 		rjsaOptimizer->SetMaximumNumberOfAttemptsAtT(2000); //2000 //5000
@@ -348,17 +322,7 @@ return 1;
 			std::cout<<"  interaction cost: "<<scene->GetObjectTotalInteractionCost(objectIt.GetID())<<std::endl;
 		}
 
-		Write2DGreyLevelRescaledImageToFile<SingleObjectCostFunctionType::IntegralImageType>("integralRefImage.png", singleObjectCostFunction->GetPartialIntegralImage());
-		Write2DGreyLevelRescaledImageToFile<SingleObjectCostFunctionType::IntegralImageType>("integralSquaredRefImage.png", singleObjectCostFunction->GetPartialIntegralSquaredImage());
-
-
 		WriteITKImageToFile<SceneType::LabelImageType>("FinalLabelImage.png", scene->GetSceneAsLabelImage());
-		ReferenceImageType::Pointer image = ReferenceImageType::New();
-		image->SetOrigin(scene->GetSceneAsLabelImage()->GetOrigin());
-		image->SetRegions(scene->GetSceneAsLabelImage()->GetLargestPossibleRegion());
-		image->SetSpacing(scene->GetSceneAsLabelImage()->GetSpacing());
-		image->Allocate();
-
 		typedef itk::BinaryThresholdImageFilter <SceneType::LabelImageType, ReferenceImageType> BinaryThresholdImageFilterType;
 		BinaryThresholdImageFilterType::Pointer thresholdFilter = BinaryThresholdImageFilterType::New();
 		thresholdFilter->SetInput(scene->GetSceneAsLabelImage());

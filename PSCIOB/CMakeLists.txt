@@ -75,8 +75,8 @@ target_link_libraries (PSCIOB ${GENERALUTILS_LIBRARIES} ${ITK_LIBRARIES} ${VTK_L
 #install the target
 install(TARGETS PSCIOB DESTINATION lib/) 
 #install the cmake configuration for the target
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/PSCIOB-config.cmake.in  ${CMAKE_CURRENT_BINARY_DIR}/PSCIOB-config.cmake @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/PSCIOB-config.cmake DESTINATION lib/cmake/)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/psciob-config.cmake.in  ${CMAKE_CURRENT_BINARY_DIR}/psciob-config.cmake @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/psciob-config.cmake DESTINATION lib/cmake/)
 
 
 

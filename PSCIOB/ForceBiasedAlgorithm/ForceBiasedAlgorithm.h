@@ -154,13 +154,13 @@ public:
         unsigned nbIter=0;
         int converged = 0;
         //draw the scene now
-        psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
+        //psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
         while (converged==0) {
             nbIter++;
             if (nbIter>=m_maxNbIteration) { converged = -1; break; }            
             if ( !ApplyOneIteration() ) converged = 1;
             //draw the scene now
-            psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
+            //psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
         }
         return converged;
     }
