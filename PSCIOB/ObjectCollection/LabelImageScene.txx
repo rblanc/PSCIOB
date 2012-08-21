@@ -56,7 +56,7 @@ LabelImageScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractio
 //
 template<unsigned int VDimension, class TAppearance, class TObjectId, class TAssociatedData, class TInteractionData>
 void 
-LabelImageScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::AllocateFromPhysicalDimension {
+LabelImageScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::AllocateFromPhysicalDimension() {
 	m_labelMap->SetRegions( m_sceneImageRegion ); m_labelImage->SetRegions( m_sceneImageRegion); m_dummyLabelMap->SetRegions( m_sceneImageRegion );
 	m_labelMap->SetSpacing( m_sceneSpacing );     m_labelImage->SetSpacing( m_sceneSpacing );    m_dummyLabelMap->SetSpacing( m_sceneSpacing );
 	m_labelMap->SetOrigin(  m_sceneOrigin );      m_labelImage->SetOrigin( m_sceneOrigin );      m_dummyLabelMap->SetOrigin(  m_sceneOrigin );

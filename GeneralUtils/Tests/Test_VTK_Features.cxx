@@ -65,11 +65,27 @@
 //#include <vtkBooleanOperationPolyDataFilter.h>
 #include <vtkIntersectionPolyDataFilter.h>
 #include "vtkCubeSource.h"
-#include "vtkSphereSource.h"
 #include <vtkTriangleFilter.h>
 #include "vtkFloatArray.h"
 #include "vtkCellData.h"
 #include "vtkMassProperties.h"
+
+
+#include "vtkCamera.h"
+#include "vtkLight.h"
+#include <vtkRenderer.h> 
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkPolyDataMapper.h> 
+#include <vtkActor.h> 
+#include <vtkActorCollection.h>
+#include <vtkProperty.h> 
+
+
+#include <vtkSmartPointer.h>
+#include <vtkPolyData.h>
+
+#include <vtkCommand.h>
 
 using namespace psciob;
 
@@ -334,17 +350,6 @@ void TestIntersection3DPolyData() {
 
 }
 
-#include "vtkPolyDataMapper.h"
-#include "vtkCamera.h"
-#include "vtkLight.h"
-#include <vtkRenderer.h> 
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkPolyDataMapper.h> 
-#include <vtkActor.h> 
-#include <vtkActorCollection.h>
-#include <vtkProperty.h> 
-
 void TestVTKRenderImageAndZBuffer() {
 	std::cout<<"test vtk rendering image and zbuffer..."<<std::endl;
 
@@ -375,9 +380,6 @@ void TestVTKRenderImageAndZBuffer() {
 
 	renderer->SetActiveCamera(camera);
 
-vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::New(); 
-iren->SetRenderWindow(renderWindow); 
-
 	renderWindow->Render();
 	float *zbuff = renderWindow->GetZbufferData(0, 0, 99, 99);
 	unsigned char *pixbuff = renderWindow->GetPixelData(0, 0, 99, 99, 0);
@@ -399,11 +401,9 @@ iren->SetRenderWindow(renderWindow);
 	
 	Write2DGreyLevelRescaledImageToFile<itk::Image<float>>("TestVTK_ZBuffer.png", zbuffImg);
 	Write2DGreyLevelRescaledImageToFile<itk::Image<unsigned char>>("TestVTK_Img.png", pixbuffImg);
-//iren->Start();
 
 	delete [] zbuff;
 	delete [] pixbuff;
-iren->Delete();
 }
 
 void TestVTKRenderLeak() {
@@ -521,6 +521,84 @@ void TestVTKRenderNoLeak() {
 }
 
 
+//
+class vtkTimerCallback2 : public vtkCommand
+{
+public:
+	static vtkTimerCallback2 *New()
+	{
+		vtkTimerCallback2 *cb = new vtkTimerCallback2;
+		cb->TimerCount = 0;
+		return cb;
+	}
+
+	virtual void Execute(vtkObject *caller, unsigned long eventId,
+		void * vtkNotUsed(callData))
+	{
+		if (vtkCommand::TimerEvent == eventId)
+		{
+			++this->TimerCount;
+		}
+		std::cout << this->TimerCount << std::endl;
+
+
+		sphereSource->SetRadius( sphereSource->GetRadius() + 0.5 );
+
+		vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::SafeDownCast(caller);
+		iren->GetRenderWindow()->Render();
+	}
+
+private:
+	int TimerCount;
+public:
+	vtkActor* actor;
+	vtkSphereSource *sphereSource;
+};
+
+void TestVTKAnimation() {
+// Create a sphere
+  vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
+  sphereSource->SetCenter(0.0, 0.0, 0.0);
+  sphereSource->SetRadius(5.0);
+  sphereSource->Update();
+ 
+  // Create a mapper and actor
+  vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+  mapper->SetInputConnection(sphereSource->GetOutputPort());
+  vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+  actor->SetMapper(mapper);
+ 
+  // Create a renderer, render window, and interactor
+  vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+  vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+  renderWindow->AddRenderer(renderer);
+  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+  renderWindowInteractor->SetRenderWindow(renderWindow);
+ 
+  // Add the actor to the scene
+  renderer->AddActor(actor);
+  renderer->SetBackground(1,1,1); // Background color white
+ 
+  // Render and interact
+  renderWindow->Render();
+ 
+  // Initialize must be called prior to creating timer events.
+  renderWindowInteractor->Initialize();
+ 
+  // Sign up to receive TimerEvent
+  vtkSmartPointer<vtkTimerCallback2> cb = vtkSmartPointer<vtkTimerCallback2>::New();
+  cb->actor = actor;
+  cb->sphereSource = sphereSource;
+  renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, cb);
+ 
+  int timerId = renderWindowInteractor->CreateRepeatingTimer(2);
+  std::cout << "timerId: " << timerId << std::endl;
+ 
+  // Start the interaction and timer
+  renderWindowInteractor->Start();
+ 
+}
+
 int main(int argc, char** argv) {
 
 	//Test3DVTKPolyDataTolabelMap();
@@ -529,11 +607,13 @@ int main(int argc, char** argv) {
 
 	//TestIntersection3DPolyData(); 
 
-	TestVTKRenderImageAndZBuffer();
+	//TestVTKRenderImageAndZBuffer();
 
 	//TestVTKRenderLeak();
 
 	//TestVTKRenderNoLeak();
+
+	TestVTKAnimation();
 
 	return 1;
 }

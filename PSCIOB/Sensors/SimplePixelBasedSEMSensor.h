@@ -56,7 +56,7 @@ namespace psciob {
 */
 
 //CONCRETE CLASS
-template<class TScene, class TOutputImage>
+template<class TScene, class TOutputImage = itk::Image<float, 2>>
 class SimplePixelBasedSEMSensor : public ImageSensor_Base<TScene, TOutputImage> { 
 protected:
 	static const unsigned int m_nbOrientationParams = 1;	//code for the direction (horizontal/sagittal/coronal)

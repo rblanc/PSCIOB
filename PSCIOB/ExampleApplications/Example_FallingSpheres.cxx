@@ -41,6 +41,8 @@
 #include "RandomVariables.h"
 #include "UnivariatePDF.h"
 
+#include "SimplePixelBasedSEMSensor.h"
+
 using namespace psciob;
 
 //
@@ -82,6 +84,14 @@ int main(int argc, char** argv) {
 		NormalPDF::Pointer radiusPDF = NormalPDF::New();   
 		radiusPDF->SetParameters(10, 1);
 
+		//Create a 2D sensor for visualization purposes
+		typedef SimplePixelBasedSEMSensor<SceneType> SensorType;
+		SensorType::Pointer sensorHor = SensorType::New(); sensorHor->SetScene(scene); sensorHor->SetObservationDirectionType(psciob::HORIZONTAL);
+		SensorType::Pointer sensorSag = SensorType::New(); sensorSag->SetScene(scene); sensorSag->SetObservationDirectionType(psciob::SAGITTAL);
+
+		vnl_vector<double> AppParams(2); AppParams(0) = 250; AppParams(1) = 1.0/100.0;
+		sensorHor->SetAppearanceParameters(AppParams);
+		sensorSag->SetAppearanceParameters(AppParams);
 
 		/*
 		* Insert a sphere of radius 10 at the top-center of the scene
@@ -112,7 +122,10 @@ int main(int argc, char** argv) {
 		double ks = 0.95;  //energie dissipée lors d'un choc entre spheres
 		double t = 0, dt = 0.01;//discrete time step.
 		vnl_vector<double> nv(3);
-		WriteMirrorPolyDataToFile("sphere_t0.vtk", scene->GetSceneAsVTKPolyData());
+		WriteMirrorPolyDataToFile("FallingSpheres_vtk/sphere_t0.vtk", scene->GetSceneAsVTKPolyData());
+		Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere1_HOR_0.png", sensorHor->GetOutput());
+		Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere1_SAG_0.png", sensorSag->GetOutput());
+		unsigned nb=0;
 		while (!converged) {
 			sumV = 0;
 			//get the current position and velocity of the object
@@ -148,10 +161,12 @@ int main(int argc, char** argv) {
 
 			//advance time.
 			t+=dt;
+			nb++;
+			Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere1_SAG_" + stringify(nb) + ".png", sensorSag->GetOutput());
 			if (fabs(t-round(t))<TINY) {
-				WriteMirrorPolyDataToFile("sphere1_t" + stringify(t) + ".vtk", scene->GetSceneAsVTKPolyData());				
+				WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere1_SAG_" + stringify(nb) + ".nii", sensorSag->GetOutput());
+				WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere1_HOR_" + stringify(nb) + ".nii", sensorHor->GetOutput());
 			}
-
 			//check if things are still moving
 			sumV = nv.magnitude();
 			if (sumV<G*dt+TINY) nbItAtZero++;
@@ -181,7 +196,7 @@ int main(int argc, char** argv) {
 		id = scene->AddObject(sampleObject);
 		scene->GetObject(id)->objectData.m = sphereParams(3)*sphereParams(3)*sphereParams(3);
 		std::cout<<"let a second ball fall on the first one..., radius = "<<sphereParams(3)<<", m = "<<scene->GetObject(id)->objectData.m<<std::endl;
-
+		nb=0;
 		while (!converged) {
 
 			//move each spheres, unless it is 'frozen'
@@ -200,6 +215,7 @@ int main(int argc, char** argv) {
 			}
 
 			//for each sphere, update the velocities with various forces.
+
 			for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
 				if (objectIt.GetObject()->objectData.frozen) continue;
 
@@ -254,8 +270,12 @@ int main(int argc, char** argv) {
 
 			//advance time.
 			t+=dt;
+			nb++;
+			Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere2_SAG_" + stringify(nb) + ".png", sensorSag->GetOutput());
 			if (fabs(t-round(t))<TINY) {
 				WriteMirrorPolyDataToFile("sphere2_t" + stringify(t) + ".vtk", scene->GetSceneAsVTKPolyData());				
+				WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere2_HOR_" + stringify(t) + ".nii", sensorHor->GetOutput());
+				WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere2_SAG_" + stringify(t) + ".nii", sensorSag->GetOutput());
 			}
 
 			//check if things are still moving...
@@ -351,8 +371,12 @@ int main(int argc, char** argv) {
 
 			//advance time.
 			t+=dt;
+			nb++;
+			Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("spheres_SAG_" + stringify(nb) + ".png", sensorSag->GetOutput());
 			if (fabs(t-round(t))<TINY) {
-				WriteMirrorPolyDataToFile("spheres_t" + stringify(t) + ".vtk", scene->GetSceneAsVTKPolyData());				
+				WriteMirrorPolyDataToFile("spheres_t" + stringify(t) + ".vtk", scene->GetSceneAsVTKPolyData());
+				WriteITKImageToFile<SensorType::OutputImageType>("spheres_HOR_" + stringify(t) + ".nii", sensorHor->GetOutput());
+				WriteITKImageToFile<SensorType::OutputImageType>("spheres_SAG_" + stringify(t) + ".nii", sensorSag->GetOutput());
 			}
 
 			//check if things are still moving...
@@ -362,6 +386,7 @@ int main(int argc, char** argv) {
 
 		}
 
+		std::cout<<"final nb of balls: "<<scene->GetNumberOfObjects()<<std::endl;
 
 	}
 	catch (DeformableModelException& e) {
