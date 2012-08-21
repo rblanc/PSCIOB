@@ -41,6 +41,7 @@
 #include "PoseTransformedBinaryShape.h"
 #include "shape3DSphere.h"
 #include "Translation3DTransform.h"
+#include "TranslationScale3DTransform.h"
 #include "Direct3DSphere.h"
 #include "VTKScene.h"
 
@@ -66,14 +67,12 @@ void TestVTKScene() {
 	std::cout<<"\n\n TestVTKScene: draw a few spheres, remove some, save as vtk polydata file & labelimage"<<std::endl;
 
 	shape3DSphere::Pointer sphereShape = shape3DSphere::New();
-	Translation3DTransform::Pointer translation3D = Translation3DTransform::New();
+	TranslationScale3DTransform::Pointer transform = TranslationScale3DTransform::New();
 	PoseTransformedBinaryShape<3>::Pointer sphere = PoseTransformedBinaryShape<3>::New();
 
-	vnl_vector<double> sphereRadius(1);	sphereRadius(0) = 2.215;	sphereShape->SetParameters(sphereRadius);
-	vnl_vector<double> trans3D(3);		trans3D.fill(0);			translation3D->SetParameters(trans3D);
-	sphere->SetShapeAndTransform(sphereShape, translation3D);
-
-	typedef PoseTransformedBinaryShape<3>::BaseClass Base3DObjectType;	
+	vnl_vector<double> pose3D(4); pose3D.fill(0); pose3D(3) = 2.215; 
+	transform->SetParameters(pose3D);
+	sphere->SetShapeAndTransform(sphereShape, transform);
 
 	typedef VTKScene<3> Scene3DType;
 	//typedef itk::Image<unsigned char, 2> Image2DType;	typedef itk::Image<unsigned char, 3> Image3DType;
@@ -168,15 +167,14 @@ void TestVTKScene() {
 void Test3DVTKSceneWithOverlapMonitoring() {
 	std::cout<<"\n\n Test3DVTKSceneWithOverlapMonitoring: draw a few spheres, remove some, save as vtk polydata file & labelimage"<<std::endl;
 	clock_t t0;
+
 	shape3DSphere::Pointer sphereShape = shape3DSphere::New();
-	Translation3DTransform::Pointer translation3D = Translation3DTransform::New();
+	TranslationScale3DTransform::Pointer transform = TranslationScale3DTransform::New();
 	PoseTransformedBinaryShape<3>::Pointer sphere = PoseTransformedBinaryShape<3>::New();
 
-	vnl_vector<double> sphereRadius(1);	sphereRadius(0) = 2.215;	sphereShape->SetParameters(sphereRadius);
-	vnl_vector<double> trans3D(3);		trans3D.fill(0);			translation3D->SetParameters(trans3D);
-	sphere->SetShapeAndTransform(sphereShape, translation3D);
-
-	typedef PoseTransformedBinaryShape<3>::BaseClass Base3DObjectType;	
+	vnl_vector<double> pose3D(4); pose3D.fill(0); pose3D(3) = 2.215; 
+	transform->SetParameters(pose3D);
+	sphere->SetShapeAndTransform(sphereShape, transform);
 
 	typedef VTKScene<3> Scene3DType;
 	Scene3DType::Pointer scene3D = Scene3DType::New();
@@ -290,15 +288,14 @@ void Test3DVTKSceneWithOverlapMonitoring() {
 void TestLabelMapScene() {
 	std::cout<<"\n\n TestLabelMapScene, using LabelObjectOverlap: draw a few spheres, remove some, save as vtk polydata file & labelimage "<<std::endl;
 
+
 	shape3DSphere::Pointer sphereShape = shape3DSphere::New();
-	Translation3DTransform::Pointer translation3D = Translation3DTransform::New();
+	TranslationScale3DTransform::Pointer transform = TranslationScale3DTransform::New();
 	PoseTransformedBinaryShape<3>::Pointer sphere = PoseTransformedBinaryShape<3>::New();
 
-	vnl_vector<double> sphereRadius(1);	sphereRadius(0) = 2.215;	sphereShape->SetParameters(sphereRadius);
-	vnl_vector<double> trans3D(3);		trans3D.fill(0);			translation3D->SetParameters(trans3D);
-	sphere->SetShapeAndTransform(sphereShape, translation3D);
-
-	typedef PoseTransformedBinaryShape<3>::BaseClass Base3DObjectType;	
+	vnl_vector<double> pose3D(4); pose3D.fill(0); pose3D(3) = 2.215; 
+	transform->SetParameters(pose3D);
+	sphere->SetShapeAndTransform(sphereShape, transform);
 
 	//typedef LabelMapScene<3, unsigned char, unsigned short, ObjectCostsAndPixelSetContainer, PixelSetIntersectionContainer> Scene3DType;
 	//typedef PixelSetObjectOverlap<Scene3DType> InteractionManagerType;
@@ -389,14 +386,12 @@ void TestLabelImageScene() {
 	std::cout<<"\n\n TestLabelImageScene: draw a few spheres, some with overlaps, remove some, test that the overlaps are properly managed."<<std::endl;
 
 	shape3DSphere::Pointer sphereShape = shape3DSphere::New();
-	Translation3DTransform::Pointer translation3D = Translation3DTransform::New();
+	TranslationScale3DTransform::Pointer transform = TranslationScale3DTransform::New();
 	PoseTransformedBinaryShape<3>::Pointer sphere = PoseTransformedBinaryShape<3>::New();
 
-	vnl_vector<double> sphereRadius(1);	sphereRadius(0) = 2.215;	sphereShape->SetParameters(sphereRadius);
-	vnl_vector<double> trans3D(3);		trans3D.fill(0);			translation3D->SetParameters(trans3D);
-	sphere->SetShapeAndTransform(sphereShape, translation3D);
-
-	typedef PoseTransformedBinaryShape<3>::BaseClass Base3DObjectType;	
+	vnl_vector<double> pose3D(4); pose3D.fill(0); pose3D(3) = 2.215; 
+	transform->SetParameters(pose3D);
+	sphere->SetShapeAndTransform(sphereShape, transform);
 
 	//typedef LabelImageScene<3, unsigned char, unsigned short, ObjectCostsAndPixelSetContainer, PixelSetIntersectionContainer> Scene3DType;
 	typedef LabelImageScene<3, unsigned char, unsigned short, ObjectCostsContainer, LabelObjectIntersectionContainer<unsigned short, 3>> Scene3DType;
@@ -481,12 +476,12 @@ void TestModificationsLabelImageScene() {
 	std::cout<<"\n\n TestModificationsLabelImageScene: draw 3 spheres, two partially overlapping. A fourth ball is introduced, and translated such that it passes through various overlap configurations..."<<std::endl;
 
 	shape3DSphere::Pointer sphereShape = shape3DSphere::New();
-	Translation3DTransform::Pointer translation3D = Translation3DTransform::New();
+	TranslationScale3DTransform::Pointer transform = TranslationScale3DTransform::New();
 	PoseTransformedBinaryShape<3>::Pointer sphere = PoseTransformedBinaryShape<3>::New();
 
-	vnl_vector<double> sphereRadius(1);	sphereRadius(0) = 5; sphereShape->SetParameters(sphereRadius);
-	vnl_vector<double> trans3D(3);		trans3D.fill(0);     translation3D->SetParameters(trans3D);
-	sphere->SetShapeAndTransform(sphereShape, translation3D);
+	vnl_vector<double> pose3D(4); pose3D.fill(0); pose3D(3) = 2.215; 
+	transform->SetParameters(pose3D);
+	sphere->SetShapeAndTransform(sphereShape, transform);
 
 	typedef PoseTransformedBinaryShape<3>::BaseClass Base3DObjectType;	
 
@@ -568,7 +563,7 @@ void TestModificationsLabelImageScene() {
 int main(int argc, char** argv) {
 
 	try {
-	TestVTKScene();
+		TestVTKScene();
 
 //		Test2DVTKSceneWithOverlapMonitoring(); //TODO
 		Test3DVTKSceneWithOverlapMonitoring();

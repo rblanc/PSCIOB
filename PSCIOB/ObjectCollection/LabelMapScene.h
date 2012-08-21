@@ -65,16 +65,11 @@ public:
 	std::string GetClassName() const { return "LabelMapScene"; }
 	void PrintInfo()           const { std::cout<<"LabelMapScene containing "<<GetNumberOfObjects()<<", for a total of "<<GetNumberOfParameters()<<std::endl;}
 
-	/** Set physical bounding Box and pixel spacing
-	* the actual bounding box will be slightly modify, to ensure that the origin will be at the center of a pixel (even if outside the actual grid)
-	* overloads the base implementation, and allocate memory for the volume
-	*/
-	using Superclass::SetPhysicalDimensions;
-	void SetPhysicalDimensions(const vnl_vector<double> &physicalBoundingBox, const vnl_vector<double> &spacing);
-
 protected:	
 	LabelMapScene();
 	virtual ~LabelMapScene() {};	
+
+	void AllocateFromPhysicalDimension();
 
 	//Test methods
 	SceneObjectOverlapCode TestOverlap_Internal(ObjectInScene *object);

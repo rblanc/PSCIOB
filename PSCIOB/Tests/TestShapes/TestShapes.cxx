@@ -295,9 +295,9 @@ void LabelMapExample() {
 	Similarity2DTransform::Pointer transf = Similarity2DTransform::New();
 	shape2DRectangle::Pointer shape = shape2DRectangle::New();
 
-	vnl_vector<double> sp(2); sp(0) = 5.63045; sp(1) = 2.105;
+	vnl_vector<double> sp(1); sp(0) = 2.5;
 	shape->SetParameters(sp);
-	vnl_vector<double> pp(4); pp(0)=1; pp(1)=50; pp(2)=-25; pp(3)=0.85;
+	vnl_vector<double> pp(4); pp(0)=1; pp(1)=50; pp(2)=-25; pp(3)=5.12;
 	transf->SetParameters(pp);
 
 	PoseTransformedBinaryShape<2>::Pointer object = PoseTransformedBinaryShape<2>::New();

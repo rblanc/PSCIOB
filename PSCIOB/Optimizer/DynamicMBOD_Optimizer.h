@@ -85,7 +85,7 @@ public:
 	/** The optimization manager must derive from a SceneOptimizationManager_Base */
 	typedef SingleSceneObjectOptimizationManager<TScene> LocalOptimizationManagerType;	
 	/** The birth map should be of format double. */
-	typedef itk::Image<double, SceneType::Dimension>              BirthMapType;
+	typedef itk::Image<double, SceneType::Dimension>     BirthMapType;
 	/** The local optimization manager must derive from a SceneOptimizationManager_Base */
 	typedef SceneOptimizationManager_Base<SceneType>     OptimizationManagerType;
 
@@ -175,16 +175,32 @@ public:
 		if (!m_manager) throw DeformableModelException("Exception in DynamicMBOD_Optimizer: the optimization manager should derive from SceneOptimizationManager_Base");
 		m_scene = m_manager->GetScene();
 		if (!m_scene) throw DeformableModelException("Exception in DynamicMBOD_Optimizer: the given optimization manager is not related to any scene!");
-
+		
+		if (m_verbose) std::cout<<"Starting DynamicMBOD_Optimizer"<<std::endl;
 		m_library = m_scene->GetObjectTypesLibrary();
 
 		//create the local scene, which will be used for local optimizations
-		m_localScene = SceneType::New(); //TODO: check that they are configured in the same way (insertion policy, etc...)
-		m_localScene->SetPhysicalDimensions( m_scene->GetSceneBoundingBox(), m_scene->GetSceneSpacing().GetVnlVector() );
+		//m_localScene->SetPhysicalDimensions( m_scene->GetSceneBoundingBox(), m_scene->GetSceneSpacing().GetVnlVector() );
+		m_localScene->SetPhysicalDimensions( m_scene->GetSceneOrigin(), m_scene->GetSceneSpacing(), m_scene->GetSceneImageRegion().GetSize() );
+std::cout<<"Scene origin: "<<m_scene->GetSceneOrigin()<<std::endl;
+std::cout<<"Scene spacing: "<<m_scene->GetSceneSpacing()<<std::endl;
+std::cout<<"Scene size: "<<m_scene->GetSceneImageRegion().GetSize()<<std::endl;
+std::cout<<"Scene bbox: "<<m_scene->GetSceneBoundingBox()<<std::endl;
+
+std::cout<<"Local Scene origin: "<<m_localScene->GetSceneOrigin()<<std::endl;
+std::cout<<"Local Scene spacing: "<<m_localScene->GetSceneSpacing()<<std::endl;
+std::cout<<"Local Scene size: "<<m_localScene->GetSceneImageRegion().GetSize()<<std::endl;
+std::cout<<"Local Scene bbox: "<<m_localScene->GetSceneBoundingBox()<<std::endl;
+
+
 		m_localScene->FuseObjectTypesLibrary( m_scene->GetObjectTypesLibrary() );
 		m_localScene->SetGlobalPrior( m_scene->GetGlobalPrior()->CreateClone() ); //TODO: I should make sure they are properly configured. (if there are parameters to set, ...)
 		m_localScene->SetObjectPriorNormalizationFunction( m_scene->GetObjectPriorNormalizationFunction() );
-		m_localScene->SetTrackChanges( m_scene->GetTrackChangesStatus() );
+		////m_localScene->SetTrackChanges( m_scene->GetTrackChangesStatus() );
+		//for (SceneType::SensorInterfaceListType::iterator it = m_scene->GetListOfConnectedSensors().begin() ; 
+		//	it != m_scene->GetListOfConnectedSensors().end() ; ++it) {
+		//		m_localScene->ConnectSensor(*it);
+		//}
 
 		//configure the local optimizer to work on this local scene
 		m_localOptimizationManager->SetScene(m_localScene);
@@ -195,7 +211,6 @@ public:
 
 		bool converged = false;
 		unsigned successiveFailures = 0;
-
 
 		if (!m_birthMap) {
 			//if the birth map is unspecified -> generate a uniform grid, the same size and resolution as the scene image, filled with 1
@@ -226,6 +241,7 @@ public:
 		IDType tmpLabel, label; 
 		std::vector<ObjectCosts> listObjects; unsigned nbRemovedObjects;
 		SceneObjectIterator<SceneType> objectIt(m_scene);
+
 		for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
 			label = objectIt.GetID();
 			//put the object in the local scene and get its local cost
@@ -285,10 +301,13 @@ public:
 					tmpObj = m_library->GenerateNewRandomObject(requestedObjectType);
 					//redefine the object center (draw uniformly inside the birthMap pixel...
 					const BirthMapType::IndexType &BMindex = itBM.GetIndex();
+					initialParam = tmpObj->GetParameters();
 					tmpOffset = m_translationRndGen->DrawSample();
-					for (unsigned i=0 ; i<SceneType::Dimension ; i++) pos(i) = BMorigin[i] + BMindex[i]*BMspacing[i] + tmpOffset(i);
-					tmpObj->PositionAt(pos);
-
+					for (unsigned i=0 ; i<SceneType::Dimension ; i++) {
+						pos(i) = BMorigin[i] + BMindex[i]*BMspacing[i] + tmpOffset(i);
+						initialParam(i) = pos(i);
+					}
+					tmpObj->SetParameters(initialParam);
 					//add it to the local scene
 					tmpLabel = m_localScene->AddObject( tmpObj );	// what about specific object insertion policies??	//should child classes of Scene_Base force specific policies (e.g. label map ; or binary map <-> boolean model ; or ADD mode <-> shot noise, ...)
 					if (tmpLabel==0) continue; //warning: it could happen that the object is not accepted inside the scene.
@@ -296,8 +315,10 @@ public:
 					initialParam = m_localScene->GetParametersOfObject(tmpLabel);
 					//optimize that object locally
 					m_localOptimizationManager->SelectObject(tmpLabel);
+					m_localOptimizationManager->GetCostFunction();
+		std::cout<<"value before: "<<m_localOptimizationManager->GetCostFunction()->GetValue()<<std::endl;
 					m_localOptimizationManager->Optimize();
-					//add the optimized object into the real scene, and clean the local scene.
+		std::cout<<"value after: "<<m_localOptimizationManager->GetCostFunction()->GetValue()<<std::endl;					//add the optimized object into the real scene, and clean the local scene.
 					label = m_scene->AddObject( m_localScene->GetObject(tmpLabel)->obj );
 					listObjects.push_back( ObjectCosts(label, m_localOptimizationManager->GetValue()) );
 					m_localScene->RemoveObject(tmpLabel);
@@ -378,11 +399,11 @@ public:
 				std::cout<<", nb obj: "<<m_scene->GetNumberOfObjects()<<" ; energy: "<<currentEnergy<<" (best = "<<bestEnergy<<") ** time: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s"<<std::endl;
 				Write2DGreyLevelRescaledImageToFile<BirthMapType>("birthMap_" + stringify(nbiter) + ".png", m_birthMap);
 				
-				
-				thresholdFilter->SetInput(m_scene->GetSceneAsLabelImage());
-				thresholdFilter->SetLowerThreshold(1); thresholdFilter->SetInsideValue(200); thresholdFilter->SetOutsideValue(0);
-				thresholdFilter->Update();
-				Write2DGreyLevelRescaledImageToFile<SceneType::BinaryImageType>("binaryScene_" + stringify(nbiter) + ".png", thresholdFilter->GetOutput());
+				WriteMirrorPolyDataToFile("tmpVTKScene_" + stringify(nbiter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
+				//thresholdFilter->SetInput(m_scene->GetSceneAsLabelImage());
+				//thresholdFilter->SetLowerThreshold(1); thresholdFilter->SetInsideValue(200); thresholdFilter->SetOutsideValue(0);
+				//thresholdFilter->Update();
+				//Write2DGreyLevelRescaledImageToFile<SceneType::BinaryImageType>("binaryScene_" + stringify(nbiter) + ".png", thresholdFilter->GetOutput());
 
 				//Write2DGreyLevelRescaledImageToFile<BirthMapType>("binaryScene_" + stringify(nbiter) + ".png", m_birthMap);
 			}
@@ -391,6 +412,11 @@ public:
 		return manager->GetValue();	//the manager will return to the best visited state in case this is not the case
 
 	}
+
+	/** get pointer to the internal, local scene 
+	* (test)
+	*/
+	SceneType* GetLocalScene() {return m_localScene;} 
 
 protected:
 	DynamicMBOD_Optimizer() : Optimizer_Base() {
@@ -419,6 +445,9 @@ protected:
 
 		m_verbose = false;
 		thresholdFilter = BinaryThresholdImageFilterType::New();
+
+		m_localScene = SceneType::New(); //TODO: check that they are configured in the same way (insertion policy, etc...)
+
 	};
 	~DynamicMBOD_Optimizer() {};
 

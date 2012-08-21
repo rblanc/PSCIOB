@@ -345,6 +345,66 @@ void TestIntersection3DPolyData() {
 #include <vtkActorCollection.h>
 #include <vtkProperty.h> 
 
+void TestVTKRenderImageAndZBuffer() {
+	std::cout<<"test vtk rendering image and zbuffer..."<<std::endl;
+
+	vtkSphereSource *sphereSource = vtkSphereSource::New();
+	sphereSource->SetThetaResolution(20);sphereSource->SetPhiResolution(20);
+	sphereSource->SetCenter(0,0,0); sphereSource->SetRadius(8); 
+
+	vtkRenderer *renderer = vtkRenderer::New();  renderer->SetBackground(0,0,0);
+	vtkRenderWindow *renderWindow = vtkRenderWindow::New(); 
+	renderWindow->SetOffScreenRendering(1);
+	renderWindow->SetSize(100, 100);
+
+	vtkPolyDataMapper *map = vtkPolyDataMapper::New(); map->SetInput( sphereSource->GetOutput() );
+	vtkActor *actor = vtkActor::New(); actor->SetMapper(map); 
+
+	renderer->AddActor(actor);
+
+	renderWindow->AddRenderer( renderer ); 
+	vtkCamera *camera = vtkCamera::New();
+	camera->ParallelProjectionOn();
+
+	double cameraOffset = 10*0.5;
+	camera->SetFocalPoint( 0, 0, 0 );
+	camera->SetPosition( -16, 0, 0);
+	camera->SetViewUp(0,0,1);
+	camera->SetParallelScale( 8 );
+	camera->SetClippingRange( 0, cameraOffset + 10 );
+
+	renderer->SetActiveCamera(camera);
+
+vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::New(); 
+iren->SetRenderWindow(renderWindow); 
+
+	renderWindow->Render();
+	float *zbuff = renderWindow->GetZbufferData(0, 0, 99, 99);
+	unsigned char *pixbuff = renderWindow->GetPixelData(0, 0, 99, 99, 0);
+
+	itk::Image<float>::Pointer zbuffImg = itk::Image<float>::New();
+	itk::Image<unsigned char>::Pointer pixbuffImg = itk::Image<unsigned char>::New();
+	itk::Image<float>::SizeType size; size[0]=100;size[1]=100;
+	itk::Image<float>::IndexType index; index[0]=0;index[1]=0;
+	itk::Image<float>::RegionType region; region.SetSize(size);region.SetIndex(index);
+	zbuffImg->SetRegions(region); pixbuffImg->SetRegions(region);
+	zbuffImg->Allocate(); pixbuffImg->Allocate();
+	float *zb = zbuffImg->GetBufferPointer();
+	unsigned char *pb = pixbuffImg->GetBufferPointer();
+
+	for (unsigned i=0 ; i<100*100 ; i++) { 
+		zb[i] = zbuff[i];
+		pb[i] = (pixbuff[3*i] + pixbuff[3*i+1] + pixbuff[3*i+2])/3;
+	}
+	
+	Write2DGreyLevelRescaledImageToFile<itk::Image<float>>("TestVTK_ZBuffer.png", zbuffImg);
+	Write2DGreyLevelRescaledImageToFile<itk::Image<unsigned char>>("TestVTK_Img.png", pixbuffImg);
+//iren->Start();
+
+	delete [] zbuff;
+	delete [] pixbuff;
+iren->Delete();
+}
 
 void TestVTKRenderLeak() {
 	std::cout<<"test leak..."<<std::endl;
@@ -469,9 +529,11 @@ int main(int argc, char** argv) {
 
 	//TestIntersection3DPolyData(); 
 
+	TestVTKRenderImageAndZBuffer();
+
 	//TestVTKRenderLeak();
 
-	TestVTKRenderNoLeak();
+	//TestVTKRenderNoLeak();
 
 	return 1;
 }

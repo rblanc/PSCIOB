@@ -739,8 +739,10 @@ protected:
 		m_direction = HORIZONTAL; m_dirAxis0=0;m_dirAxis1=1;m_dirAxis2=2;
 		m_orientationParams.set_size(1); m_orientationParams(0)=m_direction;
 
-		GPF_ExpDecrFunction<double, double>::Pointer exp_fct = GPF_ExpDecrFunction<double, double>::New();	
-		exp_fct->SetParameter(250);
+		GPF_ScExpDecrFunction<double, double>::Pointer exp_fct = GPF_ScExpDecrFunction<double, double>::New();	
+		vnl_vector<double> params(2); params(0) = 250; params(1) = 1.0/10.0;
+		exp_fct->SetParameters(params);
+
 		m_function = exp_fct;
 		m_appearanceFunctionFlag = true;
 
@@ -863,22 +865,41 @@ protected:
 		//a first step however would be to get only a smaller portion of the zbuffer
 		//not trivial for the labelmap , see other comments (top of the file, and functions below) about it.
 std::cout<<"UPDATE_DATA, SIMPLESEMSENSOR... using vtk ; seems broken..."<<std::endl;
-		vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New(); renderer->SetBackground(0,0,0);
-		renderer->RemoveAllLights(); renderer->AddLight(m_light);
+//		vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New(); 
+//renderer->SetBackground(0.5,0.5,0.5);
+//		renderer->SetBackground(0,0,0);
+//		renderer->RemoveAllLights(); renderer->AddLight(m_light);
+//renderer->SetActiveCamera(m_camera);
+		//SceneObjectIterator<SceneType> it(m_scene);
 
-		SceneObjectIterator<SceneType> it(m_scene);
-		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
-			//TODO: check that actor is uptodate... and remember that the object may not be instanciated!
-			renderer->AddActor( it.GetObject()->actor ); 
-		}
-		
+		//for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
+		//	if (!it.GetObject()->actorFlag) {
+		//		vtkSmartPointer<vtkPolyDataMapper> map = vtkSmartPointer<vtkPolyDataMapper>::New(); 
+		//		map->SetInput( it.GetObject()->obj->GetObjectAsVTKPolyData() ); 
+		//		it.GetObject()->actor = vtkSmartPointer<vtkActor>::New(); 
+		//		it.GetObject()->actor->SetMapper(map); 
+		//		unsigned tmpid = it.GetObject()->id%(255*255), R = it.GetObject()->id/(255*255), G = tmpid/255, B = tmpid%255;
+		//		it.GetObject()->actor->GetProperty( )->SetColor(R/255.0,G/255.0,B/255.0); 
+		//		it.GetObject()->actorFlag = true;
+		//	//}
+		//	//TODO: check that actor is uptodate... and remember that the object may not be instanciated!
+		//	renderer->AddActor( it.GetObject()->actor ); 
+		//}
+
 		vtkRenderWindow *renderWindow = vtkRenderWindow::New(); 
-		renderWindow->SetOffScreenRendering(1);
+//		renderWindow->SetOffScreenRendering(1);
 
 		renderWindow->SetSize(m_outputSize[0], m_outputSize[1]);
+//renderWindow->AddRenderer( renderer ); 
+ m_scene->GetSceneRenderer()->SetBackground(0.5,0.5,0.5);
 		renderWindow->AddRenderer( m_scene->GetSceneRenderer() ); 
 
+vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::New(); 
+//iren->SetRenderWindow(renderWindow); 
+
 		renderWindow->Render(); // THE PROBLEM APPARENTLY COMES FROM CALLING ->Render multiple times on the same renderWindow...
+		std::cout<<"direction = "<<m_direction<<std::endl;
+
 		float *zbuff = renderWindow->GetZbufferData(0, 0, m_outputSize[0]-1, m_outputSize[1]-1);
 		unsigned char *pixbuff = renderWindow->GetPixelData(0, 0, m_outputSize[0]-1, m_outputSize[1]-1, 0);
 
@@ -911,6 +932,7 @@ std::cout<<"UPDATE_DATA, SIMPLESEMSENSOR... using vtk ; seems broken..."<<std::e
 					currentLabel = 0;
 					for (unsigned i=0 ; i<m_outputSize[0] ; i++) {
 						dist = (zbuff[i+j*m_outputSize[0]]-m_cameraTransformMat->GetElement(2,3))/m_cameraTransformMat->GetElement(2,0) - sceneBBox(0);
+std::cout<<"pixel "<<i<<", "<<j<<", zbuff = "<<zbuff[i+j*m_outputSize[0]]<<", dist = "<<dist<<", fct = "<<m_function->Evaluate( dist )<<", pixbuff = "<<(float)pixbuff[3*(i+j*m_outputSize[0])]<<", "<<(float)pixbuff[3*(i+j*m_outputSize[0])+1]<<", "<<(float)pixbuff[3*(i+j*m_outputSize[0])+2]<<std::endl;
 						outBuff[(m_outputSize[0]-i-1)+j*m_outputSize[0]] = m_function->Evaluate( dist );
 
 						//not sure why this /2 is necessary, but it does in the ToyApplication to recover the correct label / id
@@ -1023,6 +1045,9 @@ std::cout<<"UPDATE_DATA, SIMPLESEMSENSOR... using vtk ; seems broken..."<<std::e
 		delete [] zbuff;
 		delete [] pixbuff;
 		renderWindow->Delete();
+//iren->Start(); 
+//iren->Delete();
+
 	}
 
 	//The following is an unfinished attempt for updating the images

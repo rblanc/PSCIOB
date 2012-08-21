@@ -144,7 +144,7 @@ clock_t t0=clock();
 	SensorType::Pointer sensor3D = SensorType::New();
 	sensor3D->SetScene(scene3D);
 	sensor3D->SetObservationDirectionType(HORIZONTAL);
-	vnl_vector<double> appearanceParams(1); appearanceParams(0)=200; sensor3D->SetAppearanceParameters(appearanceParams);
+	vnl_vector<double> appearanceParams(2); appearanceParams(0)=250;appearanceParams(1)=1.0/10.0; sensor3D->SetAppearanceParameters(appearanceParams);
 
 
 	//GENERATE A REFERENCE IMAGE... with possibly different resolution, ...

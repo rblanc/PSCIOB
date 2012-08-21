@@ -53,8 +53,6 @@ m_labelMapFlag(false), m_rendererFlag(false), m_labelImageFlag(false) {
 	m_BoundaryConditionManagement = BOUNDARYCONDITIONS_VOID; //default: no boundaries conditions
 	m_insertionPolicy = ACCEPTALL; //default: accept all objects provided they are not fully outside the scene
 
-	m_trackChanges = false;
-
 	//main scene representations
 	m_labelMap = LabelMapType::New();
 	m_renderer = vtkSmartPointer<vtkRenderer>::New(); m_renderer->SetBackground(0,0,0);
@@ -87,6 +85,8 @@ BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>
 	m_labelMap->SetRegions( m_sceneImageRegion );
 	m_labelMap->SetSpacing( m_sceneSpacing );
 	m_labelMap->SetOrigin( m_sceneOrigin );
+	
+	AllocateFromPhysicalDimension();
 }
 
 template<unsigned int VDimension, class TAppearance, class TObjectId, class TAssociatedData, class TInteractionData>
@@ -96,6 +96,24 @@ BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>
 	SetPhysicalDimensions(physicalBoundingBox, sp);
 }
 
+//
+// SetPhysicalDimensions
+//
+template<unsigned int VDimension, class TAppearance, class TObjectId, class TAssociatedData, class TInteractionData>
+void 
+BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::SetPhysicalDimensions(
+	typename BinaryImageType::PointType origin, 
+	typename BinaryImageType::SpacingType spacing, 
+	typename BinaryImageType::SizeType size) 
+{
+	m_sceneOrigin = origin;
+	m_sceneSpacing = spacing;
+	m_sceneSize = size;
+	m_sceneImageRegion.SetSize(size);
+	m_sceneBBox = BoundingBoxFromITKImageInformation<BinaryImageType>( m_sceneOrigin, m_sceneSpacing, m_sceneImageRegion );
+	
+	AllocateFromPhysicalDimension();
+}
 
 //
 // TestObjectInsertionAcceptance_Internal
@@ -328,10 +346,11 @@ BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>
 	m_interactionManager->AddObject(&m_arrayObjects[newObject.id-1]);
 
 	//track changes for the sensor
-	if (m_trackChanges) {
+	if (!m_listConnectedSensors.empty()) {
 		LabelImageType::RegionType	regionInScene;
 		ITKImageRegionFromBoundingBox<Dimension>(m_sceneSpacing, m_sceneOrigin, m_sceneSize, m_arrayObjects[newObject.id-1].obj->GetPhysicalBoundingBox(), &regionInScene);
 		TrackModifications(regionInScene);
+//std::cout<<"ADD phys bbox: "<<m_arrayObjects[newObject.id-1].obj->GetPhysicalBoundingBox()<<" -- index: "<<regionInScene.GetIndex()<<" ; size: "<<regionInScene.GetSize()<<" ; params: "<<m_arrayObjects[newObject.id-1].obj->GetParameters()<<std::endl;
 	}
 
 	//any other action to take? if some actions are added here, their 'undoing' shall be also added to the RemoveObject method
@@ -353,10 +372,11 @@ BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>
 	if ( m_arrayObjects[id-1].id == 0 ) return false;
 	m_remCounter++;
 	//track changes for the sensor
-	if (m_trackChanges) {
+	if (!m_listConnectedSensors.empty()) {
 		LabelImageType::RegionType regionInScene;
 		ITKImageRegionFromBoundingBox<Dimension>(m_sceneSpacing, m_sceneOrigin, m_sceneSize, m_arrayObjects[id-1].obj->GetPhysicalBoundingBox(), &regionInScene);
 		TrackModifications(regionInScene);
+//std::cout<<"REM phys bbox: "<<m_arrayObjects[id-1].obj->GetPhysicalBoundingBox()<<" -- index: "<<regionInScene.GetIndex()<<" ; size: "<<regionInScene.GetSize()<<" ; params: "<<m_arrayObjects[id-1].obj->GetParameters()<<std::endl;
 	}
 
 	//update the scene prior and object interaction manager
@@ -410,12 +430,14 @@ BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>
 	if (!TestObjectInsertionAcceptanceIgnoringObjectID_Internal(&newObject, id)) return false;
 	//ok for the modification 
 	//track changes for the sensor
-	if (m_trackChanges) {
+	if (!m_listConnectedSensors.empty()) {
 		LabelImageType::RegionType	regionInScene;
 		ITKImageRegionFromBoundingBox<Dimension>(m_sceneSpacing, m_sceneOrigin, m_sceneSize, m_arrayObjects[id-1].obj->GetPhysicalBoundingBox(), &regionInScene);
 		TrackModifications(regionInScene);
+//std::cout<<"M-R phys bbox: "<<m_arrayObjects[id-1].obj->GetPhysicalBoundingBox()<<" -- index: "<<regionInScene.GetIndex()<<" ; size: "<<regionInScene.GetSize()<<" ; params: "<<m_arrayObjects[id-1].obj->GetParameters()<<std::endl;
 		ITKImageRegionFromBoundingBox<Dimension>(m_sceneSpacing, m_sceneOrigin, m_sceneSize, newObject.obj->GetPhysicalBoundingBox(), &regionInScene);
 		TrackModifications(regionInScene);
+//std::cout<<"M-A phys bbox: "<<newObject.obj->GetPhysicalBoundingBox()<<" -- index: "<<regionInScene.GetIndex()<<" ; size: "<<regionInScene.GetSize()<<" ; params: "<<newObject.obj->GetParameters()<<" ; spacing: "<<m_sceneSpacing<<std::endl;
 	}
 
 	//inform the scene prior and interaction manager
@@ -639,33 +661,11 @@ BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>
 
 //
 template<unsigned int VDimension, class TAppearance, class TObjectId, class TAssociatedData, class TInteractionData>
+inline
 void 
 BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::TrackModifications(typename BinaryImageType::RegionType region) {
-	if ( m_modifiedRegions.empty() ) {m_modifiedRegions.push_back(region);}
-	else { 
-		//TODO: this is fairly suboptimal..., currently, I change m_modifiedRegions to the axis-aligned bbox that contains both the old and new regions.
-		//OPTIMIZATION: if the regions don't intersect, add a new region to the vector, otherwise merge some regions 
-		// this can become a bit complex because different existing elements of the vector may need to be merged after a while, etc...
-		// other possibility is, on the contrary, to increase the number of regions, extracting minimal rectangular parts
-		//  _______             _______
-		//  |  1  |             |  1| |
-		//  |   __|__           |   | |__
-		//  |___|_|  |     =>   |___|2| 3|
-		//      |  2 |              | |  |
-		//      |____|              |_|__|
-		LabelImageType::IndexType modifiedStart = m_modifiedRegions[0].GetIndex();
-		LabelImageType::SizeType  modifiedSize = m_modifiedRegions[0].GetSize();		
-		const LabelImageType::IndexType &currentStart = region.GetIndex();
-		const LabelImageType::SizeType  &currentSize  = region.GetSize();
-		unsigned int modifiedEnd;
-		for (unsigned i=0 ; i<Dimension ; i++) {
-			modifiedEnd = std::max<unsigned>(modifiedStart[i] + modifiedSize[i], currentStart[i] + currentSize[i]);
-			modifiedStart[i] = std::min<unsigned>( modifiedStart[i], currentStart[i] );
-			modifiedSize[i] = modifiedEnd - modifiedStart[i];
-		}
-		m_modifiedRegions[0].SetIndex(modifiedStart); m_modifiedRegions[0].SetSize(modifiedSize);
-		
-		//m_modifiedRegions;
+	for (SensorInterfaceListType::iterator it = m_listConnectedSensors.begin() ; it!=m_listConnectedSensors.end() ; ++it) {
+		(*it)->AddModifiedSceneRegion(region);
 	}
 }
 

@@ -133,7 +133,11 @@ public:
 		m_localScene->FuseObjectTypesLibrary( m_scene->GetObjectTypesLibrary() );
 		m_localScene->SetGlobalPrior( m_scene->GetGlobalPrior()->CreateClone() ); //TODO: I should make sure they are properly configured. (if there are parameters to set, ...)
 		m_localScene->SetObjectPriorNormalizationFunction( m_scene->GetObjectPriorNormalizationFunction() );
-		m_localScene->SetTrackChanges( m_scene->GetTrackChangesStatus() );
+		////m_localScene->SetTrackChanges( m_scene->GetTrackChangesStatus() );
+		//for (SceneType::SensorInterfaceListType::iterator it = m_scene->GetListOfConnectedSensors().begin() ; 
+		//	it != m_scene->GetListOfConnectedSensors().end() ; ++it) {
+		//		m_localScene->ConnectSensor(*it);
+		//}
 
 		//configure the local optimizer to work on this local scene
 		m_localOptimizationManager->SetScene(m_localScene);

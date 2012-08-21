@@ -358,7 +358,7 @@ int main(int argc, char** argv) {
 			//check if things are still moving...
 
 			//
-			if (t>100) converged=true;
+			if (t>200) converged=true;
 
 		}
 

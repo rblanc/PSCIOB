@@ -77,13 +77,21 @@
 #include <vtkActorCollection.h>
 #include <vtkProperty.h> 
 
+#include "SensorSceneInterface.h"
 
 namespace psciob {
 
 /** \class BaseScene
 * \brief BaseScene
-* add description here
-*
+* base class to handle a collection of ParametricObject, associating a unique identifier to each object
+* attach various pdfs and likelihoods through a ObjectTypesLibrary
+* monitor interaction through an ObjectInteractionManager, etc...
+* \sa ParametricObject
+* \sa SensorSceneInterface
+* \sa ObjectInSceneDataContainers
+* \sa ObjectTypesLibrary
+* \sa SceneGlobalPrior_Base
+* \sa ObjectInteractionManager
 */
 
 
@@ -119,7 +127,7 @@ public:
 	* otherwise unsigned short should be fine with up to 65535 objects
 	* The IDType is also used as the pixel type for the label image
 	*/
-	typedef TObjectId                     IDType;
+	typedef TObjectId                               IDType;
 
 	/** Type of the Label Image that may be produced out of the scene */
 	typedef itk::Image<IDType, Dimension>			LabelImageType;
@@ -235,6 +243,10 @@ public:
 		FORBIDPARTIALLYOUTSIDE,
 	} SceneObjectInsertionPolicyCode;
 
+	/** */
+	typedef SensorSceneInterface<BaseClass>             SensorInterfaceType;
+	typedef typename std::vector<SensorInterfaceType *> SensorInterfaceListType;
+
 	/** Give Information about Self */
 	virtual std::string GetClassName() const = 0;
 	virtual void PrintInfo()           const = 0;
@@ -243,7 +255,8 @@ public:
 	* the actual bounding box will be slightly modify, to ensure that the origin will be at the center of a pixel (even if outside the actual grid)
 	*/
 	void SetPhysicalDimensions(const vnl_vector<double> &physicalBoundingBox, double spacing = 1.0);
-	virtual void SetPhysicalDimensions(const vnl_vector<double> &physicalBoundingBox, const vnl_vector<double> &spacing);
+	void SetPhysicalDimensions( typename BinaryImageType::PointType origin, typename BinaryImageType::SpacingType spacing, typename BinaryImageType::SizeType size);
+	void SetPhysicalDimensions(const vnl_vector<double> &physicalBoundingBox, const vnl_vector<double> &spacing);
 
 	/** Get information about the scene physical dimensions */
 	vnl_vector<double>                    GetSceneBoundingBox() const { return m_sceneBBox; }
@@ -605,10 +618,35 @@ public:
 	bool LoadSceneFromFile(std::string filename);
 
 
-	/** track modifications - essentially for usage by the sensor */
-	void SetTrackChanges(bool b) { m_trackChanges = b; }
-	bool GetTrackChangesStatus() { return m_trackChanges; }
-	std::vector<typename BinaryImageType::RegionType> GetSensorModifiedRegions() const { return m_modifiedRegions; }
+	/** Connect a sensor to the scene, so it can be informed of modifications of the scene 
+	* checks if the sensor is already connected, and ignore the command in this case.
+	*/
+	void ConnectSensor(SensorInterfaceType *s) {
+		bool alreadyThere = false;
+		for (unsigned i=0 ; i<m_listConnectedSensors.size() ; i++) {
+			if (m_listConnectedSensors[i]==s) { alreadyThere=true; return; }
+		}
+		if (!alreadyThere) m_listConnectedSensors.push_back(s);
+	}
+
+	/** Disconnect a sensor from the scene */
+	void DisconnectSensor(SensorInterfaceType *s) {
+		for (unsigned i=0 ; i<m_listConnectedSensors.size() ; i++) {
+			if (m_listConnectedSensors[i]==s) {
+				m_listConnectedSensors[i] = m_listConnectedSensors.back();
+				m_listConnectedSensors.pop_back();
+				break;
+			}
+		}
+	}
+
+	/** Get list of connected sensors 
+	* \todo output should be const
+	*/
+	SensorInterfaceListType GetListOfConnectedSensors() {
+		return m_listConnectedSensors;
+	}
+
 
 	unsigned long m_addCounter, m_remCounter, m_modCounter;
 protected:	
@@ -667,6 +705,9 @@ protected:
 		}		
 	}
 
+	// Allocate memory for internal representations
+	virtual void AllocateFromPhysicalDimension() {}
+
 	// draws the object ; 
 	virtual void DrawObjectInScene(IDType id)    = 0;	//this method be implemented only in the leaf class when all insertion policies have been defined (do I write in the label image, in both the label and the textured image, do I authorize object overlaps, etc...)
 	virtual void EraseObjectFromScene(IDType id) = 0;
@@ -674,11 +715,8 @@ protected:
 
 
 	// Track the modifications in the scene (in particular to inform the sensor which regions have changed, and need to be updated)
-	bool m_trackChanges;
-	std::vector<typename BinaryImageType::RegionType> m_modifiedRegions;
-	std::map<IDType, unsigned char> m_modifiedIDs; //
+	SensorInterfaceListType m_listConnectedSensors;
 	void TrackModifications(typename BinaryImageType::RegionType region);
-	void ResetSensorModifiedRegions() { m_modifiedRegions.clear(); }
 
 private:
 	BaseScene(const Self&);                 //purposely not implemented

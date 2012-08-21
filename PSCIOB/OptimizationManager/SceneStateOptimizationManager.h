@@ -55,9 +55,9 @@ public:
 	itkTypeMacro(SceneStateOptimizationManager, SceneOptimizationManager_Base);
 	itkNewMacro(Self);
 
-	void SetScene(SceneType* scene)		{ 
-		m_scene = scene; 
-	}
+	//void SetScene(SceneType* scene)	{ 
+	//	m_scene = scene; 
+	//}
 
 	inline unsigned int GetNumberOfParameters()		{ return m_scene->GetNumberOfParameters(); }
 

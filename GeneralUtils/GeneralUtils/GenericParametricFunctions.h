@@ -220,6 +220,33 @@ private:
 	const Self & operator=( const Self & );		//purposely not implemented
 };
 
+/** \class GPF_ScExpDecrFunction
+* \brief GPF_ScExpDecrFunction: p0*exp(-p1*x)
+* default: p0 = 1, p1 = 1
+*/
+template<class TInputType, class TOutputType>
+class GPF_ScExpDecrFunction : public GenericParametricFunctions<TInputType, TOutputType> {
+public:
+	static const unsigned int nbParams = 2;
+
+	typedef GPF_ScExpDecrFunction      Self;
+	typedef GenericParametricFunctions Superclass;
+	typedef itk::SmartPointer<Self>    Pointer;
+	/** Run-time type information (and related methods). */
+	itkTypeMacro(GPF_ScExpDecrFunction, GenericParametricFunctions);
+	itkNewMacro(Self);
+
+	unsigned int GetNumberOfParameters() {return nbParams;}
+
+	inline TOutputType Evaluate( TInputType input ) { return static_cast<TOutputType>( m_params(0) * exp( - m_params(1) * static_cast<double>(input)) ); }
+
+protected:
+	GPF_ScExpDecrFunction() : GenericParametricFunctions() {m_params.set_size(nbParams); m_params.fill(1);};
+	~GPF_ScExpDecrFunction() {};
+private:
+	GPF_ScExpDecrFunction(const Self&);				//purposely not implemented
+	const Self & operator=( const Self & );		//purposely not implemented
+};
 
 
 /** \class GPF_LinearDecrFunction

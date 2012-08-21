@@ -166,6 +166,7 @@ public:
 
 	/** Compute the energy */
 	double GetRawValue() { //OPTIMIZATION: do GetAverageObjectPriors and GetAverageObjectInteractions in a single pass if both are requested...
+//std::cout<<"SceneEnery -- get raw value..., m_scene = "<<m_scene.GetPointer()<<std::endl;
 		double outputValue = 0;
 		if (m_UseGlobalPrior) outputValue += m_weightGlobalPrior * GetSceneGlobalCost();			//std::cout<<"------------------------ global prior: outputValue = "<<outputValue<<std::endl;
 		if (m_UseObjectPrior) outputValue += m_weightObjectPrior * GetSumObjectPriorCost();		//std::cout<<"------------------------ +object prior: outputValue = "<<outputValue<<std::endl;

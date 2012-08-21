@@ -357,13 +357,14 @@ protected:
 		catch( itk::ExceptionObject &e) { std::cerr << "SensedSceneToImageCostFunction: Exception raised when resampling the reference image... : "<< std::endl; std::cerr << e << std::endl; }
 
 		m_interpolatedReferenceImage = m_filter->GetOutput();
-
 		// ADD THE CODE TO compute m_partialIntegralImage and m_partialIntegralSquaredImage 
+		m_integralFilter = ReferenceImageIntegrateFilterType::New();
+
 		m_integralFilter->SetInput(m_interpolatedReferenceImage);
 		m_integralFilter->Update();
+
 		m_partialIntegralImage = m_integralFilter->GetOutput1();
 		m_partialIntegralSquaredImage = m_integralFilter->GetOutput2();
-		//lbip::LinearIntegrationImageAndSquaredImageFilter<ReferenceImageType, IntegralImageType>(m_interpolatedReferenceImage, m_partialIntegralImage, m_partialIntegralSquaredImage);
 
 		m_refImageInterpolatedFlag = true;
 	}

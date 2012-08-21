@@ -65,12 +65,11 @@ void LineIntegralImageAndSquaredImageFilter<TInputImage, TOutputImage1, TOutputI
 	typename TOutputImage2::Pointer output2 = this->GetOutput2();
 	output2->CopyInformation(inputImage); output2->SetRegions(inputImage->GetLargestPossibleRegion()); output2->Allocate();
 
-
 	typedef itk::ImageLinearConstIteratorWithIndex< TInputImage > ConstInIteratorType;
 	typedef itk::ImageLinearIteratorWithIndex< TOutputImage1 > Out1IteratorType;
 	typedef itk::ImageLinearIteratorWithIndex< TOutputImage2 > Out2IteratorType;
 
-	ConstInIteratorType  inIt(inputImage, inputImage->GetLargestPossibleRegion() );  inIt.SetDirection(0);
+	ConstInIteratorType  inIt(inputImage, inputImage->GetLargestPossibleRegion() ); inIt.SetDirection(0);
 	Out1IteratorType     outIt1( output1, inputImage->GetLargestPossibleRegion() ); outIt1.SetDirection(0);
 	Out2IteratorType     outIt2( output2, inputImage->GetLargestPossibleRegion() ); outIt2.SetDirection(0);
 
@@ -88,7 +87,6 @@ void LineIntegralImageAndSquaredImageFilter<TInputImage, TOutputImage1, TOutputI
 			++inIt; ++outIt1; ++outIt2;
 		}
 	}
-
 
 }
 

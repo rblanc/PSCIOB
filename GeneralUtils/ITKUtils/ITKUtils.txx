@@ -159,11 +159,13 @@ void ITKGridImageInformationFromPhysicalBoundingBoxAndSpacing(vnl_vector<double>
 	if ( (sp.size()!=VDimension) || (2*VDimension!=pBB.size()) ) {throw DeformableModelException("AllocateITKImageRegionsFromPhysicalBoundingBoxAndSpacing: inconsistent parameters ");}
 
 	itk::Size<VDimension> size;	itk::Index<VDimension> startIndex;
+		//I1 = std::floor( (interBBox( 2*i ) - origin[i]) / spacing[i] + 0.5 - TINY ); //test, used to be +TINY
+		//I2 = std::floor( (interBBox(2*i+1) - origin[i]) / spacing[i] + 0.5 + TINY ); //test, used to be -TINY
 
 	int N1, N2;
 	for (unsigned int i=0 ; i<VDimension ; i++) {
-		N1 = std::floor( pBB(2*i)/sp[i] +TINY+0.5);
-		N2 = std::floor( pBB(2*i+1)/sp[i] -TINY+0.5);
+		N1 = std::floor( pBB( 2*i )/sp[i] + 0.5 - TINY); //used to be +TINY
+		N2 = std::floor( pBB(2*i+1)/sp[i] + 0.5 + TINY);  //used to be -TINY
 		(*origin)[i] = N1*sp[i];
 		startIndex[i] = 0;
 		size[i] = max((unsigned int)1,(unsigned int)( 1 + N2 - N1 ) );
@@ -352,16 +354,19 @@ bool ITKImageRegionFromBoundingBox(typename itk::Image<unsigned char, VDimension
 	itk::Image<unsigned char, VDimension>::SizeType		regionSize;
 
 	int I1, I2;
+
 	for (unsigned i=0 ; i<VDimension ; i++) {
 		//convert physical point to an index, relative to the origin ; rounded so that the region always contains the borders of the box
 		I1 = std::floor( (interBBox( 2*i ) - origin[i]) / spacing[i] + 0.5 - TINY ); //test, used to be +TINY
 		I2 = std::floor( (interBBox(2*i+1) - origin[i]) / spacing[i] + 0.5 + TINY ); //test, used to be -TINY
+
 		//now, get the start index & size
 		regionStart[i] = max(0, I1 );
 		regionSize[i] = min(1 + I2 - I1 , size[i] - regionStart[i]); //test, used to be: regionSize[i] = max(1, 1 + I2 - I1 );
 	}
 	region->SetIndex( regionStart );
 	region->SetSize( regionSize );
+
 	return true;
 }
 

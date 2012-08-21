@@ -42,9 +42,9 @@ namespace psciob {
 /** 
  * \class shape3DCuboid
  * \brief shape3DCuboid is a class for generating a cuboid, usually in combination with a PoseTransform
- * cuboid centered at (0,0,0), with Z length = 1, X and Y 
- * 2 parameters = flatness ( = z/sqrt(xy) >0 ), elongation ( = x/(sqrt(yz)) >0 )
- * => x = pow((b*b)/(a*a), 1/3) ; y = (b*b)/(x*x)
+ * cuboid centered at (0,0,0), with X length = 1, Y and Z 
+ * 2 parameters = elongation ( = x/y >=1 ), thickness( = x/z >=1 )
+ * -> y = x/e ; z = x/t
 */
 
 class shape3DCuboid : public BinaryShape<3> {
@@ -78,14 +78,15 @@ public:
 	/** Physical bounding box of the object */
 	vnl_vector<double> GetPhysicalBoundingBox() {
 		if (!m_physicalBBoxUpToDate) {
-			double x = pow( (m_parameters(1)*m_parameters(1))/(m_parameters(0)*m_parameters(0)), 1.0/3.0);
-			double y = (x*x)/(m_parameters(1)*m_parameters(1));
+			double x = 1.0;
+			double y = x/m_parameters(0);
+			double z = x/m_parameters(1);
 			m_physicalBoundingBox(0) = -x/2.0; //xmin
 			m_physicalBoundingBox(1) = +x/2.0; //xmax
 			m_physicalBoundingBox(2) = -y/2.0; //ymin
 			m_physicalBoundingBox(3) = +y/2.0; //ymax
-			m_physicalBoundingBox(4) = -1/2.0; //zmin
-			m_physicalBoundingBox(5) = +1/2.0; //zmax
+			m_physicalBoundingBox(4) = -z/2.0; //zmin
+			m_physicalBoundingBox(5) = +z/2.0; //zmax
 			m_physicalBBoxUpToDate=true;
 		}
 		return m_physicalBoundingBox;

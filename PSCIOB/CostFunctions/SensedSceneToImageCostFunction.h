@@ -105,7 +105,6 @@ public:
 	*/
 	virtual void SetScene(SceneType *scene) {
 		Superclass::SetScene(scene);
-
 		//make sure the other functions work on the same scene.
 		if (!m_sensor) {} else {m_sensor->SetScene(scene);}
 		m_refImageInterpolatedFlag = false;

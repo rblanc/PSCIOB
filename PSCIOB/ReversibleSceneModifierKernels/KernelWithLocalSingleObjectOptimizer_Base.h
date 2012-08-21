@@ -72,7 +72,11 @@ public:
 		m_localScene->FuseObjectTypesLibrary( scene->GetObjectTypesLibrary() );
 		m_localScene->SetGlobalPrior( scene->GetGlobalPrior()->CreateClone() ); //TODO: I should make sure they are properly configured. (if there are parameters to set, ...)
 		m_localScene->SetObjectPriorNormalizationFunction( scene->GetObjectPriorNormalizationFunction() );
-		m_localScene->SetTrackChanges( scene->GetTrackChangesStatus() );
+		//m_localScene->SetTrackChanges( scene->GetTrackChangesStatus() );
+		for (SceneType::SensorInterfaceListType::iterator it = m_scene->GetListOfConnectedSensors().begin() ; 
+			it != m_scene->GetListOfConnectedSensors().end() ; ++it) {
+				m_localScene->ConnectSensor(*it);
+		}
 
 		//tell the manager to work with this scene (the manager will propagate this information to the cost function, which in turn will send the message to the sensor, etc...)
 		if (!m_localOptimizationManager) {} else { m_localOptimizationManager->SetScene(m_localScene); }

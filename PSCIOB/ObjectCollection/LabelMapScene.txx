@@ -49,16 +49,11 @@ LabelMapScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionD
 
 
 //
-// SetPhysicalDimensions
+// AllocateFromPhysicalDimension
 //
 template<unsigned int VDimension, class TAppearance, class TObjectId, class TAssociatedData, class TInteractionData>
 void 
-LabelMapScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::SetPhysicalDimensions(const vnl_vector<double> &physicalBoundingBox, const vnl_vector<double> &spacing) {	
-	ITKGridImageInformationFromPhysicalBoundingBoxAndSpacing<Dimension>(physicalBoundingBox, spacing, &m_sceneOrigin, &m_sceneImageRegion);
-	m_sceneSize = m_sceneImageRegion.GetSize();
-	for (unsigned i=0 ; i<Dimension ; i++) { m_sceneSpacing[i] = spacing(i); }
-	m_sceneBBox = BoundingBoxFromITKImageInformation<BinaryImageType>( m_sceneOrigin, m_sceneSpacing, m_sceneImageRegion );
-
+LabelMapScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::AllocateFromPhysicalDimension() {
 	m_labelMap->SetRegions( m_sceneImageRegion ); m_dummyLabelMap->SetRegions( m_sceneImageRegion );
 	m_labelMap->SetSpacing( m_sceneSpacing );     m_dummyLabelMap->SetSpacing( m_sceneSpacing );
 	m_labelMap->SetOrigin(  m_sceneOrigin );      m_dummyLabelMap->SetOrigin(  m_sceneOrigin );

@@ -38,6 +38,8 @@
 #include "GenericParametricFunctions.h"
 #include "LabelMapUtils.h"
 
+#include "SensorSceneInterface.h"
+
 namespace psciob {
 
 /**
@@ -78,15 +80,15 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(ImageSensor_Base, itk::LightObject);
 
-	static const unsigned int InputDimension    = TScene::Dimension;
-	static const unsigned int OutputDimension   = TOutputImage::ImageDimension;
+	static const unsigned int InputDimension = TScene::Dimension;
 
-	typedef TScene                            SceneType;
-	typedef typename SceneType::ObjectInScene ObjectInScene;
-	typedef typename SceneType::IDType        LabelType;
+	typedef TScene                             SceneType;
+	typedef typename SceneType::ObjectInScene  ObjectInScene;
+	typedef typename SceneType::IDType         LabelType;
 
 	typedef typename SceneType::DeformableObjectType::LabelObjectType OriginalLabelObjectType;
 	typedef typename SceneType::DeformableObjectType::LabelMapType    OriginalLabelMapType;
+	typedef typename SceneType::DeformableObjectType::LabelMapType    ObjectLabelMapType;
 
 	typedef	typename SceneType::LabelObjectType    InputLabelObjectType;
 	typedef	typename SceneType::LabelMapType       InputLabelMapType;
@@ -94,12 +96,17 @@ public:
 	typedef	typename SceneType::BinaryImageType    InputBinaryImageType;
 	typedef	typename SceneType::TexturedImageType  InputTexturedImageType;
 
+	typedef SensorSceneInterface<typename SceneType::BaseClass> SensorSceneInterfaceType;
+	typedef typename SceneType::BinaryImageType::RegionType     SceneRegionType;
+	typedef typename std::vector<SceneRegionType>               SceneRegionListType;
+
+	static const unsigned int OutputDimension   = TOutputImage::ImageDimension;
+
 	typedef TOutputImage                                  OutputImageType;
 	typedef itk::LabelObject<LabelType, OutputDimension>  OutputLabelObjectType;
 	typedef itk::LabelMap<OutputLabelObjectType>          OutputLabelMapType;
 	typedef itk::Image<LabelType, OutputDimension>        OutputLabelImageType;
 
-	typedef typename SceneType::DeformableObjectType::LabelMapType ObjectLabelMapType;
 
 	//a priori, I don't care about the pixel value in the scene (should just care if it is empty or not...)
 	typedef GenericParametricFunctions<double, double>		AppearanceFunctionType;
@@ -123,12 +130,27 @@ public:
 		if (m_noiseFlag)       clonePtr->SetNoiseParameters( m_noiseParams );
 		if (m_resolutionFlag)  clonePtr->SetResolutionParameters( m_resolutionParams );
 		clonePtr->SetObjectContextRadius( m_contextRadius );
-		clonePtr->TrackSceneModifications( m_connectedToScene );
+		//clonePtr->TrackSceneModifications( m_connectedToScene );
+		//if ( m_sceneInterface->m_connectedToScene ) {
+		//	clonePtr->m_sceneInterface->SetScene(m_scene);
+		//}
 		clonePtr->m_imageAllocated = false;
 		clonePtr->m_updateFlag = UPDATEAll;
 		return clonePtr;
 	}
 
+	/** Set the scene to observe
+	* By default, the sensor is connected to the scene, to get informed of the scene regions that are being modified
+	* so it can update itself only on modified regions
+	*/
+	void SetScene(SceneType *scene) { 
+		if (!m_scene) {} else {m_scene->DisconnectSensor(m_sceneInterface);}
+		m_scene = scene; Modified(); 
+		m_sceneInterface->SetScene(scene);
+		m_sceneInterface->TrackSceneModifications(true); 
+	}
+	/** Get a pointer to the observed scene */
+	SceneType* GetScene()           { return m_scene;}
 
 	//the dimension of the parameter vectors should be set in the child classes 
 	//see the comments below ; if some of these concepts are handled through external classes, these functions need not be virtual
@@ -144,8 +166,8 @@ public:
 	/** Update the sensor */
 	void Update() { 
 		if (m_updateFlag==UPDATEAll) { //this means that 'geometry parameters' of the sensor have changed
-			AllocateOutputImage(); m_imageAllocated=true;	  //therefore, re-allocated the image
-			Update_Data(m_scene->GetSceneImageRegion()); //update both images completely
+			AllocateOutputImage(); m_imageAllocated=true; //therefore, re-allocate the image
+			Update_Data(m_scene->GetSceneImageRegion());  //update both images completely
 			m_updateFlag = UPTODATE;
 		}
 		else {
@@ -156,16 +178,16 @@ public:
 				//If I separate these, I will need independent implementations of Update_AppearanceImage and Update_LabelImage
 			}
 			else { // no modifications on the sensor => now check if the scene has changed
-				if (m_connectedToScene) {
-					std::vector<InputLabelImageType::RegionType> modifiedSceneRegions = m_scene->GetSensorModifiedRegions();
-					//update only the regions that are marked as modified...						
-					for (unsigned i=0 ; i<modifiedSceneRegions.size() ; i++) { Update_Data(modifiedSceneRegions[i]); }
-					m_scene->ResetSensorModifiedRegions();
+				if (m_sceneInterface->m_connectedToScene) {
+					//update only the regions that are marked as modified...
+					SceneRegionListType listRegions = m_sceneInterface->GetListSceneRegionsToUpdate();
+					for (unsigned i=0 ; i<listRegions.size() ; i++) { Update_Data(listRegions[i]); }
 					m_updateFlag = UPTODATE;
 				}
 				else { Update_Data(m_scene->GetSceneImageRegion());m_updateFlag = UPTODATE; } //if the sensor is not connected, update everything at each call... <= DO I really want to be disconnected at any time??
 			}
 		}
+		m_sceneInterface->ClearListRegionsToUpdate();
 	}
 
 	//treat separately modifications on the geometry of the image, and modifications that only affect the appearance
@@ -173,10 +195,6 @@ public:
 	void Modified()           { m_scene->InvalidateObjectDataCosts();     m_updateFlag = UPDATEAll; } //here, I certainly need to re-allocate the image!!
 	void ModifiedAppearance() { m_scene->InvalidateObjectDataCosts(); if (m_updateFlag!= UPDATEAll)  m_updateFlag = UPDATEAppearanceOnly; }
 
-	/** Set the scene to observe */
-	void SetScene(SceneType *scene) { m_scene = scene; Modified(); TrackSceneModifications(true); }
-	/** Get a pointer to the observed scene */
-	SceneType* GetScene()           { return m_scene;}
 
 	//TODO: check validity of the various parameters !!!! the SetXXXParameters should return a bool indicating whether this was performed correctly or not!
 	//TAKE CARE THAT ALL THE PARAMETERS OF THIS FUNCTION ARE SUSCEPTIBLE TO MODIFICATION AND OPTIMIZATION...
@@ -233,9 +251,6 @@ public:
 	typename OutputImageType::SpacingType GetOutputImageSpacing() { return m_outputSpacing; }
 
 
-	/** Asks the scene to keep track of the modifications */
-	void TrackSceneModifications(bool b = true) { m_connectedToScene=b;m_scene->SetTrackChanges(b); } //track modifications of the scene, to optimize the update of the sensor output
-
 	/** Set the radius defining the context around an object
 	 * this is used to: - define the pixelset indicating which pixels belong to the context of an object
 	 *                  - not implemented yet: invalidate the dataCost if another object comes this close to another one 
@@ -281,7 +296,7 @@ public:
 		inContextObjectLabelMap->SetSpacing(m_outputSpacing);
 		inContextObjectLabelMap->SetOrigin(m_outputOrigin);
 		inContextObjectLabelMap->SetRegions(m_outputRegion);
-		if (!GetLabelOutput()->HasLabel(objectPtr->id)) return false; //make sure the map is uptodate
+		if (!this->GetLabelOutput()->HasLabel(objectPtr->id)) return false; //make sure the map is uptodate
 		inContextObjectLabelMap->AddLabelObject(m_outputLabelMap->GetLabelObject(objectPtr->id)); 
 		return true;
 	}
@@ -291,7 +306,7 @@ public:
 	 * a value less than 1 indicates that an object is 'shadowed' by another, either due to overlapping, or projection effects
 	 */
 	double GetSingleObjectVisibilityPercentage( LabelType id ) {
-		if (!GetLabelOutput()->HasLabel(id)) return 0; //make sure the label output is uptodate
+		if (!this->GetLabelOutput()->HasLabel(id)) return 0; //make sure the label output is uptodate
 		OutputLabelObjectType *inContextObject = m_outputLabelMap->GetLabelObject(id);
 		unsigned int nbVisiblePixels = inContextObject->Size();
 
@@ -325,13 +340,14 @@ public:
 	/** Get a labelMap containing only the requested off context object, AND its surrounding (with a radius specified to the sensor)
 	* The map contains 2 labelObject: the object (with its correct label), and the surroundings (with label+1)
 	* this labelMap is expressed with respect to the full sensor grid
-	* returns false if the object is not in the scene
+	* returns false if the object is not visible / not in the scene
 	* \param objectPtr is a pointer to the object of the scene to be processed
 	* \param offContextLabelMap is a pointer to be filled by the function
 	*/
 	bool GetInContextObjectAndSurroundingsLabelMap(ObjectInScene *objectPtr, OutputLabelMapType *labelMap) {
 		//Get InContextObjectLabelMap to begin with...
-		GetInContextObjectLabelMap(objectPtr, labelMap);
+		if (!GetInContextObjectLabelMap(objectPtr, labelMap)) return false;
+		if (labelMap->GetNumberOfLabelObjects()==0) return false;
 		//then, compute its surroundings and add it to the map
 		GetOffContextObjectsSurroundings<OutputLabelMapType>(labelMap, m_StructuringElement, m_tmpSingleObjectLabelMap);
 		//make sure the map contains 2 objects, 1: the object, 2: the surrounding
@@ -352,13 +368,19 @@ protected:
 
 		m_contextRadius=0;
 		m_StructuringElement = OutputLabelObjectType::New();
+
+		m_sceneInterface = SensorSceneInterfaceType::New();
+//nb_updates=0;
 	}
 	~ImageSensor_Base() {};
+//unsigned nb_updates;
 
-	typename SceneType::Pointer				m_scene;
+	typename SceneType::Pointer	m_scene;
+	typename SensorSceneInterfaceType::Pointer m_sceneInterface;
+
 	typename OutputImageType::Pointer		m_outputImage;   //, m_outputSingleObjectImage; 
 	typename OutputLabelMapType::Pointer	m_outputLabelMap, m_tmpSingleObjectLabelMap;
-	bool m_imageAllocated, m_connectedToScene;
+	bool m_imageAllocated;
 
 	typename OutputImageType::RegionType  m_outputRegion;
 	typename OutputImageType::SizeType    m_outputSize;

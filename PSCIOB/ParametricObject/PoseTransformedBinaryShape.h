@@ -152,6 +152,14 @@ public:
 	/** Collect Parameters from the shape and transform, in the following order: pose then shape parameters */
 	vnl_vector<double> CollectParameters();
 
+	/** Indicate that the output should be recomputed */
+	virtual inline void Modified() {
+		m_physicalBBoxUpToDate = false; m_imageBBoxUpToDate = false; 
+		m_uptodatePolyData = false; m_uptodateBinaryImage = false; m_uptodateLabelMap = false;
+		m_shape->Modified();
+		m_transform->Modified();
+	}
+
 	/** Set Parameters in the following order: pose then shape parameters
 	* internally check whether the parameters are valid and returns false if not
 	* Look for pure integer grid translation

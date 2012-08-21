@@ -76,7 +76,7 @@ public:
 	inline unsigned int GetNumberOfParameters()			{ return m_scene->GetObject(m_requestedLabel)->obj->GetNumberOfParameters(); }
 
 	/** get the parameters of the selected object */
-	virtual inline vnl_vector<double> GetParameters()       { return m_currentParameters; }
+	virtual inline vnl_vector<double> GetParameters()       { return m_scene->GetParametersOfObject(m_requestedLabel); }
 
 	/** modifies the parameters of the selected object, updating the scene accordingly */
 	virtual inline bool SetParameters(vnl_vector<double> p)	{ 

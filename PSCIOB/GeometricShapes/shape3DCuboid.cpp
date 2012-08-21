@@ -59,19 +59,20 @@ vnl_vector<double> shape3DCuboid::GetDefaultParameters() const {
 inline 
 bool shape3DCuboid::CheckParameters(const vnl_vector<double> &p) const {
 	if (p.size()!=m_nbParams) return false;
-	for (unsigned i=0 ; i<m_nbParams ; i++) { if (p(i)<TINY) return false; }
+	for (unsigned i=0 ; i<m_nbParams ; i++) { if (p(i)<1) return false; }
 	return true;
 }
 
 
 vtkPolyData* shape3DCuboid::GetObjectAsVTKPolyData() {
 	if (!m_uptodatePolyData) {
-		double x = pow( (m_parameters(1)*m_parameters(1))/(m_parameters(0)*m_parameters(0)), 1.0/3.0);
-		double y = (x*x)/(m_parameters(1)*m_parameters(1));
+		double x = 1.0;
+		double y = x/m_parameters(0);
+		double z = x/m_parameters(1);
 
 		m_cubeSource->SetXLength(x);
 		m_cubeSource->SetYLength(y);
-		m_cubeSource->SetZLength(1);
+		m_cubeSource->SetZLength(z);
 
 		m_cubeSource->Update();
 		m_outputPolyData = m_cubeSource->GetOutput();

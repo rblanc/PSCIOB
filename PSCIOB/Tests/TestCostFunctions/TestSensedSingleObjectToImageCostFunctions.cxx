@@ -282,7 +282,8 @@ clock_t t0=clock();
 	//observing the scene through a 3D/2D sensor
 	SEMSensorType::Pointer sensor3D = SEMSensorType::New();
 	sensor3D->SetScene(scene3D);
-	vnl_vector<double> appearanceParams(1);appearanceParams(0)=20000; sensor3D->SetAppearanceParameters(appearanceParams);
+	vnl_vector<double> appearanceParams(2);appearanceParams(0)=250;appearanceParams(1)=1.0/10.0;
+	sensor3D->SetAppearanceParameters(appearanceParams);
 	//by default, with a HORIZONTAL view, and a exponentially decreasing appearance function, with max = 250 (decreases with the distance to the sensor)
 
 	std::cout<<"writing the sensed image"<<std::endl;
@@ -371,7 +372,8 @@ void TestSensedSingleObjectEnergy() {
 	//observing the scene through a 3D/2D sensor
 	SEMSensorType::Pointer sensor3D = SEMSensorType::New();
 	sensor3D->SetScene(scene3D);
-	vnl_vector<double> appearanceParams(1);appearanceParams(0)=20000; sensor3D->SetAppearanceParameters(appearanceParams);
+	vnl_vector<double> appearanceParams(2);appearanceParams(0)=250; appearanceParams(1)=1.0/10.0; 
+	sensor3D->SetAppearanceParameters(appearanceParams);
 	//by default, with a HORIZONTAL view, and a exponentially decreasing appearance function, with max = 250 (decreases with the distance to the sensor)
 
 

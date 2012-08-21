@@ -75,6 +75,7 @@ public:
 
 	/** Create a clone (= an exact, independant copy) of the current cost function 
 	* transfers the pointer to the reference image.
+	* \todo IT IS NECESSARY TO ALSO CLONE THE SCENE!!
 	*/
 	virtual BaseClassPointer CreateClone() {
 		Pointer clonePtr = static_cast<Self*>(this->CreateAnother().GetPointer());
@@ -89,6 +90,17 @@ public:
 		clonePtr->m_inContextMetricFlag = m_inContextMetricFlag;
 
 		return static_cast<BaseClass*>( clonePtr );
+	}
+
+	/** Set the scene on which to make the measurements 
+	* and propagates to any other members that may also be working on this scene
+	* maybe overloaded by child classes
+	*/
+	virtual void SetScene(SceneType *scene) {
+		Superclass::SetScene(scene);
+		//make sure the other functions work on the same scene.
+		if (!m_sensor) {} else {m_sensor->SetScene(scene);}
+		m_refImageInterpolatedFlag = false;
 	}
 
 	/** Set the sensor to be used for comparison with the reference image ; automatically (re)sets the associated scene */

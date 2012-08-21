@@ -447,15 +447,16 @@ public:
 	}
 
 	/** */
-	OutputLabelImageType* GetOutputLabelImage() {return m_outputLabelImage.GetPointer();}
+	OutputLabelImageType* GetOutputLabelImage() { Update(); return m_outputLabelImage.GetPointer();}
 
 protected:
 	SimplePixelBasedSEMSensor() : ImageSensor_Base() {
 		m_direction = HORIZONTAL; m_dirAxis0=0;m_dirAxis1=1;m_dirAxis2=2;
 		m_orientationParams.set_size(1); m_orientationParams(0)=m_direction;
 
-		GPF_ExpDecrFunction<double, double>::Pointer exp_fct = GPF_ExpDecrFunction<double, double>::New();	
-		exp_fct->SetParameter(250);
+		GPF_ScExpDecrFunction<double, double>::Pointer exp_fct = GPF_ScExpDecrFunction<double, double>::New();	
+		vnl_vector<double> params(2); params(0) = 250; params(1) = 1.0/10.0;
+		exp_fct->SetParameters(params);
 		m_function = exp_fct;	
 		m_appearanceFunctionFlag = true;
 
@@ -515,7 +516,8 @@ protected:
 
 
 	/** Update data in the requested region (CLEAN: use itk -> RequestedRegion instead?) */
-	void Update_Data(typename InputLabelImageType::RegionType inputRegion = m_scene->m_regionWholeScene) {
+	void Update_Data(typename InputLabelImageType::RegionType inputRegion) {
+
 		//update the labelImage from the scene
 		InputLabelImageType *inputLabelImage = m_scene->GetSceneAsLabelImage();
 		InputLabelImageType::PixelType *inputLabelBuffer = inputLabelImage->GetBufferPointer();
@@ -543,7 +545,10 @@ protected:
 		case HORIZONTAL: increment3D = sceneSize[0]*sceneSize[1]; break; //HORIZONTAL -> (x,y), normal is z
 		default: throw DeformableModelException("SimplePixelBasedSEMSensor: direction parameter must be 0, 1 or 2 "); //should never happen
 		}
-
+//nb_updates++;
+//std::cout<<"nb updates = "<<nb_updates<<std::endl,
+//std::cout<<"updating scene region, ["<<inputRegion.GetIndex(0)<<" - "<<inputRegion.GetIndex(0)+inputRegion.GetSize(0)<<"] , ["<<inputRegion.GetIndex(1)<<" - "<<inputRegion.GetIndex(1)+inputRegion.GetSize(1)<<"] , ["<<inputRegion.GetIndex(2)<<" - "<<inputRegion.GetIndex(2)+inputRegion.GetSize(2)<<"]"<<std::endl,
+//std::cout<<"updating sensor region, ["<<inputRegion.GetIndex(m_dirAxis0)<<" - "<<inputRegion.GetIndex(m_dirAxis0)+inputRegion.GetSize(m_dirAxis0)<<"] ,  ["<<inputRegion.GetIndex(m_dirAxis1)<<" - "<<inputRegion.GetIndex(m_dirAxis1)+inputRegion.GetSize(m_dirAxis1)<<"] ; obj params: "<<m_scene->GetParametersOfObject(1)<<std::endl;
 		//Browse the region that needs to be updated on the sensor image
 		for (index2D[1]=inputRegion.GetIndex(m_dirAxis1) ; index2D[1]<inputRegion.GetIndex(m_dirAxis1)+inputRegion.GetSize(m_dirAxis1) ; index2D[1]++) {			
 			index3D[m_dirAxis1] = index2D[1];
@@ -561,7 +566,7 @@ protected:
 				{
 					if (inputLabelBuffer[add3D]>0) { 
 						if (outputLabelBuffer[add2D]!=inputLabelBuffer[add3D]) {
-							std::cout<<"--updated the sensor image based on a pixel in front of the region to update... should never happen..."<<std::endl;
+							std::cout<<"--updated the sensor image based on a pixel in front of the region to update, from a different object than expected... should never happen..."<<std::endl;
 							outputLabelBuffer[add2D]=inputLabelBuffer[add3D];
 							outputBuffer[add2D] = m_function->Evaluate( index3D[m_dirAxis2]*m_outputSpacing[m_dirAxis2] );
 						}
@@ -621,7 +626,7 @@ public:
 	
 
 private:
-	SimplePixelBasedSEMSensor(const Self&);			//purposely not implemented
+	SimplePixelBasedSEMSensor(const Self&);	//purposely not implemented
 	const Self & operator=( const Self & );	//purposely not implemented
 };
 
