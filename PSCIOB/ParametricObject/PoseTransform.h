@@ -146,7 +146,7 @@ public:
 	/** \param rotation matrix to apply (pre-compose: rotate the object around its center)
 	* \param params is a vector of object parameters 
 	* The function modifies these input parameters such that the new parameters correspond to the rotated object
-	* \warning: no check are perform to verify the validity of the inputs
+	* \warning: the matrix should be a pure rotation matrix (no homogeneous coordinates...), no checks are performed to verify the validity of the inputs
 	*/
 	virtual void ApplyRotationToParameters(vnl_matrix<double> rot, vnl_vector<double> &params);
 

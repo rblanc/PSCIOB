@@ -131,5 +131,39 @@ ParametricObject<VDimension, TAppearance>::Translate(const vnl_vector<double> &t
 }
 
 
+/** Get Center Of Gravity and Inertia matrix of the shape 
+* the function fills the information in the provided structures
+* this is a base implementation which computes it from the LabelObject, it can be re-implemented to be faster in child classes
+*/
+template <unsigned int VDimension, class TAppearance>
+void 
+ParametricObject<VDimension, TAppearance>::GetObjectCenterAndInertiaMatrix(vnl_vector<double> &center, vnl_matrix<double> &mat) {
+	center.set_size(VDimension); center.fill(0);
+	mat.set_size(VDimension,VDimension); mat.fill(0);
+
+	//browse the lines of the object
+	LabelMapType* lm = GetObjectAsLabelMap(); //make sure the labelMap is uptodate
+	LabelObjectType* lo = lm->GetNthLabelObject(0);
+
+	LabelObjectType::ConstLineIterator lit( lo );
+	LabelObjectType::IndexType index;
+	vnl_vector<double> coords(VDimension); unsigned nbPts=0;
+	for (lit.GoToBegin() ; ! lit.IsAtEnd() ; ++lit) {
+		//get the index, and convert it to physical coordinates
+		index = lit.GetLine().GetIndex();
+		for (unsigned d1=0 ; d1<VDimension ; d1++) coords(d1) = lm->GetOrigin()[d1] + index[d1]*m_imageSpacing[d1];
+
+		for (unsigned i=0 ; i< lit.GetLine().GetLength() ; i++, coords(0)+=m_imageSpacing[0], nbPts++) {
+			center += coords;
+			// http://fr.wikipedia.org/wiki/Covariance
+			mat += outer_product(coords,coords);
+		}
+	}
+
+	center /= nbPts;
+	mat = mat/(nbPts-1.0) - outer_product(center,center)*nbPts*nbPts/((nbPts-1.0)*(nbPts-1.0));
+
+}
+
 } // namespace psciob
 

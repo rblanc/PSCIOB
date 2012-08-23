@@ -185,7 +185,6 @@ protected:
     typedef std::pair<IDType, vnl_vector<double>> MovePairType;
     std::map<IDType, vnl_vector<double>> m_proposedMoves;
 
-
 private:
     ForceBiasedAlgorithm(const Self&);      //purposely not implemented
     const Self & operator=( const Self & ); //purposely not implemented

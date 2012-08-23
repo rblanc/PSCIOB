@@ -94,11 +94,22 @@ void fastEllipses() {
 	Fast2DEllipse::Pointer object = Fast2DEllipse::New();
 
 	vnl_vector<double> params(5);//centre, petit axe, rapport petit/grand axe in [0,1], orientation
-	params(0) = 0; params(1) = 0; params(2) = 15.63045; params(3) = 0.5; params(4) = 0; object->SetParameters(params);
+	params(0) = 3; params(1) = -3; params(2) = 15.63045; params(3) = 1; params(4) = 0; object->SetParameters(params);
+
+	vnl_vector<double> center; vnl_matrix<double> inertia;
+
+	vnl_vector<double> v1(3), v2(3);
+	v1(0) = 0.5; v1(1) = 2;   v1(2) = -1;
+	v2(0) = -1;  v2(1) =-0.5; v2(2) = 2;
+	std::cout<<"test... v1 = "<<v1<<", v2 = "<<v2<<" ; outer_product = \n"<<outer_product(v1, v2)<<std::endl;
 
 	object->PrintInfo();
 	WriteMirrorPolyDataToFile( "fastEllipse_0.vtk", object->GetObjectAsVTKPolyData());
 	Write2DGreyLevelRescaledImageToFile<Fast2DEllipse::BinaryImageType>("fastEllipse_0.png", object->GetObjectAsBinaryImage());
+
+	object->GetObjectCenterAndInertiaMatrix(center, inertia);
+	std::cout<<"center of disk...: "<<center<<", inertia matrix :\n"<<inertia<<std::endl;
+	std::cout<<"image origin: "<<object->GetImageOrigin()<<std::endl;
 
 	params(0) = 0; params(1) = 0; params(2) = 5; params(3) = 0.71; params(4) = PI/4.0; object->SetParameters(params);
 	std::cout<<"   params: "<<params<<std::endl;
@@ -120,6 +131,9 @@ void fastEllipses() {
 	params(0) = 0.5; params(1) = 0.5; params(2) = 9.1; params(3) = 2.5; params(4) = 0.564; object->SetParameters(params);
 	std::cout<<"   params: "<<params<<std::endl;
 	Write2DGreyLevelRescaledImageToFile<Fast2DEllipse::BinaryImageType>("fastEllipse_5.png", object->GetObjectAsBinaryImage());
+
+	object->GetObjectCenterAndInertiaMatrix(center, inertia);
+	std::cout<<"center of ellipse: "<<center<<", inertia matrix :\n"<<inertia<<std::endl;
 
 }
 int main(int argc, char** argv) {

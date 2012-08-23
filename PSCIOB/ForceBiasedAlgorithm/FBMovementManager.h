@@ -37,6 +37,7 @@
 
 #include "BaseScene.h"
 #include "ForceBiasedAlgorithm.h"
+#include <vnl/algo/vnl_symmetric_eigensystem.h>
 
 namespace psciob {
 
@@ -97,21 +98,65 @@ public:
 	/** Get the value of the translation factor */
 	double GetTranslationFactor() {return m_translationFactor;}
 
-	
-	/** update the proposed move with respect to a new overlap
+	/** Set rotation factor (in [0 0.5])
+	* it interpolates the rotation which bring the principal axes of inertia of both objects in alignement
+	* 0.5 => they should end up aligned
+	*/
+	void SetRotationFactor(double f) { 
+		m_rotationFactor=f;
+	}
+
+	/** Get the value of the translation factor */
+	double GetRotationFactor() {return m_rotationFactor;}
+
+	/** update the proposed move of object id1 with respect to its interaction with id2
 	* \param currentMove is the current vector of parameters describing the move (would-be object parameters)
 	* \param id1 is the id of the object to be moved
 	* \param id2 is the id of the overlapping object
 	* \param overlapData is the structure containing the overlap information.
-	* In this class, a simple unit translation is applied, in the direction joining the center of both objects.
+	* In this class, a simple unit translation is applied, in the direction joining the center of both objects, and optionally a rotation that tends to make the objects inertia matrices 'parallel'.
 	*/
 	virtual vnl_vector<double> UpdateMove(const vnl_vector<double> &currentMove, IDType id1, IDType id2, InteractionDataType overlapData) {
 		vnl_vector<double> t(Dimension), proposedMove = currentMove;
+		
+		//translation
 		t = m_translationFactor * (m_scene->GetParametersOfObject(id1).extract(Dimension) - m_scene->GetParametersOfObject(id2).extract(Dimension)).normalize();
 		for (unsigned i=0 ; i<Dimension ; i++) proposedMove(i)+=t(i);
-	
-		//idea: a flag could be used here to apply rotation on request...
-		//for this, as for scaling, the user should indicate which parameter(s) correspond to rotation...
+
+		//rotation
+		if (m_rotationFactor!=0) {
+			//get the center of gravity, and matrices of inertia of both objects
+			vnl_vector<double> c1, c2; vnl_matrix<double> I1, I2;
+			m_scene->GetObject(id1)->obj->GetObjectCenterAndInertiaMatrix(c1, I1);
+			m_scene->GetObject(id2)->obj->GetObjectCenterAndInertiaMatrix(c2, I2);
+
+			vnl_symmetric_eigensystem<double> eig1(I1);
+			vnl_symmetric_eigensystem<double> eig2(I2);
+			
+			vnl_matrix<double> RotMat_Full = eig1.V.transpose() * eig2.V, RotMat_Part;
+			double ang;
+			vnl_vector<double> Q;vnl_vector<double> vr(3);
+
+			switch(Dimension) {
+				case 2: //just interpolate the angle that brings both systems in alignement
+					ang = GetAngleFrom2DRotationMatrix( RotMat_Full );
+					RotMat_Part = Get2DRotationMatrixFromAngle(m_rotationFactor*ang);
+					break;
+				case 3:
+					//do the same as for 2D...
+					//use quaternion to get the axis of rotation, and angle
+					Q = psciob::GetQuaternionFrom3DRotationMatrix( RotMat_Full );
+					psciob::GetVectorAndAngleFromQuaternion( vr, ang, Q );
+					//and get the rotation matrix corresponding to the requested fraction of the angle
+					psciob::GetQuaternionFromVectorAndAngle( vr, m_rotationFactor*ang, Q );
+					RotMat_Part = psciob::Get3DRotationMatrixFromQuaternion_33(Q);
+					break;
+				default: throw DeformableModelException("FBMovementManager::UpdateMove : dimension should be 2 or 3!");
+			}
+
+			m_scene->GetObject(id1)->obj->ApplyRotationToParameters( RotMat_Part, proposedMove);
+		}
+
 		return proposedMove;
 	}
 	
@@ -126,7 +171,7 @@ public:
 	}
 
 protected:
-	FBMovementManager() : m_scaleFactor(1), m_translationFactor(1) {
+	FBMovementManager() : m_scaleFactor(1), m_translationFactor(1), m_rotationFactor(0) { //by default, no rotations are applied
 		m_scene = 0;
 		m_identityMove.set_size(Dimension); m_identityMove.fill(0); //translation only in this case.
 	};
@@ -135,6 +180,7 @@ protected:
     typename SceneType::Pointer m_scene;
 	double m_scaleFactor;
 	double m_translationFactor;
+	double m_rotationFactor;
 	//bool m_scaleInfoSet; //flag indicating whether all the necessary information is available -> e.g. which parameters correspond to scale
 	vnl_vector<double> m_identityMove;
 

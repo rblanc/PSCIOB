@@ -239,6 +239,7 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	psciob::ForceBiasedAlgorithm<SceneType>::Pointer fbAlgo = psciob::ForceBiasedAlgorithm<SceneType>::New();
 	fbAlgo->SetScene(m_scene);
 	fbAlgo->GetMovementManager()->SetScalingFactor(0.99);
+	fbAlgo->GetMovementManager()->SetRotationFactor(0.1);
 	fbAlgo->IterateUntilConvergence();
 
 }

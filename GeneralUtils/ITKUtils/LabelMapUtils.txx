@@ -46,7 +46,6 @@ namespace psciob {
 //it would be quite complicated to allow different spacings ; or very spurious effects (holes, duplicated lines;... ) 
 template <class TInputLabelMap, class TOutputLabelMap>
 void CastLabelMapToOtherFrame(TInputLabelMap *inputMap, TOutputLabelMap *outputMap) {
-	std::cout<<"CastLabelMapToOtherFrame :: TODO / OPTIMIZATION: use an iterator over the LabelObjects of the map!!!"<<std::endl;
 	outputMap->ClearLabels();
 	unsigned int D = TInputLabelMap::ImageDimension;
 	if (TOutputLabelMap::ImageDimension != D) throw DeformableModelException("CastLabelMapToOtherFrame : both maps must the same dimensionality!");

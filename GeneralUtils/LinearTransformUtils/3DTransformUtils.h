@@ -48,13 +48,19 @@ typedef enum {
 } ObservationDirectionType;
 
 
-/** Convention for euler angles is heading, attitude, bank */
+/** Convention for euler angles is heading, attitude, bank 
+* returns a 3*3 rotation matrix
+*/
 vnl_matrix<double> Get3DRotationMatrixFromEulerAngles(float h, float a, float b);
 
-/** Convention for euler angles is heading, attitude, bank */
+/** Convention for euler angles is heading, attitude, bank 
+* returns a 3*3 rotation matrix
+*/
 vnl_matrix<double> Get3DRotationMatrixFromEulerAngles(const vnl_vector<double> &euler_angles);
 
-/** code adapted from http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToEuler/index.htm */
+/** code adapted from http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToEuler/index.htm 
+* expects a matrix whose first 3*3 block corresponds to the rotation matrix
+*/
 vnl_vector<double> GetEulerAnglesFrom3DRotationMatrix(const vnl_matrix<double> &mat);
 
 
@@ -70,6 +76,18 @@ void Rotate3DTransformAroundY_InPlace(vnl_matrix<double> &R, double angle);
 vnl_matrix<double> Rotate3DTransformAroundZ(const vnl_matrix<double> &R, double angle);
 void Rotate3DTransformAroundZ_InPlace(vnl_matrix<double> &R, double angle);
 
+
+/** 3D rotation matrix to Quaternion */
+vnl_vector<double> GetQuaternionFrom3DRotationMatrix(const vnl_matrix<double> &R);
+/** Quaternion to 3D rotation matrix (outputs a 3*3 matrices) */
+vnl_matrix<double> Get3DRotationMatrixFromQuaternion_33(const vnl_vector<double> &Q);
+/** Quaternion to 3D rotation matrix (outputs a 4*4 matrices) */
+vnl_matrix<double> Get3DRotationMatrixFromQuaternion_44(const vnl_vector<double> &Q);
+
+/** Get vector and angle from quaternion */
+void GetVectorAndAngleFromQuaternion(vnl_vector<double> &v, double &a, const vnl_vector<double> &Q);
+/** Get quaternion from vector and angle */
+void GetQuaternionFromVectorAndAngle(const vnl_vector<double> &v, double a, vnl_vector<double> &Q);
 
 } // namespace psciob
 

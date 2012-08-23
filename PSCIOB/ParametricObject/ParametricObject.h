@@ -212,7 +212,7 @@ public:
 	}
 
 	/** Get Image Region - it is automatically determined by the physical bounding box of the object and the spacing */
-	typename BinaryImageType::RegionType GetImageRegion() const {
+	typename BinaryImageType::RegionType GetImageRegion() {
 		if (!m_imageBBoxUpToDate) {
 			ITKGridImageInformationFromPhysicalBoundingBoxAndSpacing<VDimension>( GetPhysicalBoundingBox(), m_imageSpacing.GetVnlVector(), &m_imageOrigin, &m_imageRegion );
 			m_imageBoundingBox = BoundingBoxFromITKImageInformation<BinaryImageType>(m_imageOrigin, m_imageSpacing, m_imageRegion);
@@ -222,7 +222,7 @@ public:
 	}
 
 	/** Get Image Origin - it is automatically determined by the physical bounding box of the object and the spacing */
-	typename BinaryImageType::PointType GetImageOrigin() const {
+	typename BinaryImageType::PointType GetImageOrigin() {
 		if (!m_imageBBoxUpToDate) {
 			ITKGridImageInformationFromPhysicalBoundingBoxAndSpacing<VDimension>( GetPhysicalBoundingBox(), m_imageSpacing.GetVnlVector(), &m_imageOrigin, &m_imageRegion );
 			m_imageBoundingBox = BoundingBoxFromITKImageInformation<BinaryImageType>(m_imageOrigin, m_imageSpacing, m_imageRegion);
@@ -275,6 +275,13 @@ public:
 	inline bool IsObjectLabelMapUpToDate()            { return m_uptodateLabelMap; }
 	virtual bool IsObjectTexturedPolyDataUpToDate()   = 0;
 	virtual bool IsObjectTexturedImageUpToDate()      = 0;
+
+	/** Get Center Of Gravity and Inertia matrix of the shape 
+	* the function fills the information in the provided structures
+	* this is a base implementation which computes it from the LabelObject, it can be re-implemented to be faster in child classes
+	* \warning: the function is using a one-pass algorithm which may become unstable for large shapes (esp. 3D), and with a center far from the origin.
+	*/
+	virtual void GetObjectCenterAndInertiaMatrix(vnl_vector<double> &center, vnl_matrix<double> &mat);
 
 	/** Get the corresponding representation of the object */
 	virtual vtkPolyData* GetObjectAsVTKPolyData() = 0;

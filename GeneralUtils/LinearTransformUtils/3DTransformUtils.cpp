@@ -138,3 +138,113 @@ void psciob::Rotate3DTransformAroundZ_InPlace(vnl_matrix<double> &R, double angl
 	vnl_matrix<double> mat(R.rows(), R.rows());	mat.set_identity();	mat.put(0,0, cos(angle));	mat.put(0,1,-sin(angle));	mat.put(1,0, sin(angle));	mat.put(1,1, cos(angle));
 	ComposeTransforms_InPlace(R, mat);
 }
+
+
+
+/** 3D rotation matrix to Quaternion 
+* formula from http://jeux.developpez.com/faq/math/?page=quaternions#Q55
+*/
+vnl_vector<double> psciob::GetQuaternionFrom3DRotationMatrix(const vnl_matrix<double> &R) {
+	vnl_vector<double> Q(4);
+	double T = R(0,0) + R(1,1) + R(2,2);
+	double S;
+	if (T>0) {
+		S = 1.0/(2.0*sqrt(T));
+		Q(0) = (R(2,1)-R(1,2))*S;//or swap the first & second coords??
+		Q(1) = (R(0,2)-R(2,0))*S;
+		Q(2) = (R(1,0)-R(0,1))*S;
+		Q(3) = 1.0/(4.0*S);
+	}
+	else {
+		if ( R(0,0)>=R(1,1) && R(0,0)>=R(2,2) ) {
+			S = 2.0*sqrt(1.0+R(0,0)-R(1,1)-R(2,2));
+			Q(0) = 1.0/(2.0*S);
+			Q(1) = (R(0,1)-R(1,0))/S;
+			Q(2) = (R(0,2)-R(2,0))/S;
+			Q(3) = (R(1,2)-R(2,1))/S;//or swap the first & second coords??
+		}
+		else {
+			if ( R(1,1)>=R(0,0) && R(1,1)>=R(2,2) ) {
+				S = 2.0*sqrt(1.0-R(0,0)+R(1,1)-R(2,2));
+				Q(0) = (R(0,1)-R(1,0))/S;
+				Q(1) = 1.0/(2.0*S);
+				Q(2) = (R(1,2)-R(2,1))/S;
+				Q(3) = (R(0,2)-R(2,0))/S;//or swap the first & second coords??
+			}
+			else {
+				S = 2.0*sqrt(1.0-R(0,0)-R(1,1)+R(2,2));
+				Q(0) = (R(0,2)-R(2,0))/S;
+				Q(1) = (R(1,2)-R(2,1))/S;
+				Q(2) = 1.0/(2.0*S);
+				Q(3) = (R(0,1)-R(1,0))/S;//or swap the first & second coords??
+			}
+		}
+	}
+	return Q;
+}
+
+/** Quaternion to 3D rotation matrix (3*3)*/
+vnl_matrix<double> psciob::Get3DRotationMatrixFromQuaternion_33(const vnl_vector<double> &Q) {
+	vnl_matrix<double> R(3,3);
+	double xx = Q(0)*Q(0), xy = Q(0)*Q(1), xz = Q(0)*Q(2), xw = Q(0)*Q(3);
+	double yy = Q(1)*Q(1), yz = Q(1)*Q(2), yw = Q(1)*Q(3);
+	double zz = Q(2)*Q(2), zw = Q(2)*Q(3);
+
+	R(0,0) = 1 - 2 * ( yy + zz );
+	R(1,0) =     2 * ( xy - zw );
+	R(2,0) =     2 * ( xz + yw );
+
+	R(0,1) =     2 * ( xy + zw );
+	R(1,1) = 1 - 2 * ( xx + zz );
+	R(2,1) =     2 * ( yz - xw );
+
+	R(0,2) =     2 * ( xz - yw );
+	R(1,2) =     2 * ( yz + xw );
+	R(2,2) = 1 - 2 * ( xx + yy );
+	return R;
+}
+
+/** Quaternion to 3D rotation matrix (3*3)*/
+vnl_matrix<double> psciob::Get3DRotationMatrixFromQuaternion_44(const vnl_vector<double> &Q) {
+	vnl_matrix<double> R(4,4); R.set_identity();
+	
+	double xx = Q(0)*Q(0), xy = Q(0)*Q(1), xz = Q(0)*Q(2), xw = Q(0)*Q(3);
+	double yy = Q(1)*Q(1), yz = Q(1)*Q(2), yw = Q(1)*Q(3);
+	double zz = Q(2)*Q(2), zw = Q(2)*Q(3);
+
+	R(0,0) = 1 - 2 * ( yy + zz );
+	R(1,0) =     2 * ( xy - zw );
+	R(2,0) =     2 * ( xz + yw );
+
+	R(0,1) =     2 * ( xy + zw );
+	R(1,1) = 1 - 2 * ( xx + zz );
+	R(2,1) =     2 * ( yz - xw );
+
+	R(0,2) =     2 * ( xz - yw );
+	R(1,2) =     2 * ( yz + xw );
+	R(2,2) = 1 - 2 * ( xx + yy );
+
+	return R;
+}
+
+
+/** Get vector and angle from quaternion */
+void psciob::GetVectorAndAngleFromQuaternion(vnl_vector<double> &v, double &a, const vnl_vector<double> &Q) {
+	vnl_vector<double> nQ = Q;
+	nQ.normalize();
+
+	a = acos(nQ(3)) * 2;
+	v = nQ.extract(3,0);
+	v.normalize();
+}
+
+/** Get quaternion from vector and angle */
+void psciob::GetQuaternionFromVectorAndAngle(const vnl_vector<double> &v, double a, vnl_vector<double> &Q) {
+	double sina = sin(a/2.0);
+	Q.set_size(4);
+	Q(0) = v(0)*sina;
+	Q(1) = v(1)*sina;
+	Q(2) = v(2)*sina;
+	Q(3) = cos(a/2.0);
+	Q.normalize();
+}

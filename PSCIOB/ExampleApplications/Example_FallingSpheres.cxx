@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 		double t = 0, dt = 0.01;//discrete time step.
 		vnl_vector<double> nv(3);
 		WriteMirrorPolyDataToFile("FallingSpheres_vtk/sphere_t0.vtk", scene->GetSceneAsVTKPolyData());
-		Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere1_HOR_0.png", sensorHor->GetOutput());
+		//Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere1_HOR_0.png", sensorHor->GetOutput());
 		Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere1_SAG_0.png", sensorSag->GetOutput());
 		unsigned nb=0;
 		while (!converged) {
@@ -162,10 +162,10 @@ int main(int argc, char** argv) {
 			//advance time.
 			t+=dt;
 			nb++;
-			Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere1_SAG_" + stringify(nb) + ".png", sensorSag->GetOutput());
+			//Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere1_SAG_" + stringify(nb) + ".png", sensorSag->GetOutput());
 			if (fabs(t-round(t))<TINY) {
 				WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere1_SAG_" + stringify(nb) + ".nii", sensorSag->GetOutput());
-				WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere1_HOR_" + stringify(nb) + ".nii", sensorHor->GetOutput());
+				//WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere1_HOR_" + stringify(nb) + ".nii", sensorHor->GetOutput());
 			}
 			//check if things are still moving
 			sumV = nv.magnitude();
@@ -242,9 +242,9 @@ int main(int argc, char** argv) {
 						//http://www.sjsu.edu/faculty/watkins/collision.htm
 						m2 = scene->GetObject(iit->first)->objectData.m;
 						a = 2.0*m1*m2/(m1+m2)*dot_product(n, v1-v2);
-						std::cout<<" ball "<<objectIt.GetID()<<" : "<<sphereParams<<", speed: "<<v1<<", m = "<<m1<<std::endl;
-						std::cout<<" ball "<<iit->first<<" : "<<distantParams<<", speed: "<<v2<<", m = "<<m2<<std::endl;
-						std::cout<<" a = "<<a<<std::endl;
+						//std::cout<<" ball "<<objectIt.GetID()<<" : "<<sphereParams<<", speed: "<<v1<<", m = "<<m1<<std::endl;
+						//std::cout<<" ball "<<iit->first<<" : "<<distantParams<<", speed: "<<v2<<", m = "<<m2<<std::endl;
+						//std::cout<<" a = "<<a<<std::endl;
 						nv -= a/m1*n; 
 						nv *= ks;
 					}
@@ -271,11 +271,11 @@ int main(int argc, char** argv) {
 			//advance time.
 			t+=dt;
 			nb++;
-			Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere2_SAG_" + stringify(nb) + ".png", sensorSag->GetOutput());
+			//Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("FallingSpheres_png/sphere2_SAG_" + stringify(nb) + ".png", sensorSag->GetOutput());
 			if (fabs(t-round(t))<TINY) {
 				WriteMirrorPolyDataToFile("sphere2_t" + stringify(t) + ".vtk", scene->GetSceneAsVTKPolyData());				
-				WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere2_HOR_" + stringify(t) + ".nii", sensorHor->GetOutput());
-				WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere2_SAG_" + stringify(t) + ".nii", sensorSag->GetOutput());
+				//WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere2_HOR_" + stringify(t) + ".nii", sensorHor->GetOutput());
+				//WriteITKImageToFile<SensorType::OutputImageType>("FallingSpheres_nii/sphere2_SAG_" + stringify(t) + ".nii", sensorSag->GetOutput());
 			}
 
 			//check if things are still moving...
@@ -372,11 +372,11 @@ int main(int argc, char** argv) {
 			//advance time.
 			t+=dt;
 			nb++;
-			Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("spheres_SAG_" + stringify(nb) + ".png", sensorSag->GetOutput());
+			//Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>("spheres_SAG_" + stringify(nb) + ".png", sensorSag->GetOutput());
 			if (fabs(t-round(t))<TINY) {
 				WriteMirrorPolyDataToFile("spheres_t" + stringify(t) + ".vtk", scene->GetSceneAsVTKPolyData());
-				WriteITKImageToFile<SensorType::OutputImageType>("spheres_HOR_" + stringify(t) + ".nii", sensorHor->GetOutput());
-				WriteITKImageToFile<SensorType::OutputImageType>("spheres_SAG_" + stringify(t) + ".nii", sensorSag->GetOutput());
+				//WriteITKImageToFile<SensorType::OutputImageType>("spheres_HOR_" + stringify(t) + ".nii", sensorHor->GetOutput());
+				//WriteITKImageToFile<SensorType::OutputImageType>("spheres_SAG_" + stringify(t) + ".nii", sensorSag->GetOutput());
 			}
 
 			//check if things are still moving...
