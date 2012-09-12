@@ -95,9 +95,13 @@ bool PoseTransform<VDimension, TAppearance>::Scale(const vnl_vector<double> &sca
 
 //
 template < unsigned int VDimension, class TAppearance> 
-void PoseTransform<VDimension, TAppearance>::ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {
+void PoseTransform<VDimension, TAppearance>::ApplyScalingToParameters(double scaleFactor, vnl_vector<double> &params) {	
 	vnl_matrix<double> transformMatrix = GetMatrixFromParameters(params);
-	for (unsigned i=0 ; i<VDimension ; i++) { transformMatrix(i,i) *= scaleFactor; }
+	for (unsigned i=0 ; i<VDimension ; i++) { 
+		for (unsigned j=0 ; j<VDimension ; j++) { 
+			transformMatrix(i,j) *= scaleFactor; 
+		}
+	}
 	params = GetParametersFromMatrix(transformMatrix);
 }
 //

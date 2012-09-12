@@ -142,6 +142,24 @@ public:
 	double GetMaximumLikelihoodValue();
 	double GetLogLikelihood(const vnl_vector<double> &x);
 
+	/** Initialize the internal random variable generator against the clock time (trying to use different seeds for different generators) */
+	void Initialize() {
+		for (unsigned i=0 ; i<m_univ_pdfs.size() ; i++) { 
+			m_univ_pdfs[i]->Initialize();
+			std::set<double> wait_set;for (unsigned j=0 ; j<1000 ; j++) wait_set.insert(j); //just try to waste some time, so the next pdf is initialized with a different seed
+		}
+		for (unsigned i=0 ; i<m_multiv_pdfs.size() ; i++) {
+			m_multiv_pdfs[i]->Initialize();
+			std::set<double> wait_set;for (unsigned j=0 ; j<1000 ; j++) wait_set.insert(j); //just try to waste some time, so the next pdf is initialized with a different seed
+		}
+	}
+
+	/** Initialize the internal random variable generators against a given seed (different seeds for different generators) */
+	void Initialize(int seed) {
+		for (unsigned i=0 ; i<m_univ_pdfs.size() ; i++) m_univ_pdfs[i]->Initialize(seed+i);
+		for (unsigned i=0 ; i<m_multiv_pdfs.size() ; i++) m_multiv_pdfs[i]->Initialize(seed+i);
+	}
+
 protected:
 	IndependentPDFs();
 	~IndependentPDFs();
@@ -183,6 +201,11 @@ public:
 	double GetMaximumLikelihoodValue();
 	double GetLogLikelihood(const vnl_vector<double> &x);
 
+	/** Initialize the internal random variable generator against the clock time (trying to use different seeds for different generators) */
+	void Initialize()         { m_pdf->Initialize(); }
+	/** Initialize the internal random variable generators against a given seed (different seeds for different generators) */
+	void Initialize(int seed) { m_pdf->Initialize(seed); }
+
 protected:
 	UniformBoxPDF();
 	~UniformBoxPDF();
@@ -218,6 +241,19 @@ public:
 	double GetLikelihood(const vnl_vector<double> &x);
 	double GetMaximumLikelihoodValue();
 	double GetLogLikelihood(const vnl_vector<double> &x);
+
+	/** Initialize the internal random variable generator against the clock time (trying to use different seeds for different generators) */
+	void Initialize() {
+		for (unsigned i=0 ; i<m_univ_pdfs.size() ; i++) { 
+			m_univ_pdfs[i]->Initialize();
+			std::set<double> wait_set;for (unsigned j=0 ; j<1000 ; j++) wait_set.insert(j); //just try to waste some time, so the next pdf is initialized with a different seed
+		}
+	}
+
+	/** Initialize the internal random variable generators against a given seed (different seeds for different generators) */
+	void Initialize(int seed) {
+		for (unsigned i=0 ; i<m_univ_pdfs.size() ; i++) m_univ_pdfs[i]->Initialize(seed+i);
+	}
 
 protected:
 	IndependentEulerRotationsPDFs();
@@ -259,6 +295,19 @@ public:
 	double GetLikelihood(const vnl_vector<double> &x);
 	double GetMaximumLikelihoodValue();
 	double GetLogLikelihood(const vnl_vector<double> &x);
+	
+	/** Initialize the internal random variable generator against the clock time (trying to use different seeds for different generators) */
+	void Initialize() {
+		for (unsigned i=0 ; i<m_multiv_pdfs.size() ; i++) { 
+			m_multiv_pdfs[i]->Initialize();
+			std::set<double> wait_set;for (unsigned j=0 ; j<1000 ; j++) wait_set.insert(j); //just try to waste some time, so the next pdf is initialized with a different seed
+		}
+	}
+
+	/** Initialize the internal random variable generators against a given seed (different seeds for different generators) */
+	void Initialize(int seed) {
+		for (unsigned i=0 ; i<m_multiv_pdfs.size() ; i++) m_multiv_pdfs[i]->Initialize(seed+i);
+	}
 
 protected:
 	MultivariateMixturePDF();

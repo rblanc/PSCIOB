@@ -79,11 +79,27 @@ public:
     typedef typename SceneType::DeformableObjectType   ObjectType;
 	typedef typename FBMovementManager<SceneType>      FBMovementManagerType;
 
+	/** types of boundary effect 
+	* VOIDBOUNDARIES (default): scene boundaries are void, they have no effect on objects
+	* SOLIDBOUNDARIES: scene boundaries are solid, and thus tend to push inwards objects that are partially outside the scene.
+	* PERIODICBOUNDARIES: considering periodic boundaries, a part of an object partially outside on the right side 're-enters' the scene on the left side.
+	*/
+	enum BOUNDARYEFFECT { VOIDBOUNDARIES, SOLIDBOUNDARIES, PERIODICBOUNDARIES };
+
+
     /** Attach a scene to the algorithm */
     void SetScene(SceneType* scene) { 
         m_scene = scene;
         m_mvtManager->SetScene(m_scene);
     }
+
+	/** Set the Boundary effect behavior
+	* \todo implement the non-void boundary conditions...
+	*/
+	void SetBoundaryEffectBehavior(BOUNDARYEFFECT eff) { 
+		m_boundaryEffectCode = eff; 
+	}
+
 
     /** Set a specific movement manager, this object is in charge of proposing and applying moves to the objects of the scene 
     * The default manager is a FBMovementManager, one can set a specialized child instead (e.g. for managing rotations).
@@ -106,44 +122,74 @@ public:
     
 
     /** Applies a single iteration of the algorithm 
-    * returns false if no overlaps were present anyway.
-    */
-    bool ApplyOneIteration() {
-        m_proposedMoves.clear(); //make sure it starts empty.
-        bool noOverlaps = true;
-        //initialize the moves to identity for all objects (m_proposedMoves)
-        SceneObjectIterator<SceneType> it(m_scene);
-        for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
-            m_proposedMoves.insert(m_proposedMoves.end(), MovePairType(it.GetID(), m_scene->GetParametersOfObject(it.GetID())) );
-        }
+	* returns false if no overlaps were present anyway.
+	*/
+	bool ApplyOneIteration() {
+clock_t t0=clock();
+		m_proposedMoves.clear(); //make sure it starts empty.
+		bool noOverlaps = true;
+		//initialize the moves to identity for all objects (m_proposedMoves)
+		SceneObjectIterator<SceneType> it(m_scene);
+		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
+			m_proposedMoves.insert(m_proposedMoves.end(), MovePairType(it.GetID(), m_scene->GetParametersOfObject(it.GetID())) );
+		}
 
-        //check for overlaps between objects 
-        //for each pair of overlapping objects, propose a move, and compose it with the existing m_proposedMoves
-        m_scene->GetInteractionManager()->TurnOnInteractionManagement(); //should not be necessary... but do it just in case...
-        for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
-            //look for the interactions for this object
-            if (!it.GetObject()->interactionData.empty()) noOverlaps = false;
-            for (SceneType::ObjectInteractionIterator dit = it.GetObject()->interactionData.begin() ; dit != it.GetObject()->interactionData.end() ; dit++ ) {
-                //propose a move unilaterally for the current object, and compose it with the current proposed move
-                m_proposedMoves[it.GetID()] = m_mvtManager->UpdateMove( m_proposedMoves[it.GetID()], it.GetID(), dit->first, dit->second );
-                //the second object of the pair will be treated when its turn comes
-            }
-        }
-        
-        if (noOverlaps) return false;
-    
-        //apply the moves
-        m_scene->GetInteractionManager()->TurnOffInteractionManagement(); 
-        for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
-            //downscale the objects -> compute the parameters that realizes this downscaling and apply the moves
-            m_scene->ModifyObjectParameters( it.GetID(), m_mvtManager->GetScaledParameters(it.GetID(), m_proposedMoves[it.GetID()]) );
-            
-            
-        }
-        m_scene->GetInteractionManager()->TurnOnInteractionManagement();         
-        
-        return true;
-    }
+		//check for overlaps between objects 
+		//for each pair of overlapping objects, propose a move, and compose it with the existing m_proposedMoves
+		m_scene->GetInteractionManager()->TurnOnInteractionManagement(); //should not be necessary... but do it just in case...
+std::cout<<"  time after initializing moves, and making sure interactions are uptodate: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+		unsigned nbOverlaps = 0;
+		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
+			//look for the interactions for this object
+			if (!it.GetObject()->interactionData.empty()) noOverlaps = false;
+			for (SceneType::ObjectInteractionIterator dit = it.GetObject()->interactionData.begin() ; dit != it.GetObject()->interactionData.end() ; dit++ , ++nbOverlaps) {
+				//propose a move unilaterally for the current object, and compose it with the current proposed move
+				if (it.GetID()<dit->first) 
+					m_proposedMoves[it.GetID()] = m_mvtManager->UpdateMove( m_proposedMoves[it.GetID()], it.GetID(), dit->first, dit->second );
+				//the second object of the pair will be treated when its turn comes
+			}
+		}
+std::cout<<"  time after processing object overlaps ("<<nbOverlaps<<"): "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+
+		//manage boundary effects
+		switch (m_boundaryEffectCode) {
+			case VOIDBOUNDARIES: //nothing to do.
+				break; 
+			case SOLIDBOUNDARIES: //translate inwards objects that are partially outside the scene
+				for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
+					std::vector<unsigned> intersects;
+					intersects = IdentifyIntersectionBoundingBoxes( it.GetObject()->obj->GetPhysicalBoundingBox(), m_scene->GetSceneBoundingBox() );
+					for (unsigned w = 0 ; w<intersects.size() ; w++, ++nbOverlaps) m_proposedMoves[it.GetID()] = m_mvtManager->UpdateMoveWithSceneWall( m_proposedMoves[it.GetID()], it.GetID(), intersects[w] );
+				}
+				break;
+			case PERIODICBOUNDARIES: 
+				throw DeformableModelException("ForceBiasedAlgorithm -- PERIODICBOUNDARIES are not implemented yet -- check code for ideas"); 
+				//check with which border(s), if any, the object overlaps with, and update the move accordingly.
+				//for each of these, add a temporary object on the 'opposite' face of the scene, and UpdateMove as usual in case of interaction
+				//remember to apply the move to the correct move to the original object, and to remove the temporary one
+				//also, if an objects is too much outside the scene (more than half), than delete it and move it to the other side...
+				break;
+		}
+std::cout<<"  time after dealing with boundary conditions: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+
+
+		std::cout<<"  nb of overlaps: "<<nbOverlaps<<std::endl;
+		if (nbOverlaps==0) return false;
+
+		//apply the moves
+		m_scene->GetInteractionManager()->TurnOffInteractionManagement(); 
+		unsigned nbModifs = 0;
+		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
+			//downscale the objects -> compute the parameters that realizes this downscaling and apply the moves
+			if (m_scene->ModifyObjectParameters( it.GetID(), m_mvtManager->GetScaledParameters(it.GetID(), m_proposedMoves[it.GetID()]) )) nbModifs++;
+			//std::cout<<"new params of obj "<<it.GetID()<<": "<<m_scene->GetParametersOfObject(it.GetID())<<std::endl;
+		}
+
+		m_scene->GetInteractionManager()->TurnOnInteractionManagement();         
+std::cout<<"  total time for this iteration: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+		if (nbModifs==0) return false;
+		return true;
+	}
     
     /** Iterate until convergence 
     * returns -1 if it exited after reaching the maximum number of allowed iterations
@@ -155,12 +201,17 @@ public:
         int converged = 0;
         //draw the scene now
         //psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
+		psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
+		psciob::WriteITKImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".nii", m_scene->GetSceneAsLabelImage());
         while (converged==0) {
             nbIter++;
-            if (nbIter>=m_maxNbIteration) { converged = -1; break; }            
+            if (nbIter>m_maxNbIteration) { converged = -1; break; }
+			std::cout<<"iter: "<<nbIter<<std::endl;
             if ( !ApplyOneIteration() ) converged = 1;
             //draw the scene now
             //psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
+			psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
+			psciob::WriteITKImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".nii", m_scene->GetSceneAsLabelImage());
         }
         return converged;
     }
@@ -171,6 +222,7 @@ protected:
         m_scene = 0;
         m_maxNbIteration = 1e10;
         m_mvtManager = FBMovementManagerType::New();
+		m_boundaryEffectCode = VOIDBOUNDARIES;
     };
     ~ForceBiasedAlgorithm() {};
 
@@ -184,6 +236,8 @@ protected:
     typedef std::map<IDType, vnl_vector<double>> ProposedMovesType;
     typedef std::pair<IDType, vnl_vector<double>> MovePairType;
     std::map<IDType, vnl_vector<double>> m_proposedMoves;
+
+	BOUNDARYEFFECT m_boundaryEffectCode;
 
 private:
     ForceBiasedAlgorithm(const Self&);      //purposely not implemented

@@ -176,7 +176,7 @@ void ellipses() {
 	//WriteITKImageToFile<ImageType>("simpleObjectsExample_rectangle.png", object->GetObjectAsBinaryImage());
 	//typedef itk::Image<unsigned char, 3> Image3DType;
 	//Image3DType::Pointer image3D = Image3DType::New();
-	//Convert2DITKImageToFlat3D<unsigned char>(object->GetObjectAsBinaryImage(), image3D, CORONAL);
+	//Convert2DITKImageToFlat3D<unsigned char, unsigned char>(object->GetObjectAsBinaryImage(), image3D, CORONAL);
 	//WriteITKImageToFile<Image3DType>("simpleObjectsExample_rectangle.nii", image3D);
 
 	//std::cout<<"\n\n\n *** Now the same for a 3D cuboid... ++ play with the parameters !! ***"<<std::endl;

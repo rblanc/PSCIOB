@@ -37,6 +37,9 @@
 
 #include "BaseScene.h"
 #include "ForceBiasedAlgorithm.h"
+
+#include "2DTransformUtils.h"
+#include "3DTransformUtils.h"
 #include <vnl/algo/vnl_symmetric_eigensystem.h>
 
 namespace psciob {
@@ -70,6 +73,7 @@ public:
 	typedef typename SceneType::DeformableObjectType   ObjectType;
 	typedef typename SceneType::InteractionDataType    InteractionDataType;
 	
+
 	/** Attach a scene to the algorithm */
 	void SetScene(SceneType* scene) { 
 		m_scene = scene; 
@@ -120,7 +124,7 @@ public:
 		vnl_vector<double> t(Dimension), proposedMove = currentMove;
 		
 		//translation
-		t = m_translationFactor * (m_scene->GetParametersOfObject(id1).extract(Dimension) - m_scene->GetParametersOfObject(id2).extract(Dimension)).normalize();
+		t = m_translationFactor * (m_scene->GetParametersOfObject(id1).extract(Dimension) - m_scene->GetParametersOfObject(id2).extract(Dimension))/2.0;
 		for (unsigned i=0 ; i<Dimension ; i++) proposedMove(i)+=t(i);
 
 		//rotation
@@ -132,28 +136,39 @@ public:
 
 			vnl_symmetric_eigensystem<double> eig1(I1);
 			vnl_symmetric_eigensystem<double> eig2(I2);
-			
-			vnl_matrix<double> RotMat_Full = eig1.V.transpose() * eig2.V, RotMat_Part;
+std::cout<<"matrix 1: \n"<<eig1.V<<std::endl;
+std::cout<<"matrix 2: \n"<<eig2.V<<std::endl;
+			vnl_matrix<double> RotMat_Full = eig2.V * eig1.V.transpose(), RotMat_Part;
 			double ang;
 			vnl_vector<double> Q;vnl_vector<double> vr(3);
 
 			switch(Dimension) {
 				case 2: //just interpolate the angle that brings both systems in alignement
-					ang = GetAngleFrom2DRotationMatrix( RotMat_Full );
-					RotMat_Part = Get2DRotationMatrixFromAngle(m_rotationFactor*ang);
+					ang = psciob::GetAngleFrom2DRotationMatrix( RotMat_Full );
+					RotMat_Part = psciob::Get2DRotationMatrixFromAngle(m_rotationFactor*ang);
 					break;
 				case 3:
 					//do the same as for 2D...
 					//use quaternion to get the axis of rotation, and angle
+std::cout<<"RotMat_Full: \n"<<RotMat_Full<<std::endl;
 					Q = psciob::GetQuaternionFrom3DRotationMatrix( RotMat_Full );
+std::cout<<"    Q: "<<Q<<std::endl;
+RotMat_Part = psciob::Get3DRotationMatrixFromQuaternion_33(Q);
+std::cout<<"RotMat_Part: \n"<<RotMat_Part<<std::endl;
+
 					psciob::GetVectorAndAngleFromQuaternion( vr, ang, Q );
+std::cout<<"    vect: "<<vr<<", angle: "<<ang<<std::endl;
 					//and get the rotation matrix corresponding to the requested fraction of the angle
 					psciob::GetQuaternionFromVectorAndAngle( vr, m_rotationFactor*ang, Q );
+std::cout<<"eff Q: "<<Q<<std::endl;
+psciob::GetVectorAndAngleFromQuaternion( vr, ang, Q );
+std::cout<<"eff vect: "<<vr<<", eff angle: "<<ang<<std::endl;
+
 					RotMat_Part = psciob::Get3DRotationMatrixFromQuaternion_33(Q);
+std::cout<<"RotMat_Part: \n"<<RotMat_Part<<std::endl;
 					break;
 				default: throw DeformableModelException("FBMovementManager::UpdateMove : dimension should be 2 or 3!");
 			}
-
 			m_scene->GetObject(id1)->obj->ApplyRotationToParameters( RotMat_Part, proposedMove);
 		}
 
@@ -167,6 +182,58 @@ public:
 			//check this
 			m_scene->GetObject(id)->obj->ApplyScalingToParameters(m_scaleFactor, proposedMove);
 		}
+		return proposedMove;
+	}
+
+
+	/** update the proposed move of object id1 with respect to its interaction with the scene wall
+	* \param currentMove is the current vector of parameters describing the move (would-be object parameters)
+	* \param id1 is the id of the object to be moved
+	* \param wall is the index describing which wall is hit (0=left, 1=right, ...)
+	* In this class, a simple unit translation is applied, in the direction joining the center of both objects, and optionally a rotation that tends to make the objects inertia matrices 'parallel'.
+	*/
+	virtual vnl_vector<double> UpdateMoveWithSceneWall(const vnl_vector<double> &currentMove, IDType id1, unsigned wallId) {
+		vnl_vector<double> t(Dimension), proposedMove = currentMove;
+
+		//translation
+		t.fill(0);
+		unsigned i = wallId/2;
+
+		if (wallId == 2*i) proposedMove(i) += max(m_translationFactor * (m_scene->GetSceneBoundingBox()(wallId)-m_scene->GetObject(id1)->obj->GetPhysicalBoundingBox()(wallId)), m_scene->GetSceneSpacing()[i]);
+		else               proposedMove(i) -= max(m_translationFactor * (m_scene->GetSceneBoundingBox()(wallId)-m_scene->GetObject(id1)->obj->GetPhysicalBoundingBox()(wallId)), m_scene->GetSceneSpacing()[i]);
+		////rotation
+		//if (m_rotationFactor!=0) {
+		//	//get the center of gravity, and matrices of inertia of both objects
+		//	vnl_vector<double> c1; vnl_matrix<double> I1, I2(Dimension, Dimension);
+		//	m_scene->GetObject(id1)->obj->GetObjectCenterAndInertiaMatrix(c1, I1);
+		//	I2.fill(0); for (unsigned j=0 ; j<Dimension ; j++) { I2(j,j) = 10;} I2(i,i) = 1; // just set the inertia matrix as aligned with the wall
+
+		//	vnl_symmetric_eigensystem<double> eig1(I1);
+		//	vnl_symmetric_eigensystem<double> eig2(I2);
+		//	
+		//	vnl_matrix<double> RotMat_Full = eig1.V.transpose() * eig2.V, RotMat_Part;
+		//	double ang;
+		//	vnl_vector<double> Q; vnl_vector<double> vr(3);
+
+		//	switch(Dimension) {
+		//		case 2: //just interpolate the angle that brings both systems in alignement
+		//			ang = psciob::GetAngleFrom2DRotationMatrix( RotMat_Full );
+		//			RotMat_Part = psciob::Get2DRotationMatrixFromAngle(m_rotationFactor*ang);
+		//			break;
+		//		case 3:
+		//			//do the same as for 2D...
+		//			//use quaternion to get the axis of rotation, and angle
+		//			Q = psciob::GetQuaternionFrom3DRotationMatrix( RotMat_Full );
+		//			psciob::GetVectorAndAngleFromQuaternion( vr, ang, Q );
+		//			//and get the rotation matrix corresponding to the requested fraction of the angle
+		//			psciob::GetQuaternionFromVectorAndAngle( vr, m_rotationFactor*ang, Q );
+		//			RotMat_Part = psciob::Get3DRotationMatrixFromQuaternion_33(Q);
+		//			break;
+		//		default: throw DeformableModelException("FBMovementManager::UpdateMove : dimension should be 2 or 3!");
+		//	}
+		//	m_scene->GetObject(id1)->obj->ApplyRotationToParameters( RotMat_Part, proposedMove);
+		//}
+
 		return proposedMove;
 	}
 

@@ -67,7 +67,10 @@ vnl_vector<double> Similarity2DTransform::GetParametersFromMatrix(const vnl_matr
 	vnl_vector<double> params(m_nbParams);
 
 	vnl_matrix<double> rotmat = transformMatrix.extract(m_nbDimensions,m_nbDimensions,0,0);
-	params(3) = sqrt(vnl_determinant(rotmat));
+	//params(3) = sqrt(vnl_determinant(rotmat));
+	vnl_matrix<double> tmpmat = rotmat*rotmat.transpose();
+	params(3) = sqrt( tmpmat(0,0) ); //for a similarity transform, the diagonal terms should all be equal...
+
 	rotmat /= params(3);
 
 	params(0) = transformMatrix(0,m_nbDimensions);

@@ -194,26 +194,26 @@ void TestSimpleSEMSensor() {
 	//by default, with a HORIZONTAL view, and a exponentially decreasing appearance function, with max = 250 (decreases with the distance to the sensor)
 
 	//Write2DGreyLevelRescaledImageToFile<Image2DType>("SimpleSEMSensedScene.png", sensor3D->GetOutput());
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(4));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(4));
 	WriteITKImageToFile<Image3DType>("SEMSensor_Hor.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(4));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(4));
 	std::cout<<"number of objects in horizontal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("SEMSensor_HorLabels.nii", img3DUS);
 
 	sensor3D->SetObservationDirectionType(SAGITTAL);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("SEMSensor_Sag.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	std::cout<<"number of objects in sagittal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("SEMSensor_SagLabels.nii", img3DUS);
 
 	sensor3D->SetObservationDirectionType(CORONAL);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	WriteITKImageToFile<Image3DType>("SEMSensor_Cor.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	std::cout<<"number of objects in coronal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("SEMSensor_CorLabels.nii", img3DUS);
 
@@ -223,7 +223,7 @@ void TestSimpleSEMSensor() {
 	SensorType::OutputLabelMapType::Pointer singleObjectLabelMap = SensorType::OutputLabelMapType::New();
 	sensor3D->GetOffContextObjectImage( scene3D->GetObject(2), singleObjectImage, singleObjectLabelMap );
 	std::cout<<"number of object in singleObjectLabelMap: "<<singleObjectLabelMap->GetNumberOfLabelObjects()<<std::endl;
-	Convert2DITKImageToFlat3D<float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<float, float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	WriteITKImageToFile<Image3DType>("SEMSensor_Cor_Single.nii", img3D);
 
 
@@ -231,10 +231,10 @@ void TestSimpleSEMSensor() {
 	std::cout<<"Removing first object and updating the sensor"<<std::endl;
 	scene3D->RemoveObject(1);
 
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	WriteITKImageToFile<Image3DType>("SEMSensor_Cor2.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	std::cout<<"number of objects in coronal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("SEMSensor_CorLabels2.nii", img3DUS);
 
@@ -307,10 +307,10 @@ void TestPixelSetBasedSEMSensor() {
 	sensor3D->SetAppearanceParameters(appearanceParams);
 	
 	//by default, with a HORIZONTAL view, and a exponentially decreasing appearance function, with max = 250 (decreases with the distance to the sensor)
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(4));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(4));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Hor.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(4));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(4));
 	std::cout<<"number of objects in horizontal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("PixelSEMSensor_HorLabels.nii", img3DUS);
 
@@ -318,35 +318,35 @@ void TestPixelSetBasedSEMSensor() {
 	SensorType::OutputLabelMapType::Pointer singleObjectLabelMap = SensorType::OutputLabelMapType::New();
 	sensor3D->GetOffContextObjectImage( scene3D->GetObject(5), singleObjectImage, singleObjectLabelMap );
 	std::cout<<"number of object in singleObjectLabelMap: "<<singleObjectLabelMap->GetNumberOfLabelObjects()<<std::endl;
-	Convert2DITKImageToFlat3D<float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(4));
+	Convert2DITKImageToFlat3D<float, float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(4));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Hor_Single.nii", img3D);
 
 
 
 	sensor3D->SetObservationDirectionType(CORONAL);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Cor.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	std::cout<<"number of objects in coronal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("PixelSEMSensor_CorLabels.nii", img3DUS);
 
 	sensor3D->GetOffContextObjectImage( scene3D->GetObject(5), singleObjectImage, singleObjectLabelMap );
-	Convert2DITKImageToFlat3D<float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<float, float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Cor_Single.nii", img3D);
 
 
 
 	sensor3D->SetObservationDirectionType(SAGITTAL);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Sag.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	std::cout<<"number of objects in sagittal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("PixelSEMSensor_SagLabels.nii", img3DUS);
 
 	sensor3D->GetOffContextObjectImage( scene3D->GetObject(5), singleObjectImage, singleObjectLabelMap );
-	Convert2DITKImageToFlat3D<float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Sag_Single.nii", img3D);
 
 
@@ -356,37 +356,37 @@ void TestPixelSetBasedSEMSensor() {
 	sphereParams = scene3D->GetParametersOfObject(5);
 	sphereParams(1)+=0.3;
 	scene3D->ModifyObjectParameters(5, sphereParams);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Sag1.nii", img3D);
 
 	sphereParams(1)+=0.3;
 	scene3D->ModifyObjectParameters(5, sphereParams);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Sag2.nii", img3D);
 
 	sphereParams(1)+=0.3;
 	scene3D->ModifyObjectParameters(5, sphereParams);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Sag3.nii", img3D);
 	
 	sphereParams(1)+=0.3;
 	scene3D->ModifyObjectParameters(5, sphereParams);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Sag4.nii", img3D);
 	
 	sphereParams(1)+=0.3;
 	scene3D->ModifyObjectParameters(5, sphereParams);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Sag5.nii", img3D);
 
 	sphereParams(1)-=0.3;
 	scene3D->ModifyObjectParameters(5, sphereParams);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Sag6.nii", img3D);
 
 	sphereParams(1)-=0.3;
 	scene3D->ModifyObjectParameters(5, sphereParams);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensor_Sag7.nii", img3D);
 
 	//SensorType::OutputImageType::Pointer outImg = SensorType::OutputImageType::New();
@@ -490,10 +490,10 @@ void TestPixelSetBasedSEMSensorWithLabelImage() {
 	vnl_vector<double> appearanceParams(1); appearanceParams(0)=200; sensor3D->SetAppearanceParameters(appearanceParams);
 	
 	//by default, with a HORIZONTAL view, and a exponentially decreasing appearance function, with max = 250 (decreases with the distance to the sensor)
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(4));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(4));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensorLabImg_Hor.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(4));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(4));
 	std::cout<<"number of objects in horizontal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("PixelSEMSensorLabImg_HorLabels.nii", img3DUS);
 
@@ -501,32 +501,32 @@ void TestPixelSetBasedSEMSensorWithLabelImage() {
 	SensorType::OutputLabelMapType::Pointer singleObjectLabelMap = SensorType::OutputLabelMapType::New();
 	sensor3D->GetOffContextObjectImage( scene3D->GetObject(5), singleObjectImage, singleObjectLabelMap );
 	std::cout<<"number of object in singleObjectLabelMap: "<<singleObjectLabelMap->GetNumberOfLabelObjects()<<std::endl;
-	Convert2DITKImageToFlat3D<float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(4));
+	Convert2DITKImageToFlat3D<float, float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(4));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensorLabImg_Hor_Single.nii", img3D);
 
 
 	sensor3D->SetObservationDirectionType(SAGITTAL);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensorLabImg_Sag.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	std::cout<<"number of objects in sagittal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("PixelSEMSensorLabImg_SagLabels.nii", img3DUS);
 
 	sensor3D->GetOffContextObjectImage( scene3D->GetObject(5), singleObjectImage, singleObjectLabelMap );
-	Convert2DITKImageToFlat3D<float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensorLabImg_Sag_Single.nii", img3D);
 
 	sensor3D->SetObservationDirectionType(CORONAL);
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensorLabImg_Cor.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	std::cout<<"number of objects in coronal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("PixelSEMSensorLabImg_CorLabels.nii", img3DUS);
 
 	sensor3D->GetOffContextObjectImage( scene3D->GetObject(5), singleObjectImage, singleObjectLabelMap );
-	Convert2DITKImageToFlat3D<float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<float, float>(singleObjectImage, img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensorLabImg_Cor_Single.nii", img3D);
 
 
@@ -534,10 +534,10 @@ void TestPixelSetBasedSEMSensorWithLabelImage() {
 	std::cout<<"Removing first object and updating the sensor"<<std::endl;
 	scene3D->RemoveObject(1);
 
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	WriteITKImageToFile<Image3DType>("PixelSEMSensorLabImg_Cor2.nii", img3D);
 	filter->SetInput( sensor3D->GetLabelOutput() ); filter->Update();
-	Convert2DITKImageToFlat3D<unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(2));
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(filter->GetOutput(), img3DUS, sensor3D->GetObservationDirectionType(), sceneBBox(2));
 	std::cout<<"number of objects in coronal label map: "<<sensor3D->GetLabelOutput()->GetNumberOfLabelObjects()<<std::endl;
 	WriteITKImageToFile<UShort3DImageType>("PixelSEMSensorLabImg_CorLabels2.nii", img3DUS);
 
@@ -642,7 +642,7 @@ void TestOverlaps() {
 	sphereParams(0) = 0; sphereParams(1) = 0; sphereParams(2)=7.5; sphereParams(3) = 5; sphere->SetParameters(sphereParams);	scene3D->AddObject(sphere);
 
 	WriteITKImageToFile<Scene3DType::LabelImageType>("TestOverlaps_0_lab.nii", scene3D->GetSceneAsLabelImage());
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("TestOverlaps_0_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
@@ -655,7 +655,7 @@ void TestOverlaps() {
 	std::cout<<"\n1: Adding a third overlapping sphere, which 'hides' the overlap between spheres 1 and 2"<<std::endl;
 	sphereParams(0) = 0; sphereParams(1) = 0; sphereParams(2) = 5; sphereParams(3) = 5; sphere->SetParameters(sphereParams);	scene3D->AddObject(sphere);
 	WriteITKImageToFile<Scene3DType::LabelImageType>("TestOverlaps_1_lab.nii", scene3D->GetSceneAsLabelImage());
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("TestOverlaps_1_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
@@ -667,7 +667,7 @@ void TestOverlaps() {
 	std::cout<<"\n2: Removing sphere 2"<<std::endl;
 	scene3D->RemoveObject(2);
 	WriteITKImageToFile<Scene3DType::LabelImageType>("TestOverlaps_2_lab.nii", scene3D->GetSceneAsLabelImage());
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("TestOverlaps_2_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
@@ -679,7 +679,7 @@ void TestOverlaps() {
 	std::cout<<"\n3: Re-Adding the removed sphere, the overlap between this sphere and sphere 1 is shadowed by sphere 3"<<std::endl;
 	sphereParams(0) = 0; sphereParams(1) = 0; sphereParams(2)=7.5; sphereParams(3) = 5; sphere->SetParameters(sphereParams);	scene3D->AddObject(sphere);
 	WriteITKImageToFile<Scene3DType::LabelImageType>("TestOverlaps_3_lab.nii", scene3D->GetSceneAsLabelImage());
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("TestOverlaps_3_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
@@ -692,7 +692,7 @@ void TestOverlaps() {
 	std::cout<<"\n4: Modifying sphere2, such that its overlap with sphere 1 is still shadowed by sphere 3"<<std::endl;
 	sphereParams(0) = 0; sphereParams(1) = 0; sphereParams(2)=8; sphereParams(3) = 5; scene3D->ModifyObjectParameters(2, sphereParams);
 	WriteITKImageToFile<Scene3DType::LabelImageType>("TestOverlaps_4_lab.nii", scene3D->GetSceneAsLabelImage());
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("TestOverlaps_4_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
@@ -705,7 +705,7 @@ void TestOverlaps() {
 	std::cout<<"\n5: Modifying sphere2, such that it no longer overlaps with sphere 1"<<std::endl;
 	sphereParams(0) = 0; sphereParams(1) = 0; sphereParams(2)=11; sphereParams(3) = 5; scene3D->ModifyObjectParameters(2, sphereParams);
 	WriteITKImageToFile<Scene3DType::LabelImageType>("TestOverlaps_5_lab.nii", scene3D->GetSceneAsLabelImage());
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("TestOverlaps_5_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
@@ -718,7 +718,7 @@ void TestOverlaps() {
 	std::cout<<"\n6: Modifying sphere1, such that it touches again sphere 2, but this contact is shadowed by sphere3"<<std::endl;
 	sphereParams(0) = 0; sphereParams(1) = 0; sphereParams(2)=3; sphereParams(3) = 5; scene3D->ModifyObjectParameters(1, sphereParams);
 	WriteITKImageToFile<Scene3DType::LabelImageType>("TestOverlaps_6_lab.nii", scene3D->GetSceneAsLabelImage());
-	Convert2DITKImageToFlat3D<float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
+	Convert2DITKImageToFlat3D<float, float>(sensor3D->GetOutput(), img3D, sensor3D->GetObservationDirectionType(), sceneBBox(0));
 	WriteITKImageToFile<Image3DType>("TestOverlaps_6_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {

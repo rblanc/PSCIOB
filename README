@@ -1,5 +1,5 @@
 Parametric Scenes of Interacting Objects (PSIOB) 
-is a library intended to facilitate the manipulation of 2D or 3D scenes composed of parametric objects in interaction.
+is a C++ library intended to facilitate the manipulation of 2D or 3D scenes composed of parametric objects in interaction.
 
 The library builds upon a number of concepts, implemented through (generally virtual) base classes, and specialized instances.
 
@@ -22,7 +22,7 @@ The sensor is itself a parametric object.
 
 * Cost functions are used to associate costs to single objects, part or whole of the scene, possibly with respect to a reference image provided for this purpose.
 
-* The main idea behind PSIOB is to generate scene which optimize various criteria : compact scene without any overlaps between the objects, detecting objects visible on a reference image, ...
+* The main idea behind PSIOB is to generate various types of populations of objects (scenes) that optimize different kinds of criteria: compact scene without any overlaps between the objects, detecting objects visible on a reference image, ...
 The optimization framework consists of optimizers (Optimizer_Base), and optimization managers (OptimizationManager_Base). The idea is that the optimizer implements the HOW to optimize, while the optimization manager tells the optimizer WHAT to optimize.
 
 
@@ -41,7 +41,9 @@ In particular for 3D scenes, typical outputs are 3D images (.nii) or meshes (vtk
 Installation:
 -------------
 
-Using CMake
+tested only with Windows & Visual Studio so far, but should be compatible with linux
+
+Run CMake
 1/ Select the current directory as the source directory
 2/ Define your build directory (e.g. ../PSIOB-build)
 3/ Configure
@@ -54,10 +56,22 @@ Using CMake
    not tested under Linux, however, "make" followed by "make install" should work 
 
 
--------
-Author: 
--------
+--------------
+Documentation:
+--------------
+
+A doxygen documentation can be generated (www.doxygen.org/). The simplest is to run doxywizard on the provided ./Documentation/Doxyfile
+
+
+------------
+Main Author: 
+------------
 Remi Blanc
+
+Contributors:
+------------
+- Barna Keresztes
+- Cédric Chapouillie
 
 
 --------

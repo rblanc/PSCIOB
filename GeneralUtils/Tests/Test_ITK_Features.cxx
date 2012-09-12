@@ -306,7 +306,7 @@ void TestVTKToITK2DLabelMapConversion() {
 	Write2DGreyLevelRescaledImageToFile<Image2DType>("TestVTK2ITK_2DEllipse.png", labelMapToLabelImageFilter->GetOutput() );
 
 	Image3DType::Pointer img = Image3DType::New();
-	Convert2DITKImageToFlat3D<unsigned short>(labelMapToLabelImageFilter->GetOutput(), img, HORIZONTAL, 0);
+	Convert2DITKImageToFlat3D<unsigned short, unsigned short>(labelMapToLabelImageFilter->GetOutput(), img, HORIZONTAL, 0);
 
 	WriteITKImageToFile<Image3DType>("TestVTK2ITK_2DEllipse.nii", img );
 

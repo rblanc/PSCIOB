@@ -55,9 +55,9 @@ public:
 	itkTypeMacro(PDFBase, itk::LightObject);
 
 	/** Initialize the internal random variable generator against the clock time */
-	void Initialize();
+	virtual void Initialize();
 	/** Initialize the internal random variable generator against a given seed */
-	void Initialize(int seed);
+	virtual void Initialize(int seed);
 
 	/** Get the likelihood of the sample p(x), where p is the probability density function */
 	virtual double GetLikelihood(const TSampleType &x) = 0;

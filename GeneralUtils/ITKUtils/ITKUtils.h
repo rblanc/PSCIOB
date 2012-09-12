@@ -190,8 +190,10 @@ void ConvertFlat3DITKImageTo2D(itk::Image<T,3> *I1, itk::Image<T,2> *I2);
 
 //
 //Convert2DITKImageToFlat3D
-template <class T> 
-void Convert2DITKImageToFlat3D(itk::Image<T,2> *I1, itk::Image<T,3> *I2, ObservationDirectionType dir = HORIZONTAL, double ref_coord = 0.0);
+/** Converts a 2D ITK Image into a flat 3D image, with a specified coordinate system */ 
+template <class T1, class T2> 
+void Convert2DITKImageToFlat3D(itk::Image<T1,2> *I1, itk::Image<T2,3> *I2, ObservationDirectionType dir = HORIZONTAL, double ref_coord = 0.0);
+
 
 } // namespace psciob
 

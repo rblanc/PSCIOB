@@ -68,8 +68,15 @@ inline bool TestBoundingBoxesIntersection_NoCheck(const vnl_vector<double> &BB1,
 */
 bool IntersectionBoundingBoxes(const vnl_vector<double> &BB1, const vnl_vector<double> &BB2, vnl_vector<double> *interBB);
 
+
 /** Test whether bounding box 1 is fully inside bounding box 2 */
 bool TestBoundingBoxFullyInsideAnother(const vnl_vector<double> &BB1, const vnl_vector<double> &BB2);
+
+
+/** Identify which walls of the 2nd bounding box are crossed by BB1
+* returns an std::vector containing indices of walls that are intersected (0=left, 1=right, 2= ...)
+*/
+std::vector<unsigned> IdentifyIntersectionBoundingBoxes(const vnl_vector<double> &BB1, const vnl_vector<double> &BB2);
 
 } // namespace psciob
 

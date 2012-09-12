@@ -75,3 +75,16 @@ bool psciob::TestBoundingBoxFullyInsideAnother(const vnl_vector<double> &BB1, co
 	return true;
 }
 
+
+
+std::vector<unsigned> psciob::IdentifyIntersectionBoundingBoxes(const vnl_vector<double> &BB1, const vnl_vector<double> &BB2) {
+	std::vector<unsigned> intersects;
+	unsigned int D = BB1.size()/2;
+	if (2*D != BB2.size()) throw DeformableModelException("IdentifyIntersectionBoundingBoxes : error with dimensionality of inputs");
+
+	for (unsigned i=0 ; i<D ; i++) {
+		if ( (BB1( 2*i )<BB2( 2*i )) && (BB1(2*i+1)>BB2( 2*i )) ) intersects.push_back( 2*i );
+		if ( (BB1( 2*i )<BB2(2*i+1)) && (BB1(2*i+1)>BB2(2*i+1)) ) intersects.push_back(2*i+1);
+	}
+	return intersects;
+}

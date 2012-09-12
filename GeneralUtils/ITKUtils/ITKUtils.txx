@@ -495,10 +495,10 @@ void ConvertFlat3DITKImageTo2D(itk::Image<T,3> *I1, itk::Image<T,2> *I2) {
 
 //
 //Convert2DITKImageToFlat3D
-template <class T> 
-void Convert2DITKImageToFlat3D(itk::Image<T,2> *I1, itk::Image<T,3> *I2, ObservationDirectionType dir, double ref_coord) {
-	typedef itk::Image<T,2> InputImageType;
-	typedef itk::Image<T,3> OutputImageType;
+template <class T1, class T2> 
+void Convert2DITKImageToFlat3D(itk::Image<T1,2> *I1, itk::Image<T2,3> *I2, ObservationDirectionType dir, double ref_coord) {
+	typedef itk::Image<T1,2> InputImageType;
+	typedef itk::Image<T2,3> OutputImageType;
 
 	OutputImageType::SpacingType outputSpacing;
 	OutputImageType::PointType outputOrigin;
