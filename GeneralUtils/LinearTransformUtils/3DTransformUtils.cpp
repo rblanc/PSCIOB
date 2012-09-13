@@ -45,7 +45,7 @@ vnl_matrix<double> psciob::Get3DRotationMatrixFromEulerAngles(double h, double a
 	rot(0,0) = ch*ca;  rot(0,1) = sh*sb-ch*sacb;   rot(0,2)= ch*sasb+sh*cb;
 	rot(1,0) = sa;     rot(1,1) = ca*cb;           rot(1,2)=-ca*sb;
 	rot(2,0) =-sh*ca;  rot(2,1) = sh*sacb+ch*sb;   rot(2,2)=-sh*sasb+ch*cb;
-
+	
 	return rot;
 }
 
@@ -180,6 +180,7 @@ vnl_vector<double> psciob::GetQuaternionFrom3DRotationMatrix(const vnl_matrix<do
 	return Q.normalize();
 }
 
+
 /** Quaternion to 3D rotation matrix (3*3)*/
 vnl_matrix<double> psciob::Get3DRotationMatrixFromQuaternion_33(const vnl_vector<double> &Q) {
 	vnl_matrix<double> R(3,3);
@@ -225,18 +226,12 @@ vnl_matrix<double> psciob::Get3DRotationMatrixFromQuaternion_44(const vnl_vector
 
 /** Get vector and angle from quaternion */
 void psciob::GetVectorAndAngleFromQuaternion(vnl_vector<double> &v, double &a, const vnl_vector<double> &Q) {
-	vnl_vector<double> nQ = Q;
-	nQ.normalize();
-
-	a = 2.0 * acos(nQ(0));
-	if (a>TINY) {
-		v = nQ.extract(3,1);
-		v.normalize();
-	}
-	else { v.set_size(3); v.fill(1.0/sqrt(3.0)); }
+	a = 2.0 * acos(Q(0)/Q.magnitude());
+	if (a>TINY)	v = Q.extract(3,1).normalize();
+	else        { v.set_size(3); v.fill(1.0/sqrt(3.0)); }
 }
 
-/** Get quaternion from vector and angle */
+/** Get quaternion from (unit) vector and angle */
 void psciob::GetQuaternionFromVectorAndAngle(const vnl_vector<double> &v, double a, vnl_vector<double> &Q) {
 	double sina = sin(a/2.0);
 	Q.set_size(4);
@@ -244,5 +239,4 @@ void psciob::GetQuaternionFromVectorAndAngle(const vnl_vector<double> &v, double
 	Q(1) = v(0) * sina;
 	Q(2) = v(1) * sina;
 	Q(3) = v(2) * sina;
-	Q.normalize();
 }

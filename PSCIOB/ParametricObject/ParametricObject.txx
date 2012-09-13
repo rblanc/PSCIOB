@@ -155,14 +155,22 @@ ParametricObject<VDimension, TAppearance>::GetObjectCenterAndInertiaMatrix(vnl_v
 
 		for (unsigned i=0 ; i< lit.GetLine().GetLength() ; i++, coords(0)+=m_imageSpacing[0], nbPts++) {
 			center += coords;
-			// http://fr.wikipedia.org/wiki/Covariance
-			mat += outer_product(coords,coords);
 		}
 	}
 
 	center /= nbPts;
-	mat = mat/(nbPts-1.0) - outer_product(center,center)*nbPts*nbPts/((nbPts-1.0)*(nbPts-1.0));
 
+	for (lit.GoToBegin() ; ! lit.IsAtEnd() ; ++lit) {
+		//get the index, and convert it to physical coordinates
+		index = lit.GetLine().GetIndex();
+		for (unsigned d1=0 ; d1<VDimension ; d1++) coords(d1) = lm->GetOrigin()[d1] + index[d1]*m_imageSpacing[d1];
+		coords -= center;
+		for (unsigned i=0 ; i< lit.GetLine().GetLength() ; i++, coords(0)+=m_imageSpacing[0], nbPts++) {
+			mat += outer_product(coords,coords);
+		}
+	}
+
+	mat = mat/(nbPts-1.0);
 }
 
 } // namespace psciob

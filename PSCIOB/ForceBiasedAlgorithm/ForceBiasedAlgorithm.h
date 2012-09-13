@@ -86,7 +86,7 @@ public:
 	*/
 	enum BOUNDARYEFFECT { VOIDBOUNDARIES, SOLIDBOUNDARIES, PERIODICBOUNDARIES };
 
-
+	
     /** Attach a scene to the algorithm */
     void SetScene(SceneType* scene) { 
         m_scene = scene;
@@ -99,8 +99,7 @@ public:
 	void SetBoundaryEffectBehavior(BOUNDARYEFFECT eff) { 
 		m_boundaryEffectCode = eff; 
 	}
-
-
+	
     /** Set a specific movement manager, this object is in charge of proposing and applying moves to the objects of the scene 
     * The default manager is a FBMovementManager, one can set a specialized child instead (e.g. for managing rotations).
     */
@@ -205,8 +204,8 @@ std::cout<<"  total time for this iteration: "<<(clock()-t0)/((double)CLOCKS_PER
 		psciob::WriteITKImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".nii", m_scene->GetSceneAsLabelImage());
         while (converged==0) {
             nbIter++;
-            if (nbIter>m_maxNbIteration) { converged = -1; break; }
-			std::cout<<"iter: "<<nbIter<<std::endl;
+            if (nbIter>=m_maxNbIteration) { converged = -1; break; }
+			//std::cout<<"iter: "<<nbIter<<std::endl;
             if ( !ApplyOneIteration() ) converged = 1;
             //draw the scene now
             //psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
@@ -237,8 +236,7 @@ protected:
     typedef std::pair<IDType, vnl_vector<double>> MovePairType;
     std::map<IDType, vnl_vector<double>> m_proposedMoves;
 
-	BOUNDARYEFFECT m_boundaryEffectCode;
-
+	BOUNDARYEFFECT m_boundaryEffectCode;	
 private:
     ForceBiasedAlgorithm(const Self&);      //purposely not implemented
     const Self & operator=( const Self & ); //purposely not implemented

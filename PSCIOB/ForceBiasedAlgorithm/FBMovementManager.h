@@ -40,6 +40,7 @@
 
 #include "2DTransformUtils.h"
 #include "3DTransformUtils.h"
+#include "vnl/vnl_cross.h"
 #include <vnl/algo/vnl_symmetric_eigensystem.h>
 
 namespace psciob {
@@ -73,7 +74,6 @@ public:
 	typedef typename SceneType::DeformableObjectType   ObjectType;
 	typedef typename SceneType::InteractionDataType    InteractionDataType;
 	
-
 	/** Attach a scene to the algorithm */
 	void SetScene(SceneType* scene) { 
 		m_scene = scene; 
@@ -136,39 +136,82 @@ public:
 
 			vnl_symmetric_eigensystem<double> eig1(I1);
 			vnl_symmetric_eigensystem<double> eig2(I2);
-std::cout<<"matrix 1: \n"<<eig1.V<<std::endl;
-std::cout<<"matrix 2: \n"<<eig2.V<<std::endl;
-			vnl_matrix<double> RotMat_Full = eig2.V * eig1.V.transpose(), RotMat_Part;
+
+			vnl_matrix<double> m1, m2;
+			double dp0, dp1;
+
+			vnl_matrix<double> RotMat_Full, RotMat_Part;
 			double ang;
 			vnl_vector<double> Q;vnl_vector<double> vr(3);
 
 			switch(Dimension) {
 				case 2: //just interpolate the angle that brings both systems in alignement
+					m1.set_size(2,2); m2.set_size(2,2);
+					m1.set_column(0, eig1.V.get_column(1));
+					m2.set_column(0, eig2.V.get_column(1));
+					//now, make sure their axes tend to point in the same direction
+					dp0 = dot_product(m1.get_column(0), m2.get_column(0));
+					if (id1<id2) {
+						if (dp0<0) m2.set_column(0, -m2.get_column(0));
+						m1(0,1) = -m1(1,0); m1(1,1) = m1(0,0);
+						m2(0,1) = -m2(1,0); m2(1,1) = m2(0,0);
+					}
+					else {
+						if (dp0<0) m1.set_column(0, -m1.get_column(0));
+						m1(0,1) = -m1(1,0); m1(1,1) = m1(0,0);
+						m2(0,1) = -m2(1,0); m2(1,1) = m2(0,0);
+					}
+						
+					RotMat_Full = m2 * m1.transpose();
+					//now, interpolate the rotation
 					ang = psciob::GetAngleFrom2DRotationMatrix( RotMat_Full );
-					RotMat_Part = psciob::Get2DRotationMatrixFromAngle(m_rotationFactor*ang);
+					RotMat_Part = psciob::Get2DRotationMatrixFromAngle( -m_rotationFactor*ang );
 					break;
 				case 3:
-					//do the same as for 2D...
+					m1.set_size(3,3); m2.set_size(3,3);
+					//make sure both systems are direct
+					m1.set_column(0, eig1.V.get_column(2)); m1.set_column(1, eig1.V.get_column(1)); 
+					m2.set_column(0, eig2.V.get_column(2)); m2.set_column(1, eig2.V.get_column(1)); 
+
+					//now, make sure their axes tend to point in the same direction
+					dp0 = dot_product(m1.get_column(0), m2.get_column(0));
+					dp1 = dot_product(m1.get_column(1), m2.get_column(1));
+					if (id1<id2) { //flip the axis of the object with larger id (to be consistent when processing the interaction from the other side id2->id1)
+						if (dp0<0) m2.set_column(0, -m2.get_column(0));
+						if (dp1<0) m2.set_column(1, -m2.get_column(1));
+
+						m1.set_column(2, vnl_cross_3d( m1.get_column(0), m1.get_column(1)) ); 
+						m2.set_column(2, vnl_cross_3d( m2.get_column(0), m2.get_column(1)) ); 
+
+						if ( (dp0==0) && (dp1==0) && dot_product(m1.get_column(2), m2.get_column(2))<0 ) { 
+							m2.set_column(0, -m2.get_column(0)); 
+							m2.set_column(2, vnl_cross_3d( m2.get_column(0), m2.get_column(1)));
+						}
+					}
+					else {
+						if (dp0<0) m1.set_column(0, -m1.get_column(0));
+						if (dp1<0) m1.set_column(1, -m1.get_column(1));
+
+						m1.set_column(2, vnl_cross_3d( m1.get_column(0), m1.get_column(1)) ); 
+						m2.set_column(2, vnl_cross_3d( m2.get_column(0), m2.get_column(1)) ); 
+
+						if ( (dp0==0) && (dp1==0) && dot_product(m1.get_column(2), m2.get_column(2))<0 ) { 
+							m1.set_column(0, -m1.get_column(0)); 
+							m1.set_column(2, vnl_cross_3d( m1.get_column(0), m1.get_column(1)));
+						}
+					}
+
+					RotMat_Full = m2 * m1.transpose();
 					//use quaternion to get the axis of rotation, and angle
-std::cout<<"RotMat_Full: \n"<<RotMat_Full<<std::endl;
 					Q = psciob::GetQuaternionFrom3DRotationMatrix( RotMat_Full );
-std::cout<<"    Q: "<<Q<<std::endl;
-RotMat_Part = psciob::Get3DRotationMatrixFromQuaternion_33(Q);
-std::cout<<"RotMat_Part: \n"<<RotMat_Part<<std::endl;
-
 					psciob::GetVectorAndAngleFromQuaternion( vr, ang, Q );
-std::cout<<"    vect: "<<vr<<", angle: "<<ang<<std::endl;
-					//and get the rotation matrix corresponding to the requested fraction of the angle
+					//and, interpolate the rotation
 					psciob::GetQuaternionFromVectorAndAngle( vr, m_rotationFactor*ang, Q );
-std::cout<<"eff Q: "<<Q<<std::endl;
-psciob::GetVectorAndAngleFromQuaternion( vr, ang, Q );
-std::cout<<"eff vect: "<<vr<<", eff angle: "<<ang<<std::endl;
-
 					RotMat_Part = psciob::Get3DRotationMatrixFromQuaternion_33(Q);
-std::cout<<"RotMat_Part: \n"<<RotMat_Part<<std::endl;
 					break;
 				default: throw DeformableModelException("FBMovementManager::UpdateMove : dimension should be 2 or 3!");
 			}
+
 			m_scene->GetObject(id1)->obj->ApplyRotationToParameters( RotMat_Part, proposedMove);
 		}
 
@@ -184,7 +227,6 @@ std::cout<<"RotMat_Part: \n"<<RotMat_Part<<std::endl;
 		}
 		return proposedMove;
 	}
-
 
 	/** update the proposed move of object id1 with respect to its interaction with the scene wall
 	* \param currentMove is the current vector of parameters describing the move (would-be object parameters)
@@ -236,7 +278,7 @@ std::cout<<"RotMat_Part: \n"<<RotMat_Part<<std::endl;
 
 		return proposedMove;
 	}
-
+	
 protected:
 	FBMovementManager() : m_scaleFactor(1), m_translationFactor(1), m_rotationFactor(0) { //by default, no rotations are applied
 		m_scene = 0;

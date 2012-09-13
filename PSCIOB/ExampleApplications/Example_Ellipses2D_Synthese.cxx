@@ -222,6 +222,17 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 
 	m_scene->GetObjectTypesLibrary()->SetObjectPDF(typeCode, psciob::PDF_OBJECTGENERATIONPRIOR, ellipseGenerationPDF);
 
+	////2 ellipses ... to test rotations work fine
+	//vnl_vector<double> par(5);
+	//par(0) = 50; par(1) = 50; par(2) = 5; par(3) = 0.5; par(4) = 0;
+	//sampleEllipse->SetParameters(par);
+	//m_scene->AddObject( sampleEllipse );
+
+	//par(0) = 52; par(1) = 52; par(2) = 5; par(3) = 0.5; par(4) = PI/3.0;
+	//sampleEllipse->SetParameters(par);
+	//m_scene->AddObject( sampleEllipse );
+
+
 	//50 random ellipses
 	for (unsigned i=0 ; i<50 ; i++) {
 		m_scene->AddObject(m_scene->GetObjectTypesLibrary()->GenerateNewRandomObject(typeCode));
@@ -238,8 +249,9 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 
 	psciob::ForceBiasedAlgorithm<SceneType>::Pointer fbAlgo = psciob::ForceBiasedAlgorithm<SceneType>::New();
 	fbAlgo->SetScene(m_scene);
+	fbAlgo->GetMovementManager()->SetTranslationFactor(0.2);
 	fbAlgo->GetMovementManager()->SetScalingFactor(0.99);
-	fbAlgo->GetMovementManager()->SetRotationFactor(0.1);
+	fbAlgo->GetMovementManager()->SetRotationFactor(0.2);
 	fbAlgo->IterateUntilConvergence();
 
 }
