@@ -190,9 +190,7 @@ return 1;
 		vnl_vector<double> sensorAppearanceParam(1); sensorAppearanceParam(0) = 200;
 		sensor->SetAppearanceParameters(sensorAppearanceParam);
 		if (verbose) std::cout<<"defined the sensor"<<std::endl; 
-		std::cout<<"test... try to get the scene from the sensor..."<<std::endl;
 		sensor->GetScene();
-		std::cout<<"test... succeeded!"<<std::endl;
 
 		/*
 		* Cost Function

@@ -118,13 +118,13 @@ public:
 	* \param id1 is the id of the object to be moved
 	* \param id2 is the id of the overlapping object
 	* \param overlapData is the structure containing the overlap information.
-	* In this class, a simple unit translation is applied, in the direction joining the center of both objects, and optionally a rotation that tends to make the objects inertia matrices 'parallel'.
+	* In this class, a simple unit (wrt pixel size) translation is applied, in the direction joining the center of both objects, and optionally a rotation that tends to make the objects inertia matrices 'parallel'.
 	*/
 	virtual vnl_vector<double> UpdateMove(const vnl_vector<double> &currentMove, IDType id1, IDType id2, InteractionDataType overlapData) {
 		vnl_vector<double> t(Dimension), proposedMove = currentMove;
 		
 		//translation
-		t = m_translationFactor * (m_scene->GetParametersOfObject(id1).extract(Dimension) - m_scene->GetParametersOfObject(id2).extract(Dimension))/2.0;
+		t = m_translationFactor * element_product( (m_scene->GetParametersOfObject(id1).extract(Dimension) - m_scene->GetParametersOfObject(id2).extract(Dimension)).normalize(), m_scene->GetSceneSpacing().GetVnlVector());
 		for (unsigned i=0 ; i<Dimension ; i++) proposedMove(i)+=t(i);
 
 		//rotation
@@ -242,7 +242,8 @@ public:
 		unsigned i = wallId/2;
 
 		if (wallId == 2*i) proposedMove(i) += max(m_translationFactor * (m_scene->GetSceneBoundingBox()(wallId)-m_scene->GetObject(id1)->obj->GetPhysicalBoundingBox()(wallId)), m_scene->GetSceneSpacing()[i]);
-		else               proposedMove(i) -= max(m_translationFactor * (m_scene->GetSceneBoundingBox()(wallId)-m_scene->GetObject(id1)->obj->GetPhysicalBoundingBox()(wallId)), m_scene->GetSceneSpacing()[i]);
+		else               proposedMove(i) -= max(m_translationFactor * (m_scene->GetObject(id1)->obj->GetPhysicalBoundingBox()(wallId)-m_scene->GetSceneBoundingBox()(wallId)), m_scene->GetSceneSpacing()[i]);
+
 		////rotation
 		//if (m_rotationFactor!=0) {
 		//	//get the center of gravity, and matrices of inertia of both objects

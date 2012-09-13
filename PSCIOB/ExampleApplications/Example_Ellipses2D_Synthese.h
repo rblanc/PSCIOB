@@ -57,9 +57,9 @@ class Example_Ellipses2D_Synthese {
 public:
 	static const unsigned int Dimension = 2;
 	typedef double            PixelType;
-	typedef unsigned char     IDType;
-	typedef psciob::Fast2DEllipse                               ObjectType;
-	typedef psciob::LabelImageScene<Dimension, IDType, IDType>  SceneType;
+	typedef unsigned short    IDType;
+	typedef psciob::Fast2DEllipse                                     ObjectType;
+	typedef psciob::LabelImageScene<Dimension, unsigned char, IDType> SceneType;
 	typedef itk::Image<PixelType, Dimension>            ImageType;
 	typedef itk::Image<double, Dimension>               NoiseImageType;
 

@@ -120,6 +120,7 @@ void IndependentPDFs::AddUnivariatePDF(UnivariatePDF *pdf) {
 	m_univ_multiv_law.push_back(false);
 	m_dim_laws.push_back(1);
 	m_univ_pdfs.push_back(pdf);
+	this->Initialize(0); //make sure the various pdfs are initialized with different seeds to avoid spurious correlations
 }
 
 
@@ -128,6 +129,7 @@ void IndependentPDFs::AddMultivariatePDF(MultivariatePDF *pdf) {
 	m_univ_multiv_law.push_back(true);
 	m_dim_laws.push_back(pdf->GetNumberOfDimensions());
 	m_multiv_pdfs.push_back(pdf);
+	this->Initialize(0); //make sure the various pdfs are initialized with different seeds to avoid spurious correlations
 }
 
 inline double IndependentPDFs::GetLikelihood(const vnl_vector<double> &x) {
@@ -251,6 +253,7 @@ IndependentEulerRotationsPDFs::~IndependentEulerRotationsPDFs() {};
 void IndependentEulerRotationsPDFs::AddIndependentRotationPDF(ROTATIONAROUND dir, UnivariatePDF *pdf) {
 	m_rotation_axis.push_back(dir);
 	m_univ_pdfs.push_back(pdf);
+	this->Initialize(0); //make sure the various pdfs are initialized with different seeds to avoid spurious correlations
 }
 
 inline double IndependentEulerRotationsPDFs::GetLikelihood(const vnl_vector<double> &x) {
@@ -302,6 +305,7 @@ void MultivariateMixturePDF::AddPDF(MultivariatePDF *pdf, double weight) {
 	m_multiv_pdfs.push_back(pdf);
 	m_weights.push_back(weight);
 	m_sumWeights += weight;
+	this->Initialize(0); //make sure the various pdfs are initialized with different seeds to avoid spurious correlations
 }
 
 double MultivariateMixturePDF::GetLikelihood(const vnl_vector<double> &x) { 

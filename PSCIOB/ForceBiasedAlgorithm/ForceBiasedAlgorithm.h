@@ -124,7 +124,7 @@ public:
 	* returns false if no overlaps were present anyway.
 	*/
 	bool ApplyOneIteration() {
-clock_t t0=clock();
+//clock_t t0=clock();
 		m_proposedMoves.clear(); //make sure it starts empty.
 		bool noOverlaps = true;
 		//initialize the moves to identity for all objects (m_proposedMoves)
@@ -136,19 +136,18 @@ clock_t t0=clock();
 		//check for overlaps between objects 
 		//for each pair of overlapping objects, propose a move, and compose it with the existing m_proposedMoves
 		m_scene->GetInteractionManager()->TurnOnInteractionManagement(); //should not be necessary... but do it just in case...
-std::cout<<"  time after initializing moves, and making sure interactions are uptodate: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+//std::cout<<"  time after initializing moves, and making sure interactions are uptodate: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 		unsigned nbOverlaps = 0;
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
 			//look for the interactions for this object
 			if (!it.GetObject()->interactionData.empty()) noOverlaps = false;
 			for (SceneType::ObjectInteractionIterator dit = it.GetObject()->interactionData.begin() ; dit != it.GetObject()->interactionData.end() ; dit++ , ++nbOverlaps) {
 				//propose a move unilaterally for the current object, and compose it with the current proposed move
-				if (it.GetID()<dit->first) 
-					m_proposedMoves[it.GetID()] = m_mvtManager->UpdateMove( m_proposedMoves[it.GetID()], it.GetID(), dit->first, dit->second );
+				m_proposedMoves[it.GetID()] = m_mvtManager->UpdateMove( m_proposedMoves[it.GetID()], it.GetID(), dit->first, dit->second );
 				//the second object of the pair will be treated when its turn comes
 			}
 		}
-std::cout<<"  time after processing object overlaps ("<<nbOverlaps<<"): "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+//std::cout<<"  time after processing object overlaps ("<<nbOverlaps<<"): "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 
 		//manage boundary effects
 		switch (m_boundaryEffectCode) {
@@ -169,10 +168,10 @@ std::cout<<"  time after processing object overlaps ("<<nbOverlaps<<"): "<<(cloc
 				//also, if an objects is too much outside the scene (more than half), than delete it and move it to the other side...
 				break;
 		}
-std::cout<<"  time after dealing with boundary conditions: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+//std::cout<<"  time after dealing with boundary conditions: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 
 
-		std::cout<<"  nb of overlaps: "<<nbOverlaps<<std::endl;
+//std::cout<<"  nb of overlaps: "<<nbOverlaps<<std::endl;
 		if (nbOverlaps==0) return false;
 
 		//apply the moves
@@ -185,7 +184,7 @@ std::cout<<"  time after dealing with boundary conditions: "<<(clock()-t0)/((dou
 		}
 
 		m_scene->GetInteractionManager()->TurnOnInteractionManagement();         
-std::cout<<"  total time for this iteration: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+//std::cout<<"  total time for this iteration: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 		if (nbModifs==0) return false;
 		return true;
 	}
@@ -199,18 +198,18 @@ std::cout<<"  total time for this iteration: "<<(clock()-t0)/((double)CLOCKS_PER
         unsigned nbIter=0;
         int converged = 0;
         //draw the scene now
-        //psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
-		psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
-		psciob::WriteITKImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".nii", m_scene->GetSceneAsLabelImage());
+		psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
+		//psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
+		//psciob::WriteITKImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".nii", m_scene->GetSceneAsLabelImage());
         while (converged==0) {
             nbIter++;
             if (nbIter>=m_maxNbIteration) { converged = -1; break; }
 			//std::cout<<"iter: "<<nbIter<<std::endl;
             if ( !ApplyOneIteration() ) converged = 1;
             //draw the scene now
-            //psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
-			psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
-			psciob::WriteITKImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".nii", m_scene->GetSceneAsLabelImage());
+			psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
+            //psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
+			//psciob::WriteITKImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".nii", m_scene->GetSceneAsLabelImage());
         }
         return converged;
     }

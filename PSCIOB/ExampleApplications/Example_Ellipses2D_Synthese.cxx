@@ -198,8 +198,8 @@ void Example_Ellipses2D_Synthese::GenerateScene_0() {
 void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	m_scene = SceneType::New();
 	vnl_vector<double> sceneBBox(4); 
-	sceneBBox(0) = 0; sceneBBox(1) = 100;
-	sceneBBox(2) = 0; sceneBBox(3) = 100;
+	sceneBBox(0) = -200; sceneBBox(1) = 200;
+	sceneBBox(2) = -200; sceneBBox(3) = 200;
 
 	m_scene->SetPhysicalDimensions(sceneBBox);
 
@@ -232,9 +232,8 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	//sampleEllipse->SetParameters(par);
 	//m_scene->AddObject( sampleEllipse );
 
-
-	//50 random ellipses
-	for (unsigned i=0 ; i<50 ; i++) {
+	//1000 random ellipses
+	for (unsigned i=0 ; i<1000 ; i++) {
 		m_scene->AddObject(m_scene->GetObjectTypesLibrary()->GenerateNewRandomObject(typeCode));
 	}
 
@@ -248,9 +247,10 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 
 
 	psciob::ForceBiasedAlgorithm<SceneType>::Pointer fbAlgo = psciob::ForceBiasedAlgorithm<SceneType>::New();
+	fbAlgo->SetBoundaryEffectBehavior(psciob::ForceBiasedAlgorithm<SceneType>::SOLIDBOUNDARIES);
 	fbAlgo->SetScene(m_scene);
-	fbAlgo->GetMovementManager()->SetTranslationFactor(0.2);
-	fbAlgo->GetMovementManager()->SetScalingFactor(0.99);
+	fbAlgo->GetMovementManager()->SetTranslationFactor( 1 ); //unit is the pixel...
+	fbAlgo->GetMovementManager()->SetScalingFactor(0.999);
 	fbAlgo->GetMovementManager()->SetRotationFactor(0.2);
 	fbAlgo->IterateUntilConvergence();
 
