@@ -130,12 +130,15 @@ public:
 		//rotation
 		if (m_rotationFactor!=0) {
 			//get the center of gravity, and matrices of inertia of both objects
-			vnl_vector<double> c1, c2; vnl_matrix<double> I1, I2;
-			m_scene->GetObject(id1)->obj->GetObjectCenterAndInertiaMatrix(c1, I1);
-			m_scene->GetObject(id2)->obj->GetObjectCenterAndInertiaMatrix(c2, I2);
+			//vnl_vector<double> c1, c2; 
+			vnl_matrix<double> V1, V2;
+			V1 = m_scene->GetObject(id1)->obj->GetObjectInertiaEigenVectors();
+			V2 = m_scene->GetObject(id2)->obj->GetObjectInertiaEigenVectors();
+			//I1 = m_scene->GetObject(id1)->obj->GetObjectInertiaMatrix();
+			//I2 = m_scene->GetObject(id2)->obj->GetObjectInertiaMatrix();
 
-			vnl_symmetric_eigensystem<double> eig1(I1);
-			vnl_symmetric_eigensystem<double> eig2(I2);
+			//vnl_symmetric_eigensystem<double> eig1(I1);
+			//vnl_symmetric_eigensystem<double> eig2(I2);
 
 			vnl_matrix<double> m1, m2;
 			double dp0, dp1;
@@ -147,8 +150,8 @@ public:
 			switch(Dimension) {
 				case 2: //just interpolate the angle that brings both systems in alignement
 					m1.set_size(2,2); m2.set_size(2,2);
-					m1.set_column(0, eig1.V.get_column(1));
-					m2.set_column(0, eig2.V.get_column(1));
+					m1.set_column(0, V1.get_column(1));
+					m2.set_column(0, V2.get_column(1));
 					//now, make sure their axes tend to point in the same direction
 					dp0 = dot_product(m1.get_column(0), m2.get_column(0));
 					if (id1<id2) {
@@ -170,8 +173,8 @@ public:
 				case 3:
 					m1.set_size(3,3); m2.set_size(3,3);
 					//make sure both systems are direct
-					m1.set_column(0, eig1.V.get_column(2)); m1.set_column(1, eig1.V.get_column(1)); 
-					m2.set_column(0, eig2.V.get_column(2)); m2.set_column(1, eig2.V.get_column(1)); 
+					m1.set_column(0, V1.get_column(2)); m1.set_column(1, V1.get_column(1)); 
+					m2.set_column(0, V2.get_column(2)); m2.set_column(1, V2.get_column(1)); 
 
 					//now, make sure their axes tend to point in the same direction
 					dp0 = dot_product(m1.get_column(0), m2.get_column(0));
@@ -243,39 +246,6 @@ public:
 
 		if (wallId == 2*i) proposedMove(i) += max(m_translationFactor * (m_scene->GetSceneBoundingBox()(wallId)-m_scene->GetObject(id1)->obj->GetPhysicalBoundingBox()(wallId)), m_scene->GetSceneSpacing()[i]);
 		else               proposedMove(i) -= max(m_translationFactor * (m_scene->GetObject(id1)->obj->GetPhysicalBoundingBox()(wallId)-m_scene->GetSceneBoundingBox()(wallId)), m_scene->GetSceneSpacing()[i]);
-
-		////rotation
-		//if (m_rotationFactor!=0) {
-		//	//get the center of gravity, and matrices of inertia of both objects
-		//	vnl_vector<double> c1; vnl_matrix<double> I1, I2(Dimension, Dimension);
-		//	m_scene->GetObject(id1)->obj->GetObjectCenterAndInertiaMatrix(c1, I1);
-		//	I2.fill(0); for (unsigned j=0 ; j<Dimension ; j++) { I2(j,j) = 10;} I2(i,i) = 1; // just set the inertia matrix as aligned with the wall
-
-		//	vnl_symmetric_eigensystem<double> eig1(I1);
-		//	vnl_symmetric_eigensystem<double> eig2(I2);
-		//	
-		//	vnl_matrix<double> RotMat_Full = eig1.V.transpose() * eig2.V, RotMat_Part;
-		//	double ang;
-		//	vnl_vector<double> Q; vnl_vector<double> vr(3);
-
-		//	switch(Dimension) {
-		//		case 2: //just interpolate the angle that brings both systems in alignement
-		//			ang = psciob::GetAngleFrom2DRotationMatrix( RotMat_Full );
-		//			RotMat_Part = psciob::Get2DRotationMatrixFromAngle(m_rotationFactor*ang);
-		//			break;
-		//		case 3:
-		//			//do the same as for 2D...
-		//			//use quaternion to get the axis of rotation, and angle
-		//			Q = psciob::GetQuaternionFrom3DRotationMatrix( RotMat_Full );
-		//			psciob::GetVectorAndAngleFromQuaternion( vr, ang, Q );
-		//			//and get the rotation matrix corresponding to the requested fraction of the angle
-		//			psciob::GetQuaternionFromVectorAndAngle( vr, m_rotationFactor*ang, Q );
-		//			RotMat_Part = psciob::Get3DRotationMatrixFromQuaternion_33(Q);
-		//			break;
-		//		default: throw DeformableModelException("FBMovementManager::UpdateMove : dimension should be 2 or 3!");
-		//	}
-		//	m_scene->GetObject(id1)->obj->ApplyRotationToParameters( RotMat_Part, proposedMove);
-		//}
 
 		return proposedMove;
 	}

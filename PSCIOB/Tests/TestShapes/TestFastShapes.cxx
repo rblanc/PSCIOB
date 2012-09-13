@@ -107,8 +107,7 @@ void fastEllipses() {
 	WriteMirrorPolyDataToFile( "fastEllipse_0.vtk", object->GetObjectAsVTKPolyData());
 	Write2DGreyLevelRescaledImageToFile<Fast2DEllipse::BinaryImageType>("fastEllipse_0.png", object->GetObjectAsBinaryImage());
 
-	object->GetObjectCenterAndInertiaMatrix(center, inertia);
-	std::cout<<"center of disk...: "<<center<<", inertia matrix :\n"<<inertia<<std::endl;
+	std::cout<<"center of disk...: "<<object->GetObjectCenter()<<", inertia matrix :\n"<<object->GetObjectInertiaMatrix()<<std::endl;
 	std::cout<<"image origin: "<<object->GetImageOrigin()<<std::endl;
 
 	params(0) = 0; params(1) = 0; params(2) = 5; params(3) = 0.71; params(4) = PI/4.0; object->SetParameters(params);
@@ -132,8 +131,7 @@ void fastEllipses() {
 	std::cout<<"   params: "<<params<<std::endl;
 	Write2DGreyLevelRescaledImageToFile<Fast2DEllipse::BinaryImageType>("fastEllipse_5.png", object->GetObjectAsBinaryImage());
 
-	object->GetObjectCenterAndInertiaMatrix(center, inertia);
-	std::cout<<"center of ellipse: "<<center<<", inertia matrix :\n"<<inertia<<std::endl;
+	std::cout<<"center of disk...: "<<object->GetObjectCenter()<<", inertia matrix :\n"<<object->GetObjectInertiaMatrix()<<std::endl;
 
 }
 int main(int argc, char** argv) {

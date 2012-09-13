@@ -31,7 +31,6 @@
 * \date 8. March 2012
 */
 
-#include "ITKUtils.h"
 #include "LabelMapUtils.h"
 #include "itkBinaryBallStructuringElement.h"
 #include "itkLabelObjectLineComparator.h"
@@ -358,6 +357,58 @@ bool GetOffContextObjectsSurroundings(const TLabelMap *inputMap, const typename 
 }
 
 
+
+/** Tests whether 2 label objects intersect, returns true if so, false otherwise */
+template <class TLabelObject>
+bool TestLabelObjectIntersection(const TLabelObject *obj1, const TLabelObject *obj2) {
+	unsigned int ind1=0, ind2=0;
+
+	bool sameRow;
+	unsigned end1, end2, minEnd;
+
+	while ( (ind1<obj1->GetNumberOfLines()) && (ind2<obj2->GetNumberOfLines()) ) {
+		//get both lines.
+		const TLabelObject::LineType &l1 = obj1->GetLine(ind1);
+		const TLabelObject::LineType &l2 = obj2->GetLine(ind2);
+		const TLabelObject::IndexType & idx1 = l1.GetIndex();
+		const TLabelObject::IndexType & idx2 = l2.GetIndex();
+
+		//check whether they intersect, and save the segment if they do, and identify in which order they are
+		//the order is based on the row (indices>0), and then if they are on the same row, on the end-point of the segment.
+		sameRow=true;
+		for (unsigned d=TLabelObject::ImageDimension-1 ; d>0 ; d--) {
+			if (idx1[d]!=idx2[d]) { //if they do not intersect, advance the 'smallest' line
+				sameRow=false; 
+				if (idx1[d]<idx2[d]) ind1++;
+				else                 ind2++;
+				break; 
+			}
+		}
+		if (sameRow) { //the 2 segments are on the same row ; now check for intersection
+			end1 = idx1[0] + l1.GetLength(); //this index value is just OUTSIDE the line!
+			end2 = idx2[0] + l2.GetLength(); //this index value is just OUTSIDE the line!
+			//in all cases, advance the 'smallest' line already.
+			if (end1<end2) { minEnd = end1; ind1++;}
+			else           { minEnd = end2; ind2++;}
+
+			if (idx1[0]<idx2[0]) {
+				if (idx2[0]<end1) { //intersection
+					return true;
+				}
+				//else { }//no intersection... nothing else to do.
+			}
+			else {
+				if (idx1[0]<end2) { //intersection
+					return true;
+				}
+				//else { }//no intersection... nothing else to do.
+			}
+		}
+		//else {} //if the segments are not on the same row, there is nothing else to do.
+	}
+
+	return false;
+}
 
 
 /** Compute the intersection between 2 label objects (assumed to be related to the same image frame...)

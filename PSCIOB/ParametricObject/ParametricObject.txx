@@ -42,7 +42,9 @@ template <unsigned int VDimension, class TAppearance>
 ParametricObject<VDimension, TAppearance>::ParametricObject() : m_uptodatePolyData(false), m_uptodateBinaryImage(false), m_uptodateLabelMap(false),
 m_physicalBBoxUpToDate(false), m_physicalBoundingBox(2*VDimension),
 m_imageBBoxUpToDate(false), m_imageBoundingBox(2*VDimension),
-m_outputPolyData(NULL), m_outputBinaryImage(NULL), m_outputLabelMap(NULL), m_labelMapToBinaryImageFilter(NULL)
+m_outputPolyData(NULL), m_outputBinaryImage(NULL), m_outputLabelMap(NULL), m_labelMapToBinaryImageFilter(NULL),
+m_center(VDimension), m_centerFlag(false),
+m_inertia(VDimension,VDimension), m_inertiaFlag(false)
 {
 	m_imageSpacing.Fill(1);
 }
@@ -131,47 +133,113 @@ ParametricObject<VDimension, TAppearance>::Translate(const vnl_vector<double> &t
 }
 
 
-/** Get Center Of Gravity and Inertia matrix of the shape 
-* the function fills the information in the provided structures
-* this is a base implementation which computes it from the LabelObject, it can be re-implemented to be faster in child classes
-*/
+
+//
 template <unsigned int VDimension, class TAppearance>
 void 
-ParametricObject<VDimension, TAppearance>::GetObjectCenterAndInertiaMatrix(vnl_vector<double> &center, vnl_matrix<double> &mat) {
-	center.set_size(VDimension); center.fill(0);
-	mat.set_size(VDimension,VDimension); mat.fill(0);
-
+ParametricObject<VDimension, TAppearance>::ComputeObjectCenter() {
+	m_center.fill(0);
 	//browse the lines of the object
 	LabelMapType* lm = GetObjectAsLabelMap(); //make sure the labelMap is uptodate
 	LabelObjectType* lo = lm->GetNthLabelObject(0);
 
 	LabelObjectType::ConstLineIterator lit( lo );
-	LabelObjectType::IndexType index;
 	vnl_vector<double> coords(VDimension); unsigned nbPts=0;
 	for (lit.GoToBegin() ; ! lit.IsAtEnd() ; ++lit) {
 		//get the index, and convert it to physical coordinates
-		index = lit.GetLine().GetIndex();
+		const LabelObjectType::IndexType &index = lit.GetLine().GetIndex();
 		for (unsigned d1=0 ; d1<VDimension ; d1++) coords(d1) = lm->GetOrigin()[d1] + index[d1]*m_imageSpacing[d1];
 
 		for (unsigned i=0 ; i< lit.GetLine().GetLength() ; i++, coords(0)+=m_imageSpacing[0], nbPts++) {
-			center += coords;
+			m_center += coords;
 		}
 	}
 
-	center /= nbPts;
+	m_center /= nbPts;
+	m_centerFlag = true;
+}
+
+
+//
+template <unsigned int VDimension, class TAppearance>
+void 
+ParametricObject<VDimension, TAppearance>::ComputeObjectInertia() {
+	m_inertia.fill(0);
+	//browse the lines of the object
+	LabelMapType* lm = GetObjectAsLabelMap(); //make sure the labelMap is uptodate
+	LabelObjectType* lo = lm->GetNthLabelObject(0);
+
+	LabelObjectType::ConstLineIterator lit( lo );
+	vnl_vector<double> coords(VDimension); unsigned nbPts=0;
+
+	GetObjectCenter(); //make sure the center is uptodate
 
 	for (lit.GoToBegin() ; ! lit.IsAtEnd() ; ++lit) {
 		//get the index, and convert it to physical coordinates
-		index = lit.GetLine().GetIndex();
+		const LabelObjectType::IndexType &index = lit.GetLine().GetIndex();
 		for (unsigned d1=0 ; d1<VDimension ; d1++) coords(d1) = lm->GetOrigin()[d1] + index[d1]*m_imageSpacing[d1];
-		coords -= center;
+		coords -= m_center;
 		for (unsigned i=0 ; i< lit.GetLine().GetLength() ; i++, coords(0)+=m_imageSpacing[0], nbPts++) {
-			mat += outer_product(coords,coords);
+			m_inertia += outer_product(coords,coords);
 		}
 	}
 
-	mat = mat/(nbPts-1.0);
+	m_inertia /= nbPts-1.0;
+
+	m_inertiaFlag = true;
 }
+
+
+template <unsigned int VDimension, class TAppearance>
+void 
+ParametricObject<VDimension, TAppearance>::ComputeObjectInertiaEigenVectors() {
+	vnl_symmetric_eigensystem<double> eig(GetObjectInertiaMatrix());
+	m_eigVInertia = eig.V;
+	m_eigVInertiaFlag=true;
+}
+
+//
+///** Get Center Of Gravity and Inertia matrix of the shape 
+//* the function fills the information in the provided structures
+//* this is a base implementation which computes it from the LabelObject, it can be re-implemented to be faster in child classes
+//*/
+//template <unsigned int VDimension, class TAppearance>
+//void 
+//ParametricObject<VDimension, TAppearance>::GetObjectCenterAndInertiaMatrix(vnl_vector<double> &center, vnl_matrix<double> &mat) {
+//	center.set_size(VDimension); center.fill(0);
+//	mat.set_size(VDimension,VDimension); mat.fill(0);
+//
+//	//browse the lines of the object
+//	LabelMapType* lm = GetObjectAsLabelMap(); //make sure the labelMap is uptodate
+//	LabelObjectType* lo = lm->GetNthLabelObject(0);
+//
+//	LabelObjectType::ConstLineIterator lit( lo );
+//	
+//	vnl_vector<double> coords(VDimension); unsigned nbPts=0;
+//	for (lit.GoToBegin() ; ! lit.IsAtEnd() ; ++lit) {
+//		//get the index, and convert it to physical coordinates
+//		const LabelObjectType::IndexType &index = lit.GetLine().GetIndex();
+//		for (unsigned d1=0 ; d1<VDimension ; d1++) coords(d1) = lm->GetOrigin()[d1] + index[d1]*m_imageSpacing[d1];
+//
+//		for (unsigned i=0 ; i< lit.GetLine().GetLength() ; i++, coords(0)+=m_imageSpacing[0], nbPts++) {
+//			center += coords;
+//		}
+//	}
+//
+//	center /= nbPts;
+//
+//	for (lit.GoToBegin() ; ! lit.IsAtEnd() ; ++lit) {
+//		//get the index, and convert it to physical coordinates
+//		index = lit.GetLine().GetIndex();
+//		for (unsigned d1=0 ; d1<VDimension ; d1++) coords(d1) = lm->GetOrigin()[d1] + index[d1]*m_imageSpacing[d1];
+//		coords -= center;
+//		for (unsigned i=0 ; i< lit.GetLine().GetLength() ; i++, coords(0)+=m_imageSpacing[0], nbPts++) {
+//			mat += outer_product(coords,coords);
+//		}
+//	}
+//
+//	mat = mat/(nbPts-1.0);
+//}
 
 } // namespace psciob
 

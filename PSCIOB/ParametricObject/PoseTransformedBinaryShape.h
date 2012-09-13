@@ -154,8 +154,7 @@ public:
 
 	/** Indicate that the output should be recomputed */
 	virtual inline void Modified() {
-		m_physicalBBoxUpToDate = false; m_imageBBoxUpToDate = false; 
-		m_uptodatePolyData = false; m_uptodateBinaryImage = false; m_uptodateLabelMap = false;
+		ParametricObject<VDimension, TexturedPixelType>::Modified();
 		m_shape->Modified();
 		m_transform->Modified();
 	}

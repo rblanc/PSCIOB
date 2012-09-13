@@ -43,6 +43,7 @@
 #include "vtkPolyDataToITKLabelMapUtils.h"
 #include "LabelMapUtils.h"
 #include "TransformUtils.h"
+#include <vnl/algo/vnl_symmetric_eigensystem.h>
 
 
 //ADD: add the possibility to associate a set of meta-parameters for an object	(e.g. which are not used to described its shape, pose or appearance)
@@ -183,6 +184,7 @@ public:
 	virtual inline void Modified() {
 		m_physicalBBoxUpToDate = false; m_imageBBoxUpToDate = false; 
 		m_uptodatePolyData = false; m_uptodateBinaryImage = false; m_uptodateLabelMap = false;
+		m_centerFlag = false; m_inertiaFlag = false; m_eigVInertiaFlag=false;
 	}
 
 	/** Release memory - may be overloaded by child classes */
@@ -276,12 +278,12 @@ public:
 	virtual bool IsObjectTexturedPolyDataUpToDate()   = 0;
 	virtual bool IsObjectTexturedImageUpToDate()      = 0;
 
-	/** Get Center Of Gravity and Inertia matrix of the shape 
-	* the function fills the information in the provided structures
-	* this is a base implementation which computes it from the LabelObject, it can be re-implemented to be faster in child classes
-	* \warning: the function is using a one-pass algorithm which may become unstable for large shapes (esp. 3D), and with a center far from the origin.
-	*/
-	virtual void GetObjectCenterAndInertiaMatrix(vnl_vector<double> &center, vnl_matrix<double> &mat);
+	/** Get Center Of Gravity of the object	*/
+	vnl_vector<double> GetObjectCenter()                             { if (!m_centerFlag) ComputeObjectCenter();     return m_center; }
+	/** Get the inertia matrix of the object */
+	vnl_matrix<double> GetObjectInertiaMatrix()                      { if (!m_inertiaFlag) ComputeObjectInertia();   return m_inertia; }
+	/** Get the eigenvectors of the inertia matrix (sorted by increasing eigenvalue) */
+	vnl_matrix<double> GetObjectInertiaEigenVectors() { if (!m_eigVInertiaFlag) ComputeObjectInertiaEigenVectors();   return m_eigVInertia; }
 
 	/** Get the corresponding representation of the object */
 	virtual vtkPolyData* GetObjectAsVTKPolyData() = 0;
@@ -331,6 +333,10 @@ protected:
 	vnl_vector<double> m_imageBoundingBox;                 bool m_imageBBoxUpToDate; 
 	vnl_vector<double> m_vtkResolution;
 
+	vnl_vector<double> m_center;  bool m_centerFlag;
+	vnl_matrix<double> m_inertia; bool m_inertiaFlag;
+	vnl_matrix<double> m_eigVInertia; bool m_eigVInertiaFlag;
+
 	vtkSmartPointer<vtkPolyData>      m_outputPolyData;    bool m_uptodatePolyData;
 	typename BinaryImageType::Pointer m_outputBinaryImage; bool m_uptodateBinaryImage;
 	typename LabelMapType::Pointer    m_outputLabelMap;    bool m_uptodateLabelMap;
@@ -360,6 +366,10 @@ protected:
 		return true;
 	}
 
+	//virtual (default) methods computes these based on the LabelObject representation of the object
+	virtual void ComputeObjectCenter();
+	virtual void ComputeObjectInertia();
+	virtual void ComputeObjectInertiaEigenVectors();
 
 private:
 	ParametricObject(const Self&);           //purposely not implemented

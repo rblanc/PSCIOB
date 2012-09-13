@@ -89,6 +89,11 @@ template <class TLabelMap>
 bool GetOffContextObjectsSurroundings(const TLabelMap *inputMap, const typename TLabelMap::LabelObjectType *SE, TLabelMap *outputMap);
 
 
+/** Tests whether 2 label objects intersect, returns true if so, false otherwise */
+template <class TLabelObject>
+bool TestLabelObjectIntersection(const TLabelObject *obj1, const TLabelObject *obj2);
+
+
 /** Compute the intersection between 2 label objects (assumed to be related to the same image frame...)
 * returns the number of intersecting pixels.
 * The input objects are assumed to be in optimal representation (no pixels belong to multiple segments, segments are sorted, ...)

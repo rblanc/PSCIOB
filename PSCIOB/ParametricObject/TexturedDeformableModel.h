@@ -127,7 +127,7 @@ public:
 
 	/** Indicate that the output should be recomputed */
 	inline void Modified() {
-		ParametricObject<VDimension, TAppearance>::Modified();
+		ParametricObject<VDimension, TexturedPixelType>::Modified();
 		m_uptodateTexturedPolyData = false; m_uptodateTexturedImage = false;
 	}
 

@@ -123,8 +123,8 @@ public:
     /** Applies a single iteration of the algorithm 
 	* returns false if no overlaps were present anyway.
 	*/
-	bool ApplyOneIteration() {
-//clock_t t0=clock();
+	bool ApplyOneIteration(bool verbose = false) {
+		clock_t t0=clock();
 		m_proposedMoves.clear(); //make sure it starts empty.
 		bool noOverlaps = true;
 		//initialize the moves to identity for all objects (m_proposedMoves)
@@ -136,7 +136,7 @@ public:
 		//check for overlaps between objects 
 		//for each pair of overlapping objects, propose a move, and compose it with the existing m_proposedMoves
 		m_scene->GetInteractionManager()->TurnOnInteractionManagement(); //should not be necessary... but do it just in case...
-//std::cout<<"  time after initializing moves, and making sure interactions are uptodate: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+        if (verbose) std::cout<<"  time after initializing moves, and making sure interactions are uptodate: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 		unsigned nbOverlaps = 0;
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
 			//look for the interactions for this object
@@ -147,7 +147,7 @@ public:
 				//the second object of the pair will be treated when its turn comes
 			}
 		}
-//std::cout<<"  time after processing object overlaps ("<<nbOverlaps<<"): "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+		if (verbose) std::cout<<"  time after processing object overlaps ("<<nbOverlaps<<"): "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 
 		//manage boundary effects
 		switch (m_boundaryEffectCode) {
@@ -168,10 +168,10 @@ public:
 				//also, if an objects is too much outside the scene (more than half), than delete it and move it to the other side...
 				break;
 		}
-//std::cout<<"  time after dealing with boundary conditions: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+		if (verbose) std::cout<<"  time after dealing with boundary conditions: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 
 
-//std::cout<<"  nb of overlaps: "<<nbOverlaps<<std::endl;
+		if (verbose) std::cout<<"  nb of overlaps: "<<nbOverlaps<<std::endl;
 		if (nbOverlaps==0) return false;
 
 		//apply the moves
@@ -184,7 +184,7 @@ public:
 		}
 
 		m_scene->GetInteractionManager()->TurnOnInteractionManagement();         
-//std::cout<<"  total time for this iteration: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+		if (verbose) std::cout<<"  total time for this iteration, after updating the interactions: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 		if (nbModifs==0) return false;
 		return true;
 	}
@@ -193,23 +193,17 @@ public:
     * returns -1 if it exited after reaching the maximum number of allowed iterations
     * and 1 otherwise.
     */
-    int IterateUntilConvergence() {
+    int IterateUntilConvergence(bool verbose = false) {
         if (!m_scene) throw DeformableModelException("ForceBiasedAlgorithm::IterateUntilConvergence -- the scene must be set first.");
         unsigned nbIter=0;
         int converged = 0;
         //draw the scene now
-		psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
-		//psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
-		//psciob::WriteITKImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".nii", m_scene->GetSceneAsLabelImage());
         while (converged==0) {
+			if (verbose) std::cout<<"\nIteration "<<nbIter<<std::endl;
             nbIter++;
             if (nbIter>=m_maxNbIteration) { converged = -1; break; }
-			//std::cout<<"iter: "<<nbIter<<std::endl;
-            if ( !ApplyOneIteration() ) converged = 1;
-            //draw the scene now
-			psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
-            //psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
-			//psciob::WriteITKImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".nii", m_scene->GetSceneAsLabelImage());
+            if ( !ApplyOneIteration(verbose) ) converged = 1;
+			if (verbose) psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
         }
         return converged;
     }

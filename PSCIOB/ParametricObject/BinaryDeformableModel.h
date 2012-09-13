@@ -56,7 +56,7 @@ class BinaryDeformableModel : public ParametricObject<VDimension, unsigned char>
 public:
 	/** Standard class typedefs. */
 	typedef BinaryDeformableModel			Self;
-	typedef ParametricObject			        Superclass;
+	typedef ParametricObject			    Superclass;
 	typedef itk::SmartPointer<Self>			Pointer;
 	typedef itk::SmartPointer<const Self>	ConstPointer;
 	/** Run-time type information (and related methods). */
