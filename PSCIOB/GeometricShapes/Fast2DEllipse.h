@@ -89,7 +89,7 @@ public:
 	}
 
 	/** Physical bounding box of the object */
-	vnl_vector<double> GetPhysicalBoundingBox() {
+	const vnl_vector<double>& GetPhysicalBoundingBox() {
 		if (!m_physicalBBoxUpToDate) {	
 			double longaxis = m_parameters(2) / m_parameters(3);
 			m_physicalBoundingBox(0) = m_parameters(0) - longaxis; //xmin

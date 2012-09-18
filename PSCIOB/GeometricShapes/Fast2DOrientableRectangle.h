@@ -78,7 +78,7 @@ public:
 	bool SetVTKResolution(const vnl_vector<double> &res) { return true; }
 
 	/** Physical bounding box of the object */
-	vnl_vector<double> GetPhysicalBoundingBox() {
+	const vnl_vector<double>& GetPhysicalBoundingBox() {
 		if (!m_physicalBBoxUpToDate) {	
 			double ct = cos( m_parameters(2) ), st = sin( m_parameters(2) );
 			double length = m_parameters(3)/2.0, width = length * m_parameters(4);

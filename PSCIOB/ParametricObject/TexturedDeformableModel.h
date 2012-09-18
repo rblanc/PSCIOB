@@ -124,9 +124,9 @@ public:
 			clonePtr->m_uptodateLabelMap = true;
 		}
 
-		if (m_centerFlag)      clonePtr->m_center      = m_center;
-		if (m_inertiaFlag)     clonePtr->m_inertia     = m_inertia;
-		if (m_eigVInertiaFlag) clonePtr->m_eigVInertia = m_eigVInertia;
+		if (m_centerFlag)      { clonePtr->m_centerFlag = true; clonePtr->m_center = m_center; }
+		if (m_inertiaFlag)     { clonePtr->m_inertiaFlag = true; clonePtr->m_inertia = m_inertia; }
+		if (m_eigVInertiaFlag) { clonePtr->m_eigVInertiaFlag = true; clonePtr->m_eigVInertia = m_eigVInertia; }
 
 		return static_cast<BaseClass*>( clonePtr );
 	}
@@ -174,7 +174,7 @@ public:
 				m_uptodateTexturedPolyData = false;
 				tmp = translation(i)*m_imageSpacing[i];
 				m_parameters(i) += tmp;
-				
+				if (m_centerFlag) m_center(i) += tmp;
 				if (m_physicalBBoxUpToDate) { m_physicalBoundingBox(2*i) += tmp;m_physicalBoundingBox(2*i+1)+= tmp; }
 				if (m_imageBBoxUpToDate)    { m_imageOrigin[i] += tmp; m_imageBoundingBox(2*i) += tmp;m_imageBoundingBox(2*i+1) += tmp; }
 			}
@@ -221,6 +221,7 @@ protected:
 				zeroTranslation = false;
 				tmp = translation(i)*m_imageSpacing[i];
 				m_parameters(i) += tmp;
+				if (m_centerFlag) m_center(i) += tmp;
 				if (m_imageBBoxUpToDate)    { m_imageOrigin[i] += tmp; m_imageBoundingBox(2*i) += tmp; m_imageBoundingBox(2*i+1) += tmp; }
 				if (m_physicalBBoxUpToDate) { m_physicalBoundingBox(2*i) += tmp; m_physicalBoundingBox(2*i+1) += tmp; }
 			}

@@ -198,8 +198,8 @@ void Example_Ellipses2D_Synthese::GenerateScene_0() {
 void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	m_scene = SceneType::New();
 	vnl_vector<double> sceneBBox(4); 
-	sceneBBox(0) = -200; sceneBBox(1) = 200;
-	sceneBBox(2) = -200; sceneBBox(3) = 200;
+	sceneBBox(0) = -300; sceneBBox(1) = 300;
+	sceneBBox(2) = -300; sceneBBox(3) = 300;
 
 	m_scene->SetPhysicalDimensions(sceneBBox);
 
@@ -222,18 +222,29 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 
 	m_scene->GetObjectTypesLibrary()->SetObjectPDF(typeCode, psciob::PDF_OBJECTGENERATIONPRIOR, ellipseGenerationPDF);
 
-	////2 ellipses ... to test things are working fine
+	////a few ellipses ... to test things are working fine
 	//vnl_vector<double> par(5);
-	//par(0) = -198; par(1) = -198; par(2) = 8; par(3) = 0.5; par(4) = 0;
-	//sampleEllipse->SetParameters(par);
-	//m_scene->AddObject( sampleEllipse );
+	//par(0) = -298; par(1) = -298; par(2) = 8; par(3) = 0.5; par(4) = 0;
+	//sampleEllipse->SetParameters(par);	m_scene->AddObject( sampleEllipse );
 
-	//par(0) = 198; par(1) = 198; par(2) = 8; par(3) = 0.5; par(4) = PI/3.0;
-	//sampleEllipse->SetParameters(par);
-	//m_scene->AddObject( sampleEllipse );
+	//par(0) = 298; par(1) = 298; par(2) = 8; par(3) = 0.5; par(4) = PI/3.0;
+	//sampleEllipse->SetParameters(par);	m_scene->AddObject( sampleEllipse );
+
+	//par(0) = -297; par(1) = 0; par(2) = 8; par(3) = 1; par(4) = 0;
+	//sampleEllipse->SetParameters(par);	m_scene->AddObject( sampleEllipse );
+	//par(0) = -295; par(1) = 1; par(2) = 8; par(3) = 1; par(4) = 0;
+	//sampleEllipse->SetParameters(par);	m_scene->AddObject( sampleEllipse );
+	//par(0) = -293; par(1) = 3; par(2) = 8; par(3) = 1; par(4) = 0;
+	//sampleEllipse->SetParameters(par);	m_scene->AddObject( sampleEllipse );
+
+	//par(0) = 290; par(1) = 1; par(2) = 9; par(3) = 1; par(4) = 0;
+	//sampleEllipse->SetParameters(par);	m_scene->AddObject( sampleEllipse );
+
+	//par(0) = 280; par(1) =-1; par(2) = 9; par(3) = 1; par(4) = 0;
+	//sampleEllipse->SetParameters(par);	m_scene->AddObject( sampleEllipse );
 
 	//1000 random ellipses
-	for (unsigned i=0 ; i<600 ; i++) {
+	for (unsigned i=0 ; i<1500 ; i++) {
 		m_scene->AddObject(m_scene->GetObjectTypesLibrary()->GenerateNewRandomObject(typeCode));
 	}
 

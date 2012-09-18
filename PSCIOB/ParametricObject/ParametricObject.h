@@ -117,7 +117,7 @@ public:
 	* not const, because the PoseTransform may need to update the parameters 
 	*/
 	//virtual inline vnl_vector<double> GetParameters() { return m_parameters; }
-	inline vnl_vector<double> GetParameters() { return m_parameters; }
+	inline const vnl_vector<double>& GetParameters() { return m_parameters; }
 
 	/** Get Parameters */
 	virtual vnl_vector<double> GetDefaultParameters() const = 0;
@@ -198,14 +198,14 @@ public:
 	/** Get the physical, axis-aligned bounding box
 	* The format is [d1_min d1_max d2_min d2_max ...]
 	*/
-	virtual vnl_vector<double> GetPhysicalBoundingBox()	= 0;
+	virtual const vnl_vector<double>& GetPhysicalBoundingBox()	= 0;
 
 	/** Get the physical, axis-aligned bounding box containing the Image representation
 	* It generally differs from the physical bounding box, because it depends on the pixel dimensions (spacing)
 	* Furthermore, the convention is that the physical 0 is at the center of a pixel
 	* The format is [d1_min d1_max d2_min d2_max ...]
 	*/
-	vnl_vector<double> GetImageBoundingBox() {
+	const vnl_vector<double>& GetImageBoundingBox() {
 		if (!m_imageBBoxUpToDate) {
 			ITKGridImageInformationFromPhysicalBoundingBoxAndSpacing<VDimension>( GetPhysicalBoundingBox(), m_imageSpacing.GetVnlVector(), &m_imageOrigin, &m_imageRegion );
 			m_imageBoundingBox = BoundingBoxFromITKImageInformation<BinaryImageType>(m_imageOrigin, m_imageSpacing, m_imageRegion);
@@ -215,7 +215,7 @@ public:
 	}
 
 	/** Get Image Region - it is automatically determined by the physical bounding box of the object and the spacing */
-	typename BinaryImageType::RegionType GetImageRegion() {
+	typename const BinaryImageType::RegionType& GetImageRegion() {
 		if (!m_imageBBoxUpToDate) {
 			ITKGridImageInformationFromPhysicalBoundingBoxAndSpacing<VDimension>( GetPhysicalBoundingBox(), m_imageSpacing.GetVnlVector(), &m_imageOrigin, &m_imageRegion );
 			m_imageBoundingBox = BoundingBoxFromITKImageInformation<BinaryImageType>(m_imageOrigin, m_imageSpacing, m_imageRegion);
@@ -225,7 +225,7 @@ public:
 	}
 
 	/** Get Image Origin - it is automatically determined by the physical bounding box of the object and the spacing */
-	typename BinaryImageType::PointType GetImageOrigin() {
+	typename const BinaryImageType::PointType& GetImageOrigin() {
 		if (!m_imageBBoxUpToDate) {
 			ITKGridImageInformationFromPhysicalBoundingBoxAndSpacing<VDimension>( GetPhysicalBoundingBox(), m_imageSpacing.GetVnlVector(), &m_imageOrigin, &m_imageRegion );
 			m_imageBoundingBox = BoundingBoxFromITKImageInformation<BinaryImageType>(m_imageOrigin, m_imageSpacing, m_imageRegion);
@@ -235,7 +235,7 @@ public:
 	}
 
 	/** Get Image Spacing */
-	typename BinaryImageType::SpacingType GetImageSpacing()	const { return m_imageSpacing; }
+	typename const BinaryImageType::SpacingType& GetImageSpacing()	const { return m_imageSpacing; }
 
 	/** Set the image spacing 
 	* Invalidates the current pixel-based representations if the spacing changes
@@ -268,7 +268,7 @@ public:
 	*/
 	virtual bool SetVTKResolution(const vnl_vector<double> &res) = 0;
 	/** Get VTK Resolution */
-	vnl_vector<double> GetVTKResolution() const { return m_vtkResolution; }
+	const vnl_vector<double>& GetVTKResolution() const { return m_vtkResolution; }
 
 	/** Ask if the corresponding object representation is uptodate */
 	inline bool IsObjectPhysicalBoundingBoxUpToDate() { return m_physicalBBoxUpToDate; }
@@ -280,11 +280,11 @@ public:
 	virtual bool IsObjectTexturedImageUpToDate()      = 0;
 
 	/** Get Center Of Gravity of the object	*/
-	vnl_vector<double> GetObjectCenter()                             { if (!m_centerFlag) ComputeObjectCenter();     m_centerFlag = true; return m_center; }
+	const vnl_vector<double>& GetObjectCenter()        { if (!m_centerFlag) { ComputeObjectCenter(); m_centerFlag = true; } return m_center; }
 	/** Get the inertia matrix of the object */
-	vnl_matrix<double> GetObjectInertiaMatrix()                      { if (!m_inertiaFlag) ComputeObjectInertia();   m_inertiaFlag = true; return m_inertia; }
+	const vnl_matrix<double>& GetObjectInertiaMatrix() { if (!m_inertiaFlag) { ComputeObjectInertia(); m_inertiaFlag = true; } return m_inertia; }
 	/** Get the eigenvectors of the inertia matrix ( sorted by increasing eigenvalue !! ) */
-	vnl_matrix<double> GetObjectInertiaEigenVectors() { if (!m_eigVInertiaFlag) ComputeObjectInertiaEigenVectors();  m_eigVInertiaFlag = true; return m_eigVInertia; }
+	const vnl_matrix<double>& GetObjectInertiaEigenVectors() { if (!m_eigVInertiaFlag) { ComputeObjectInertiaEigenVectors(); m_eigVInertiaFlag = true; } return m_eigVInertia; }
 
 	/** Get the corresponding representation of the object */
 	virtual vtkPolyData* GetObjectAsVTKPolyData() = 0;
@@ -360,6 +360,7 @@ protected:
 				m_uptodatePolyData = false; 
 				tmp = translation(i)*m_imageSpacing[i];
 				m_parameters(i) += tmp;
+				if (m_centerFlag) m_center(i) += tmp;
 				if (m_imageBBoxUpToDate) { m_imageOrigin[i] += tmp;  m_imageBoundingBox(2*i)    += tmp; m_imageBoundingBox(2*i+1) += tmp;  }
 				if (m_physicalBBoxUpToDate) { m_physicalBoundingBox(2*i) += tmp; m_physicalBoundingBox(2*i+1) += tmp; }
 			}

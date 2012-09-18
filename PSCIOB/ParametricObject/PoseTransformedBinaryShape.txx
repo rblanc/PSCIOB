@@ -240,6 +240,7 @@ PoseTransformedBinaryShape<VDimension>::IntegerGridTranslate(const vnl_vector<in
 			zeroTranslation = false;
 			tmp = translation(i)*m_imageSpacing[i];
 			m_parameters(i) += tmp;
+			if (m_centerFlag) m_center(i) += tmp;
 			if (m_physicalBBoxUpToDate) { m_physicalBoundingBox(2*i) += tmp;m_physicalBoundingBox(2*i+1) += tmp; }
 			if (m_imageBBoxUpToDate)    { m_imageOrigin[i] += tmp; m_imageBoundingBox(2*i) += tmp;m_imageBoundingBox(2*i+1) += tmp; }
 		}

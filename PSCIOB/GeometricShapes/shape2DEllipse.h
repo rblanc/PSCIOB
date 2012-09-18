@@ -84,7 +84,7 @@ public:
 	}
 
 	/** Gets the object bounding box */
-	vnl_vector<double> GetPhysicalBoundingBox() {
+	const vnl_vector<double>& GetPhysicalBoundingBox() {
 		if (!m_physicalBBoxUpToDate) {			
 			double longaxis = 0.5 * m_parameters(0);
 			m_physicalBoundingBox(0) = -longaxis; //xmin

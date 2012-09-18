@@ -39,9 +39,9 @@ bool psciob::TestBoundingBoxesIntersection(const vnl_vector<double> &BB1, const 
 	unsigned int D = BB1.size()/2;
 	if (2*D != BB2.size()) throw DeformableModelException("TestBoundingBoxesIntersection : error with dimensionality of inputs");
 
-	for (unsigned i=0 ; i<D ; i++) { //if the leftmost point of I1 is to the right of the rightmost point of I2, or vice versa, then intersection is empty
-		if ( BB2(2*i+1)-BB1( 2*i ) <= TINY ) { return false; } //actually, it could be a fraction of the spacing...
-		if ( BB1(2*i+1)-BB2( 2*i ) <= TINY ) { return false; }
+	for (unsigned i2=0 ; i2<BB2.size() ; i2+=2) { //if the leftmost point of I1 is to the right of the rightmost point of I2, or vice versa, then intersection is empty
+		if ( BB2(i2+1)-BB1( i2 ) <= TINY ) { return false; } //actually, it could be a fraction of the spacing...
+		if ( BB1(i2+1)-BB2( i2 ) <= TINY ) { return false; }
 	}
 	return true;
 }
@@ -51,10 +51,8 @@ bool psciob::IntersectionBoundingBoxes(const vnl_vector<double> &BB1, const vnl_
 	unsigned int D = BB1.size()/2;
 	if (2*D != BB2.size()) throw DeformableModelException("IntersectionBoundingBoxes : error with dimensionality of inputs");
 
-	(*interBB).set_size(2*D);
-	unsigned j;
-	for (unsigned i=0;i<D;i++) { //if the leftmost point of I1 is to the right of the rightmost point of I2, or vice versa, then intersection is empty
-		j = 2*i;
+	(*interBB).set_size(BB2.size());
+	for (unsigned j=0 ; j<BB2.size() ; j+=2) { //if the leftmost point of I1 is to the right of the rightmost point of I2, or vice versa, then intersection is empty
 		if ( BB2(j+1)-BB1( j ) <= TINY ) { return false; } //actually, it could be a fraction of the spacing...
 		if ( BB1(j+1)-BB2( j ) <= TINY ) { return false; }
 		(*interBB)(j) = max(BB1(j),BB2(j));
@@ -68,9 +66,9 @@ bool psciob::TestBoundingBoxFullyInsideAnother(const vnl_vector<double> &BB1, co
 	unsigned int D = BB1.size()/2;
 	if (2*D != BB2.size()) throw DeformableModelException("TestBoundingBoxFullyInsideAnother : error with dimensionality of inputs");
 
-	for (unsigned i=0 ; i<D ; i++) {
-		if ( BB1( 2*i )<BB2( 2*i ) ) return false;
-		if ( BB1(2*i+1)>BB2(2*i+1) ) return false;
+	for (unsigned i2=0 ; i2<BB2.size() ; i2+=2) {
+		if ( BB1( i2 )<BB2( i2 ) ) return false;
+		if ( BB1(i2+1)>BB2(i2+1) ) return false;
 	}
 	return true;
 }
@@ -82,9 +80,9 @@ std::vector<unsigned> psciob::IdentifyIntersectionBoundingBoxes(const vnl_vector
 	unsigned int D = BB1.size()/2;
 	if (2*D != BB2.size()) throw DeformableModelException("IdentifyIntersectionBoundingBoxes : error with dimensionality of inputs");
 
-	for (unsigned i=0 ; i<D ; i++) {
-		if ( (BB1( 2*i )<BB2( 2*i )) && (BB1(2*i+1)>BB2( 2*i )) ) intersects.push_back( 2*i );
-		if ( (BB1( 2*i )<BB2(2*i+1)) && (BB1(2*i+1)>BB2(2*i+1)) ) intersects.push_back(2*i+1);
+	for (unsigned i2=0 ; i2<BB2.size() ; i2+=2) {
+		if ( (BB1( i2 )<BB2( i2 )) && (BB1(i2+1)>BB2( i2 )) ) intersects.push_back( i2 );
+		if ( (BB1( i2 )<BB2(i2+1)) && (BB1(i2+1)>BB2(i2+1)) ) intersects.push_back(i2+1);
 	}
 	return intersects;
 }

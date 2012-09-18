@@ -152,7 +152,7 @@ public:
 
 
 	/** Get physical, axis-aligned bounding box */
-	vnl_vector<double> GetPhysicalBoundingBox() {
+	const vnl_vector<double>& GetPhysicalBoundingBox() {
 		if (!m_inputShape) throw DeformableModelException("PoseTransform: no shape to define a bounding box! use SetInput() ");
 		if ( (!m_inputShape->IsObjectPhysicalBoundingBoxUpToDate()) || (!m_physicalBBoxUpToDate) ) {
 			m_physicalBoundingBox = TransformBoundingBox(m_inputShape->GetPhysicalBoundingBox(), GetTransformMatrix());

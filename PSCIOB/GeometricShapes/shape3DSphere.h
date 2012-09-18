@@ -85,7 +85,7 @@ public:
 	}
 
 	/** Physical bounding box of the object */
-	vnl_vector<double> GetPhysicalBoundingBox() {
+	const vnl_vector<double>& GetPhysicalBoundingBox() {
 		if (!m_physicalBBoxUpToDate) {				
 			m_physicalBoundingBox(0) = -0.5; //xmin
 			m_physicalBoundingBox(1) = +0.5; //xmax

@@ -134,16 +134,22 @@ public:
 		}
 
 		std::map<IDType, vnl_vector<double>>::iterator it;
+		
+		//this is used only for PERIODICBOUNDARIES, to avoid treating multiple time the same pair of objects...
+		unsigned long pairKey, keyMult = 2*m_scene->GetNumberOfObjects();
+		std::set<unsigned long> treatedPairs; //structure that stores all pairs of overlapping objects that have already been treated, using the format minid + maxid*keyMult as a key
+		std::pair<std::set<unsigned long>::iterator, bool> treatedPairsInsertResp;
+
 		//check for overlaps between objects 
 		//for each pair of overlapping objects, propose a move, and compose it with the existing m_proposedMoves
 		m_scene->GetInteractionManager()->TurnOnInteractionManagement(); //should not be necessary... but do it just in case...
-        if (verbose) std::cout<<"  time after initializing moves, and making sure interactions are uptodate: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 		unsigned nbOverlaps = 0;
 		for (it = m_proposedMoves.begin() ; it != m_proposedMoves.end() ; ++it) { 
 			//look for the interactions for this object
 			for (SceneType::ObjectInteractionIterator dit = m_scene->GetObject(it->first)->interactionData.begin() ; dit != m_scene->GetObject(it->first)->interactionData.end() ; dit++ , ++nbOverlaps) {
 				//propose a move unilaterally for the current object, and compose it with the current proposed move
 				it->second = m_mvtManager->UpdateMove( it->second, it->first, dit->first, dit->second );
+				treatedPairs.insert( min(it->first,dit->first) + max(it->first,dit->first)*keyMult );
 				//the second object of the pair will be treated when its turn comes
 			}
 		}
@@ -156,7 +162,7 @@ public:
 			case SOLIDBOUNDARIES: //translate inwards objects that are partially outside the scene
 				for (it = m_proposedMoves.begin() ; it != m_proposedMoves.end() ; ++it) { 
 					std::vector<unsigned> intersects;
-					intersects = IdentifyIntersectionBoundingBoxes( m_scene->GetObject(it->first)->obj->GetPhysicalBoundingBox(), m_scene->GetSceneBoundingBox() );
+					intersects = IdentifyIntersectionBoundingBoxes_NoCheck( m_scene->GetObject(it->first)->obj->GetPhysicalBoundingBox(), m_scene->GetSceneBoundingBox() );
 					for (unsigned w = 0 ; w<intersects.size() ; w++, ++nbOverlaps) it->second = m_mvtManager->UpdateMoveWithSceneWall( it->second, it->first, intersects[w] );
 				}
 				break;
@@ -164,25 +170,26 @@ public:
 				//check with which border(s), if any, the object overlaps with, and update the move accordingly.
 				//for each of these, add (a) temporary object(s) on the 'opposite' face(s) of the scene, and UpdateMove as usual in case of interaction
 				//Furthermore, if an objects is too much outside the scene (more than half), than delete it and move it to the other side...
-				struct mirroredObjectType {
-					SceneType::IDType id; //id of the mirrored object
+				struct MirroredObjectType {
+					SceneType::IDType id, sourceId; //id of the mirrored object, and id of the source object.
 					std::vector<unsigned> mirroredWallIds; //list of wall Ids over which the original objects reflected itself to create this object
 				};
-				mirroredObjectType obj;
+				MirroredObjectType obj;
 				SceneType::DeformableObjectType::Pointer tmpObj; 
+				std::map<SceneType::IDType, MirroredObjectType> setMirroredObjects;
 
+				//1: add all the 'mirrored' objects
 				for (it = m_proposedMoves.begin() ; it != m_proposedMoves.end() ; ++it) { 
-					
 					std::vector<unsigned> wallIds, faceIds; //ids of the walls (in [0,2*d]) and faces (in [0,d]) that the current object overlaps
 					std::set<unsigned> activeFaceIds; std::pair<std::set<unsigned>::iterator,bool> facesSetInsertResp; //set of already activated faces
 
-					std::vector<mirroredObjectType> currentMirroredObjects, previousMirroredObjects;
+					std::vector<MirroredObjectType> currentMirroredObjects, previousMirroredObjects, tmpMirroredObjects;
 
-					wallIds = IdentifyIntersectionBoundingBoxes( m_scene->GetObject(it->first)->obj->GetPhysicalBoundingBox(), m_scene->GetSceneBoundingBox() );
-					if (wallIds.size()==0) continue;
+					wallIds = IdentifyIntersectionBoundingBoxes_NoCheck( m_scene->GetObject(it->first)->obj->GetPhysicalBoundingBox(), m_scene->GetSceneBoundingBox() );
+					if (wallIds.size()==0) continue; //this object is not affected by boundary conditions, just continue.
 
 					tmpObj = m_scene->GetObject(it->first)->obj->CreateClone();
-					obj.id = it->first;
+					obj.id = it->first; obj.sourceId = it->first;
 					currentMirroredObjects.push_back(obj);
 					vnl_vector<double> tmpParams;
 
@@ -191,88 +198,87 @@ public:
 						facesSetInsertResp = activeFaceIds.insert( faceIds.back() );
 						if (facesSetInsertResp.second) { //new face: add the 'reflections' of all objects in the currentMirroredObjects
 							previousMirroredObjects = currentMirroredObjects; //backup this set of objects, can be useful in some cases
-							for (unsigned idt=0 ; idt<currentMirroredObjects.size() ; idt++) {
-								obj = currentMirroredObjects[idt]; //set the parameters of the mirrored object, starting from the current object in the list
-								tmpParams = m_scene->GetParametersOfObject(obj.id);
-								if (wallIds[i] == 2*faceIds[i]) { //0 or 2 or 4, ... (first 'wall' of that 'face')
-									obj.mirroredWallIds.push_back(wallIds[i]+1);
-									tmpParams(faceIds[i]) += m_sceneWidth(faceIds[i]);
-								}
-								else { //1 or 3 or 5, ... (second 'wall' of that 'face')
-									obj.mirroredWallIds.push_back(wallIds[i]-1);
-									tmpParams(faceIds[i]) -= m_sceneWidth(faceIds[i]);
-								}
-								//add it to the scene
-								tmpObj->SetParameters(tmpParams); 
-								obj.id = m_scene->AddObject( tmpObj );
-								if (obj.id == 0) { continue; } //it can happen that the bounding box intersects with the border, but still the original object was fully inside the scene, so let just skip those cases...
-								else { 
-									if ( m_scene->GetObject(obj.id)->interactionData.find( it->first ) != m_scene->GetObject(obj.id)->interactionData.end() ) { //if the mirrored object intersects the original, then remove it.
-										std::cout<<"ForceBiasedAlgorithm with periodic boundary conditions: WARNING: the object 'reflection' overlaps the original object! this reflection is ignored..."<<std::endl;
-										m_scene->RemoveObject( obj.id );
-									}
-									else currentMirroredObjects.push_back( obj ); 
-								}
-							}
+							tmpMirroredObjects = currentMirroredObjects;
 						}
-						else { // this is the same face as in the previous iteration, but the opposite wall, only the objects in previousMirroredObjects need to be 'reflected'.
+						else {// this is the same face as in the previous iteration, but the opposite wall, only the objects in previousMirroredObjects need to be 'reflected'.
 							//this case shouldn't happen often, it means the object is crossing the entire scene
-							for (unsigned idt=0 ; idt<previousMirroredObjects.size() ; idt++) {
-								obj = previousMirroredObjects[idt]; //set the parameters of the mirrored object, starting from the current object in the list
-								tmpParams = m_scene->GetParametersOfObject(obj.id);
-								if (wallIds[i] == 2*faceIds[i]) { //0 or 2 or 4, ... (first 'wall' of that 'face')
-									obj.mirroredWallIds.push_back(wallIds[i]+1);
-									tmpParams(faceIds[i]) += m_sceneWidth(faceIds[i]);
+							tmpMirroredObjects = previousMirroredObjects;
+						}
+
+						for (unsigned idt=0 ; idt<tmpMirroredObjects.size() ; idt++) {
+							obj = tmpMirroredObjects[idt]; //set the parameters of the mirrored object, starting from the current object in the list
+							tmpParams = m_scene->GetParametersOfObject(obj.id);
+							if (wallIds[i] == 2*faceIds[i]) { //0 or 2 or 4, ... (first 'wall' of that 'face')
+								obj.mirroredWallIds.push_back(wallIds[i]+1); tmpParams(faceIds[i]) += m_sceneWidth(faceIds[i]);
+							}
+							else { //1 or 3 or 5, ... (second 'wall' of that 'face')
+								obj.mirroredWallIds.push_back(wallIds[i]-1); tmpParams(faceIds[i]) -= m_sceneWidth(faceIds[i]);
+							}
+							//add it to the scene
+							tmpObj->SetParameters(tmpParams); obj.id = m_scene->AddObject( tmpObj );
+							if (obj.id == 0) { continue; } //it can happen that the bounding box intersects with the border, but still the original object was fully inside the scene, so let just skip those cases...
+							else { 
+								if ( m_scene->GetObject(obj.id)->interactionData.find( it->first ) != m_scene->GetObject(obj.id)->interactionData.end() ) { //if the mirrored object intersects the original, then remove it.
+									std::cout<<"ForceBiasedAlgorithm with periodic boundary conditions: WARNING: the object 'reflection' overlaps the original object! this reflection is ignored..."<<std::endl;
+									m_scene->RemoveObject( obj.id );
 								}
-								else { //1 or 3 or 5, ... (second 'wall' of that 'face')
-									obj.mirroredWallIds.push_back(wallIds[i]-1);
-									tmpParams(faceIds[i]) -= m_sceneWidth(faceIds[i]);
-								}
-								//add it to the scene
-								tmpObj->SetParameters(tmpParams);
-								obj.id = m_scene->AddObject( tmpObj );
-								if (obj.id == 0) { continue; } 
-								else { 
-									if ( m_scene->GetObject(obj.id)->interactionData.find( it->first ) != m_scene->GetObject(obj.id)->interactionData.end() ) { //if the mirrored object intersects the original, then remove it.
-										std::cout<<"ForceBiasedAlgorithm with periodic boundary conditions: WARNING: the object 'reflection' overlaps the original object! this reflection is ignored..."<<std::endl;
-										m_scene->RemoveObject( obj.id );
-									}
-									else currentMirroredObjects.push_back( obj ); 
+								else { //ok, register the new mirror object 
+									currentMirroredObjects.push_back( obj ); setMirroredObjects[obj.id] = obj; 
 								}
 							}
 						}
 					}
-					
-
-					//treat all temporary objects that have been created
-					std::vector<unsigned> distantWallIds; bool distantCrossesSameFace; //wall ids that the distant object crosses
-					for (unsigned i = 1 ; i<currentMirroredObjects.size() ; i++) { //index 0 is the original object, so skip it 
-						// for all temporary reflections of the current object, check for intersections with other objects of the scene
-						for (SceneType::ObjectInteractionIterator dit = m_scene->GetObject(currentMirroredObjects[i].id)->interactionData.begin() ; dit != m_scene->GetObject(currentMirroredObjects[i].id)->interactionData.end() ; dit++) {
-							//check whether the distant object touches the same border
-							distantWallIds = IdentifyIntersectionBoundingBoxes( m_scene->GetObject(dit->first)->obj->GetPhysicalBoundingBox(), m_scene->GetSceneBoundingBox() );
-							//look for common entries between distantWallIds and currentMirroredObjects[i].mirroredWallIds
-							std::vector<unsigned> intersectWalldIds;
-							std::set_intersection(currentMirroredObjects[i].mirroredWallIds.begin(), currentMirroredObjects[i].mirroredWallIds.end(), 
-								distantWallIds.begin(), distantWallIds.end(), std::inserter(intersectWalldIds, intersectWalldIds.end()) );
-							if ( (!intersectWalldIds.empty()) && (dit->first < it->first) ) continue; //this overlap was already treated via the reflections of the object dit->first
-							//else ... move both objects (the second object may not cross the boundary, so it should be treated immediately
-							++nbOverlaps;
-							it->second = m_mvtManager->UpdateMove( it->second, currentMirroredObjects[i].id, dit->first, dit->second );
-							m_proposedMoves[dit->first] = m_mvtManager->UpdateMove( m_proposedMoves[dit->first], dit->first, currentMirroredObjects[i].id, dit->second );							
-						}
-						//finished with the overlaps on this face ; now remove the temporary object
-						m_scene->RemoveObject(currentMirroredObjects[i].id);
-					}
-
 				}
+
+				//2: treat all temporary objects that have been created, paying attention to intersection between 'mirrored' objects
+				std::vector<unsigned> distantWallIds; bool distantCrossesSameFace; //wall ids that the distant object crosses
+				std::vector<unsigned> intersectWalldIds;
+				SceneType::IDType currentSourceId, distantSourceId;
+				for (std::map<SceneType::IDType, MirroredObjectType>::iterator mit = setMirroredObjects.begin() ; mit != setMirroredObjects.end() ; ++mit) {
+					currentSourceId = mit->second.sourceId; //source id of the current mirror-object
+					// for all temporary reflections of the current object, check for intersections with other objects of the scene
+					for (SceneType::ObjectInteractionIterator dit = m_scene->GetObject(mit->first)->interactionData.begin() ; dit != m_scene->GetObject(mit->first)->interactionData.end() ; dit++) {
+						//check whether the distant object is a mirrored object, or an original object and get its id if so.
+						std::map<SceneType::IDType, MirroredObjectType>::iterator tmpIt = setMirroredObjects.find(dit->first);
+						if (tmpIt==setMirroredObjects.end()) {
+							//this mirror object intersects an original object
+							distantSourceId = dit->first;
+						}
+						else {
+							//this mirror object intersects another mirror object 
+							distantSourceId = tmpIt->second.sourceId;
+							//-> if the original objects were already intersecting, then skip this.
+							if ( m_scene->GetObject(currentSourceId)->interactionData.find(distantSourceId) != m_scene->GetObject(currentSourceId)->interactionData.end() ) continue;
+						}
+
+						pairKey = min(currentSourceId,distantSourceId) + max(currentSourceId,distantSourceId)*keyMult;
+						treatedPairsInsertResp = treatedPairs.insert( pairKey );
+
+						if (treatedPairsInsertResp.second ==false) continue; //if the pair was already treated, then skip it.
+						
+						////check whether the distant object touches the border over which the current object has been 'mirrored'
+						//distantWallIds = IdentifyIntersectionBoundingBoxes_NoCheck( m_scene->GetObject(dit->first)->obj->GetPhysicalBoundingBox(), m_scene->GetSceneBoundingBox() );
+						//intersectWalldIds.clear();
+						//std::set_intersection(mit->second.mirroredWallIds.begin(), mit->second.mirroredWallIds.end(), 
+						//	distantWallIds.begin(), distantWallIds.end(), std::inserter(intersectWalldIds, intersectWalldIds.end()) );
+						////if so, then it has also produced a mirror object, which will intersect the source of the current mirror-object
+						//if ( (!intersectWalldIds.empty()) && (currentSourceId < distantSourceId) ) continue; //this overlap was already treated via the reflections of the object distantSourceId
+						//else ... move both objects (the second object may not cross the boundary, so it should be treated immediately
+						++nbOverlaps;
+
+						m_proposedMoves[currentSourceId] = m_mvtManager->UpdateMove( m_proposedMoves[currentSourceId], mit->first, dit->first, dit->second );
+						m_proposedMoves[distantSourceId] = m_mvtManager->UpdateMove( m_proposedMoves[distantSourceId], dit->first, mit->first, dit->second );
+						
+					}
+				}
+
+				//3: remove all the mirror objects.
+				for (std::map<SceneType::IDType, MirroredObjectType>::iterator mit = setMirroredObjects.begin() ; mit != setMirroredObjects.end() ; ++mit) m_scene->RemoveObject(mit->first);
 
 				break;
 		}
-		if (verbose) std::cout<<"  time after dealing with boundary conditions: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
+		if (verbose) std::cout<<"  time after dealing with boundary conditions: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s., nb of overlaps after this step: "<<nbOverlaps<<std::endl;
 
-
-		if (verbose) std::cout<<"  nb of overlaps: "<<nbOverlaps<<std::endl;
 		if (nbOverlaps==0) return false;
 
 		//apply the moves

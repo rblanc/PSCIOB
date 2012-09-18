@@ -48,13 +48,6 @@ bool TestBoundingBoxesIntersection(const vnl_vector<double> &BB1, const vnl_vect
 
 /** Test whether 2 bounding boxes intersect - without performing dimensionality checks */
 inline bool TestBoundingBoxesIntersection_NoCheck(const vnl_vector<double> &BB1, const vnl_vector<double> &BB2) {
-	//unsigned int D = BB1.size()/2;
-	//for (unsigned i=0 ; i<D ; i++) { //if the leftmost point of I1 is to the right of the rightmost point of I2, or vice versa, then intersection is empty
-	//	if ( BB2(2*i+1)-BB1( 2*i ) <= TINY ) { return false; } //actually, it could be a fraction of the spacing...
-	//	if ( BB1(2*i+1)-BB2( 2*i ) <= TINY ) { return false; }
-	//}
-	//return true;
-
 	for (unsigned i2=0 ; i2<BB1.size() ; i2+=2) { //if the leftmost point of I1 is to the right of the rightmost point of I2, or vice versa, then intersection is empty
 		if ( BB2(i2+1)-BB1( i2 ) <= TINY ) { return false; } //actually, it could be a fraction of the spacing...
 		if ( BB1(i2+1)-BB2( i2 ) <= TINY ) { return false; }
@@ -77,6 +70,19 @@ bool TestBoundingBoxFullyInsideAnother(const vnl_vector<double> &BB1, const vnl_
 * returns an std::vector containing indices of walls that are intersected (0=left, 1=right, 2= ...)
 */
 std::vector<unsigned> IdentifyIntersectionBoundingBoxes(const vnl_vector<double> &BB1, const vnl_vector<double> &BB2);
+
+/** Identify which walls of the 2nd bounding box are crossed by BB1
+* returns an std::vector containing indices of walls that are intersected (0=left, 1=right, 2= ...)
+* \warning does not check whether the dimensionality of both boxes matches
+*/
+inline std::vector<unsigned> IdentifyIntersectionBoundingBoxes_NoCheck(const vnl_vector<double> &BB1, const vnl_vector<double> &BB2) {
+	std::vector<unsigned> intersects;
+	for (unsigned i2=0 ; i2<BB2.size() ; i2+=2) {
+		if ( (BB1( i2 )<BB2( i2 )) && (BB1(i2+1)>BB2( i2 )) ) intersects.push_back( i2 );
+		if ( (BB1( i2 )<BB2(i2+1)) && (BB1(i2+1)>BB2(i2+1)) ) intersects.push_back(i2+1);
+	}
+	return intersects;
+}
 
 } // namespace psciob
 
