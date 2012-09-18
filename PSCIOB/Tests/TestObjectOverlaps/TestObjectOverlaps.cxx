@@ -146,7 +146,7 @@ scene->AddObject(object);
 
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
-		for (SceneType::ObjectInteractionIterator iit = objectIt.GetObject()->interactionData.begin() ; iit!=objectIt.GetObject()->interactionData.end() ; iit++) {
+		for (SceneType::ObjectInteractionIterator iit = objectIt.GetObjectInScene()->interactionData.begin() ; iit!=objectIt.GetObjectInScene()->interactionData.end() ; iit++) {
 			if (objectIt.GetID()>iit->first) std::cout<<"  interaction between object: "<<objectIt.GetID()<<" and "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}	

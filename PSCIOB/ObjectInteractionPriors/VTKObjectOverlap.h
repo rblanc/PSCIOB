@@ -73,14 +73,14 @@ public:
 	//	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
 	//		if ( objectPtr->id != it.GetID() ) {
 	//			//first, check for bbox
-	//			if ( !TestBoundingBoxesIntersection_NoCheck(objectPtr->obj->GetPhysicalBoundingBox(), it.GetObject()->obj->GetPhysicalBoundingBox()) ) return;
+	//			if ( !TestBoundingBoxesIntersection_NoCheck(objectPtr->obj->GetPhysicalBoundingBox(), it.GetObject()->GetPhysicalBoundingBox()) ) return;
 	//			//if the bboxes intersect, then do the exact test.
 	//			InteractionDataType interactionData;
-	//			ComputePairWiseObjectInteractionData(objectPtr->obj, it.GetObject()->obj, interactionData);
+	//			ComputePairWiseObjectInteractionData(objectPtr->obj, it.GetObjectInScene(), interactionData);
 	//			if ( !interactionData.interactionCostFlag ) return;
 	//			//Register the interaction, bilaterally: store the information in both objects
 	//			m_scene->GetObject(objectPtr->id)->interactionData[it.GetID()] = interactionData;
-	//			it.GetObject()->interactionData[objectPtr->id] = interactionData;
+	//			it.GetObjectInScene()->interactionData[objectPtr->id] = interactionData;
 	//		}
 	//	}
 	//}
@@ -93,14 +93,14 @@ public:
 	//	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
 	//		if ( objectPtr->id != it.GetID() ) {
 	//			//first, check if their bbox intersect
-	//			if ( !TestBoundingBoxesIntersection_NoCheck(newObject->obj->GetPhysicalBoundingBox(), it.GetObject()->obj->GetPhysicalBoundingBox()) ) { _UnregisterInteraction_Internal(objectPtr, it.GetObject()); continue; }
+	//			if ( !TestBoundingBoxesIntersection_NoCheck(newObject->obj->GetPhysicalBoundingBox(), it.GetObject()->GetPhysicalBoundingBox()) ) { _UnregisterInteraction_Internal(objectPtr, it.GetObjectInScene()); continue; }
 	//			//if the bboxes intersect, then do the exact test.
 	//			InteractionDataType interactionData;
-	//			ComputePairWiseObjectInteractionData(newObject->obj, it.GetObject()->obj, interactionData);
-	//			if ( !interactionData.interactionCostFlag ) { _UnregisterInteraction_Internal(objectPtr, it.GetObject()); continue; }
+	//			ComputePairWiseObjectInteractionData(newObject->obj, it.GetObjectInScene(), interactionData);
+	//			if ( !interactionData.interactionCostFlag ) { _UnregisterInteraction_Internal(objectPtr, it.GetObjectInScene()); continue; }
 	//			//Register the interaction, bilaterally: store the information in both objects
 	//			m_scene->GetObject(objectPtr->id)->interactionData[it.GetID()] = interactionData;
-	//			it.GetObject()->interactionData[objectPtr->id] = interactionData;
+	//			it.GetObjectInScene()->interactionData[objectPtr->id] = interactionData;
 	//		}
 	//	}
 	//}
@@ -125,11 +125,11 @@ public:
 				double areas[3];
 				for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
 					if ( objectPtr->id != it.GetID() ) {
-						InteractionDataType interactionData = GetPairWiseObjectInteractionData_2D(objectPtr->obj, it.GetObject()->obj);
+						InteractionDataType interactionData = GetPairWiseObjectInteractionData_2D(objectPtr->obj, it.GetObject());
 						if ( interactionData.interactionCostFlag ) {
 							//intersection is bilateral, store the interaction information in both objects
 							m_scene->GetObject(objectPtr->id)->interactionData.insert( ObjectInteractionPairType(it.GetID(), interactionData) );
-							it.GetObject()->interactionData.insert( ObjectInteractionPairType(objectPtr->id, interactionData) );
+							it.GetObjectInScene()->interactionData.insert( ObjectInteractionPairType(objectPtr->id, interactionData) );
 						}				
 					}
 				}
@@ -145,8 +145,8 @@ public:
 
 				for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
 					if (objectPtr->id!=it.GetID()) {
-						if (!TestBoundingBoxesIntersection( it.GetObject()->obj->GetPhysicalBoundingBox(), m_scene->GetObject(objectPtr->id)->obj->GetPhysicalBoundingBox() )) continue;
-						triangFilter2->SetInput( it.GetObject()->obj->GetObjectAsVTKPolyData() ); triangFilter2->Update();
+						if (!TestBoundingBoxesIntersection( it.GetObject()->GetPhysicalBoundingBox(), m_scene->GetObject(objectPtr->id)->obj->GetPhysicalBoundingBox() )) continue;
+						triangFilter2->SetInput( it.GetObject()->GetObjectAsVTKPolyData() ); triangFilter2->Update();
 						filter->SetInput(1, triangFilter2->GetOutput() ); filter->Update();
 						if (filter->GetOutput()->GetNumberOfPoints()>0) {
 							//there is intersection, create a structure to host the interaction data
@@ -160,7 +160,7 @@ public:
 							interactionData.intersectionPolyData->DeepCopy(filter->GetOutput());
 							//intersection is bilateral, store the interaction information in both objects
 							m_scene->GetObject(objectPtr->id)->interactionData.insert( ObjectInteractionPairType(it.GetID(), interactionData) );
-							it.GetObject()->interactionData.insert( ObjectInteractionPairType(objectPtr->id, interactionData) );
+							it.GetObjectInScene()->interactionData.insert( ObjectInteractionPairType(objectPtr->id, interactionData) );
 						}
 					}
 				}

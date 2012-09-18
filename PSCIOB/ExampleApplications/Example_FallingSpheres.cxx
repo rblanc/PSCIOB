@@ -202,13 +202,13 @@ int main(int argc, char** argv) {
 			//move each spheres, unless it is 'frozen'
 			SceneObjectIterator<SceneType> objectIt(scene);
 			for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
-				if (objectIt.GetObject()->objectData.frozen) continue;
+				if (objectIt.GetObjectInScene()->objectData.frozen) continue;
 
 				sphereParams = scene->GetParametersOfObject(objectIt.GetID());
-				//std::cout<<"  id "<<objectIt.GetID()<<" ; before: pos = "<<sphereParams<<", v = "<<objectIt.GetObject()->objectData.vx<<", "<<objectIt.GetObject()->objectData.vy<<", "<<objectIt.GetObject()->objectData.vz<<std::endl;
-				sphereParams(0) += objectIt.GetObject()->objectData.vx * dt;
-				sphereParams(1) += objectIt.GetObject()->objectData.vy * dt;
-				sphereParams(2) += objectIt.GetObject()->objectData.vz * dt;
+				//std::cout<<"  id "<<objectIt.GetID()<<" ; before: pos = "<<sphereParams<<", v = "<<objectIt.GetObjectInScene()->objectData.vx<<", "<<objectIt.GetObjectInScene()->objectData.vy<<", "<<objectIt.GetObjectInScene()->objectData.vz<<std::endl;
+				sphereParams(0) += objectIt.GetObjectInScene()->objectData.vx * dt;
+				sphereParams(1) += objectIt.GetObjectInScene()->objectData.vy * dt;
+				sphereParams(2) += objectIt.GetObjectInScene()->objectData.vz * dt;
 				if (!scene->ModifyObjectParameters(objectIt.GetID(), sphereParams)) std::cout<<"failed to move to new params: "<<sphereParams<<" ; should NEVER happen..."<<std::endl;
 				//std::cout<<"  id "<<objectIt.GetID()<<" ; after: pos = "<<scene->GetParametersOfObject(objectIt.GetID())<<std::endl;
 
@@ -217,20 +217,20 @@ int main(int argc, char** argv) {
 			//for each sphere, update the velocities with various forces.
 
 			for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
-				if (objectIt.GetObject()->objectData.frozen) continue;
+				if (objectIt.GetObjectInScene()->objectData.frozen) continue;
 
 				sphereParams = scene->GetParametersOfObject(objectIt.GetID());
-				v1(0) = objectIt.GetObject()->objectData.vx;
-				v1(1) = objectIt.GetObject()->objectData.vy;
-				v1(2) = objectIt.GetObject()->objectData.vz;
-				m1 = objectIt.GetObject()->objectData.m;
+				v1(0) = objectIt.GetObjectInScene()->objectData.vx;
+				v1(1) = objectIt.GetObjectInScene()->objectData.vy;
+				v1(2) = objectIt.GetObjectInScene()->objectData.vz;
+				m1 = objectIt.GetObjectInScene()->objectData.m;
 				nv=v1;
 
 				//1: gravity
 				nv(2) -= G * dt;
 
 				//2: check collision with other spheres
-				for (SceneType::ObjectInteractionIterator iit = objectIt.GetObject()->interactionData.begin() ; iit!= objectIt.GetObject()->interactionData.end() ; iit++) {
+				for (SceneType::ObjectInteractionIterator iit = objectIt.GetObjectInScene()->interactionData.begin() ; iit!= objectIt.GetObjectInScene()->interactionData.end() ; iit++) {
 					distantParams = scene->GetParametersOfObject(iit->first);
 					v2(0) = scene->GetObject(iit->first)->objectData.vx; v2(1) = scene->GetObject(iit->first)->objectData.vy; v2(2) = scene->GetObject(iit->first)->objectData.vz;
 					//vector normal to both sphere
@@ -262,9 +262,9 @@ int main(int argc, char** argv) {
 				if (sphereParams(2)+sphereParams(3)>bbox(5)) { if (nv(2)>0) nv(2) = - nv(2); nv*=kw;}
 
 				//OK, update the velocity of the object.
-				objectIt.GetObject()->objectData.vx = nv(0);
-				objectIt.GetObject()->objectData.vy = nv(1);
-				objectIt.GetObject()->objectData.vz = nv(2);
+				objectIt.GetObjectInScene()->objectData.vx = nv(0);
+				objectIt.GetObjectInScene()->objectData.vy = nv(1);
+				objectIt.GetObjectInScene()->objectData.vz = nv(2);
 
 			}
 
@@ -306,13 +306,13 @@ int main(int argc, char** argv) {
 			//move each spheres, unless it is 'frozen'
 			SceneObjectIterator<SceneType> objectIt(scene);
 			for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
-				if (objectIt.GetObject()->objectData.frozen) continue;
+				if (objectIt.GetObjectInScene()->objectData.frozen) continue;
 
 				sphereParams = scene->GetParametersOfObject(objectIt.GetID());
-				//std::cout<<"  id "<<objectIt.GetID()<<" ; before: pos = "<<sphereParams<<", v = "<<objectIt.GetObject()->objectData.vx<<", "<<objectIt.GetObject()->objectData.vy<<", "<<objectIt.GetObject()->objectData.vz<<std::endl;
-				sphereParams(0) += objectIt.GetObject()->objectData.vx * dt;
-				sphereParams(1) += objectIt.GetObject()->objectData.vy * dt;
-				sphereParams(2) += objectIt.GetObject()->objectData.vz * dt;
+				//std::cout<<"  id "<<objectIt.GetID()<<" ; before: pos = "<<sphereParams<<", v = "<<objectIt.GetObjectInScene()->objectData.vx<<", "<<objectIt.GetObjectInScene()->objectData.vy<<", "<<objectIt.GetObjectInScene()->objectData.vz<<std::endl;
+				sphereParams(0) += objectIt.GetObjectInScene()->objectData.vx * dt;
+				sphereParams(1) += objectIt.GetObjectInScene()->objectData.vy * dt;
+				sphereParams(2) += objectIt.GetObjectInScene()->objectData.vz * dt;
 				if (!scene->ModifyObjectParameters(objectIt.GetID(), sphereParams)) std::cout<<"failed to move to new params: "<<sphereParams<<" ; should NEVER happen..."<<std::endl;
 				//std::cout<<"  id "<<objectIt.GetID()<<" ; after: pos = "<<scene->GetParametersOfObject(objectIt.GetID())<<std::endl;
 
@@ -320,20 +320,20 @@ int main(int argc, char** argv) {
 
 			//for each sphere, update the velocities with various forces.
 			for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
-				if (objectIt.GetObject()->objectData.frozen) continue;
+				if (objectIt.GetObjectInScene()->objectData.frozen) continue;
 
 				sphereParams = scene->GetParametersOfObject(objectIt.GetID());
-				v1(0) = objectIt.GetObject()->objectData.vx;
-				v1(1) = objectIt.GetObject()->objectData.vy;
-				v1(2) = objectIt.GetObject()->objectData.vz;
-				m1 = objectIt.GetObject()->objectData.m;
+				v1(0) = objectIt.GetObjectInScene()->objectData.vx;
+				v1(1) = objectIt.GetObjectInScene()->objectData.vy;
+				v1(2) = objectIt.GetObjectInScene()->objectData.vz;
+				m1 = objectIt.GetObjectInScene()->objectData.m;
 				nv=v1;
 
 				//1: gravity
 				nv(2) -= G * dt;
 
 				//2: check collision with other spheres
-				for (SceneType::ObjectInteractionIterator iit = objectIt.GetObject()->interactionData.begin() ; iit!= objectIt.GetObject()->interactionData.end() ; iit++) {
+				for (SceneType::ObjectInteractionIterator iit = objectIt.GetObjectInScene()->interactionData.begin() ; iit!= objectIt.GetObjectInScene()->interactionData.end() ; iit++) {
 					distantParams = scene->GetParametersOfObject(iit->first);
 					v2(0) = scene->GetObject(iit->first)->objectData.vx; v2(1) = scene->GetObject(iit->first)->objectData.vy; v2(2) = scene->GetObject(iit->first)->objectData.vz;
 					//vector normal to both sphere
@@ -362,9 +362,9 @@ int main(int argc, char** argv) {
 				if (sphereParams(2)+sphereParams(3)>bbox(5)) { if (nv(2)>0) nv(2) = - nv(2); nv*=kw;}
 
 				//OK, update the velocity of the object.
-				objectIt.GetObject()->objectData.vx = nv(0);
-				objectIt.GetObject()->objectData.vy = nv(1);
-				objectIt.GetObject()->objectData.vz = nv(2);
+				objectIt.GetObjectInScene()->objectData.vx = nv(0);
+				objectIt.GetObjectInScene()->objectData.vy = nv(1);
+				objectIt.GetObjectInScene()->objectData.vz = nv(2);
 
 			}
 

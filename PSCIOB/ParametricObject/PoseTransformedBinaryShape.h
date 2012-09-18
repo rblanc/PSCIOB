@@ -45,6 +45,7 @@ namespace psciob {
 * \brief PoseTransformedBinaryShape this defines a BinaryDeformableModel applying a Pose Transform to a BinaryShape
 *
 * \WARNING do not modify the transform directly, it might lead to unexpected behaviors.
+* \todo compute analytically the inertia matrices for all shapes, and apply the transform to it (check what happens wrt scale & affine transforms...)
 */
 
 //CONCRETE CLASS
@@ -92,20 +93,20 @@ public:
 	virtual BaseClassPointer CreateClone() {	
 		Pointer clonePtr = Self::New().GetPointer();
 		clonePtr->SetShapeAndTransform(static_cast<ShapeType*>(m_shape->CreateClone().GetPointer()), static_cast<TransformType*>(m_transform->CreateClone().GetPointer()));
-		//clonePtr->m_parameters = m_parameters; //m_parameters is always maintained uptodate, coherent with the parameters of the shape&transform
+		//clonePtr->m_parameters = m_parameters; //m_parameters are already maintained uptodate by SetShapeAndTransform, in coherence with the parameters of the shape&transform
 		//clonePtr->m_imageSpacing  = m_imageSpacing;
 		//clonePtr->m_vtkResolution = m_vtkResolution;
-		clonePtr->m_imageRegion   = m_imageRegion;	
-		clonePtr->m_imageOrigin   = m_imageOrigin;
 
 		if (m_physicalBBoxUpToDate) {
 			clonePtr->m_physicalBoundingBox = m_physicalBoundingBox; 
 			clonePtr->m_physicalBBoxUpToDate = true; 
 		}
 
-		if (m_imageBBoxUpToDate) { //not really necessary...
+		if (m_imageBBoxUpToDate) { 
 			clonePtr->m_imageBoundingBox = m_imageBoundingBox; 
-			clonePtr->m_imageBoundingBox = true; 
+			clonePtr->m_imageRegion   = m_imageRegion;	
+			clonePtr->m_imageOrigin   = m_imageOrigin;
+			clonePtr->m_imageBBoxUpToDate = true; 
 		}
 
 		if (m_uptodatePolyData) { //not really necessary...
@@ -125,6 +126,10 @@ public:
 			clonePtr->m_outputLabelMap->Graft(m_outputLabelMap);
 			clonePtr->m_uptodateLabelMap = true;
 		}
+
+		if (m_centerFlag)      clonePtr->m_center      = m_center;
+		if (m_inertiaFlag)     clonePtr->m_inertia     = m_inertia;
+		if (m_eigVInertiaFlag) clonePtr->m_eigVInertia = m_eigVInertia;
 
 		return static_cast<BaseClass*>( clonePtr );
 	}
@@ -146,11 +151,9 @@ public:
 	*/
 	inline TransformType* GetTransform() { return m_transform.GetPointer(); }
 
-	/** Get Parameters, in the following order: pose then shape parameters */
-	inline vnl_vector<double> GetParameters() {return m_parameters;}
+	///** Get Parameters, in the following order: pose then shape parameters */
+	//inline vnl_vector<double> GetParameters() {return m_parameters;}
 
-	/** Collect Parameters from the shape and transform, in the following order: pose then shape parameters */
-	vnl_vector<double> CollectParameters();
 
 	/** Indicate that the output should be recomputed */
 	virtual inline void Modified() {
@@ -258,6 +261,7 @@ public:
 	*/
 	inline vnl_vector<double> GetPhysicalBoundingBox() { 
 		m_physicalBoundingBox = m_transform->GetPhysicalBoundingBox();
+		m_physicalBBoxUpToDate = true;
 		return m_physicalBoundingBox;
 	}
 
@@ -281,22 +285,26 @@ protected:
 	// Apply an integer-grid translation, these can be applied very quickly to image representations and avoid recalculating these 
 	bool _IntegerGridTranslate_NoCheck(const vnl_vector<int> &translation) {
 		bool zeroTranslation = true;
-		//std::cout<<"   _IntegerGridTranslate_NoCheck , integer translation vector: "<<translation<<std::endl;
 		double tmp;
 		for (unsigned i=0 ; i<Dimension ; i++) {
 			if ( translation(i)!=0 ) {
 				zeroTranslation = false;
-				//std::cout<<"   _IntegerGridTranslate_NoCheck ,  initial param: "<<m_parameters(i)<<", trans vect: "<<translation(i)<<", sp: "<<m_imageSpacing[i]<<std::endl;
 				tmp = translation(i)*m_imageSpacing[i]; 
-				m_parameters(i) += tmp; //std::cout<<"   offset: "<<tmp<<", new param: "<<m_parameters(i)<<std::endl;
-				m_imageOrigin[i] += tmp;
-				if (m_physicalBBoxUpToDate) {m_physicalBoundingBox(2*i)+= tmp;m_physicalBoundingBox(2*i+1)+= tmp; }
-				if (m_imageBBoxUpToDate)    {m_imageBoundingBox(2*i)   += tmp;m_imageBoundingBox(2*i+1)   += tmp; }
+				m_parameters(i) += tmp; 
+				
+				if (m_imageBBoxUpToDate) { m_imageOrigin[i] += tmp; m_imageBoundingBox(2*i) += tmp; m_imageBoundingBox(2*i+1) += tmp; }
+				if (m_physicalBBoxUpToDate) { m_physicalBoundingBox(2*i) += tmp; m_physicalBoundingBox(2*i+1) += tmp; }
 			}
 		}
 
-		if (m_uptodateBinaryImage)   m_outputBinaryImage->SetOrigin(m_imageOrigin);
-		if (m_uptodateLabelMap)      m_outputLabelMap->SetOrigin(m_imageOrigin);
+		if (m_uptodateBinaryImage)   { 
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("PoseTransformedBinaryShape::_IntegerGridTranslate_NoCheck : m_imageBBoxUpToDate should always be uptodate when m_uptodateBinaryImage is ; this is not the case");; 
+			m_outputBinaryImage->SetOrigin(m_imageOrigin); 
+		}
+		if (m_uptodateLabelMap)      {
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("PoseTransformedBinaryShape::_IntegerGridTranslate_NoCheck : m_imageBBoxUpToDate should always be uptodate when m_uptodateLabelMap is ; this is not the case");; 
+			m_outputLabelMap->SetOrigin(m_imageOrigin);
+		}
 
 		if (!zeroTranslation) {
 			m_uptodatePolyData = false;
@@ -305,6 +313,14 @@ protected:
 
 		return true;
 	}
+
+	/** Collect Parameters from the shape and transform, in the following order: pose then shape parameters */
+	vnl_vector<double> CollectParameters();
+
+	//simply transforms the elements provided by the shape
+	virtual void ComputeObjectCenter();
+	//virtual void ComputeObjectInertia();
+	//virtual void ComputeObjectInertiaEigenVectors(); //in the general case of an affine transform, I need to recover the purely rotational component of the matrix...
 
 private:
 	PoseTransformedBinaryShape(const Self&); //purposely not implemented

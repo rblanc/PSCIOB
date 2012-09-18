@@ -148,6 +148,7 @@ LabelMapScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionD
 	//invalidate the vtk renderer and labelImage flags
 	m_rendererFlag = false;
 	m_labelImageFlag = false;
+	m_binaryImageFlag = false;
 
 	//update the object representation
 	if (!m_arrayObjects[id-1].sceneOffContextLabelObjectFlag) {
@@ -169,6 +170,7 @@ LabelMapScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionD
 	//invalidate the vtk renderer and labelImage flags
 	m_rendererFlag = false;
 	m_labelImageFlag = false;
+	m_binaryImageFlag = false;
 
 	//remove the labelobject from the map.
 	m_labelMap->RemoveLabel( id );
@@ -181,6 +183,7 @@ LabelMapScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionD
 	//Invalidate global scene representations
 	m_rendererFlag = false; 
 	m_labelImageFlag = false;
+	m_binaryImageFlag = false;
 
 	//update the LabelObject and LabelMap representation
 	m_labelMap->RemoveLabel(id);

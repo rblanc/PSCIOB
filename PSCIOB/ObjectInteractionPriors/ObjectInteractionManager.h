@@ -98,14 +98,14 @@ public:
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
 			if ( objectPtr->id != it.GetID() ) {
 				//first, check for bbox
-				if ( !TestBoundingBoxesIntersection_NoCheck(objectPtr->obj->GetPhysicalBoundingBox(), it.GetObject()->obj->GetPhysicalBoundingBox()) ) continue;
+				if ( !TestBoundingBoxesIntersection_NoCheck(objectPtr->obj->GetPhysicalBoundingBox(), it.GetObject()->GetPhysicalBoundingBox()) ) continue;
 				//if the bboxes intersect, then do the exact test.
 				InteractionDataType interactionData;
-				ComputePairWiseObjectInteractionData(objectPtr, it.GetObject(), interactionData);
+				ComputePairWiseObjectInteractionData(objectPtr, it.GetObjectInScene(), interactionData);
 				if ( !interactionData.interactionCostFlag ) continue;
 				//Register the interaction, bilaterally: store the information in both objects
 				objectPtr->interactionData[it.GetID()] = interactionData;
-				it.GetObject()->interactionData[objectPtr->id] = interactionData;
+				it.GetObjectInScene()->interactionData[objectPtr->id] = interactionData;
 			}
 		}
 	}
@@ -131,14 +131,14 @@ public:
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
 			if ( objectPtr->id != it.GetID() ) {
 				//first, check if their bbox intersect
-				if ( !TestBoundingBoxesIntersection_NoCheck(newObject->obj->GetPhysicalBoundingBox(), it.GetObject()->obj->GetPhysicalBoundingBox()) ) { UnregisterInteraction(objectPtr, it.GetObject()); continue; }
+				if ( !TestBoundingBoxesIntersection_NoCheck(newObject->obj->GetPhysicalBoundingBox(), it.GetObject()->GetPhysicalBoundingBox()) ) { UnregisterInteraction(objectPtr, it.GetObjectInScene()); continue; }
 				//if the bboxes intersect, then do the exact test.
 				InteractionDataType interactionData;
-				ComputePairWiseObjectInteractionData(newObject, it.GetObject(), interactionData);
-				if ( !interactionData.interactionCostFlag ) { UnregisterInteraction(objectPtr, it.GetObject()); continue; }
+				ComputePairWiseObjectInteractionData(newObject, it.GetObjectInScene(), interactionData);
+				if ( !interactionData.interactionCostFlag ) { UnregisterInteraction(objectPtr, it.GetObjectInScene()); continue; }
 				//Register the interaction, bilaterally: store the information in both objects
 				newObject->interactionData[it.GetID()] = interactionData;
-				it.GetObject()->interactionData[objectPtr->id] = interactionData;
+				it.GetObjectInScene()->interactionData[objectPtr->id] = interactionData;
 			}
 		}
 	}
@@ -164,7 +164,7 @@ public:
 		SceneObjectIterator<SceneType> it(m_scene);
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
 			if ( it.GetID() != ignoredLabel ) {
-				if ( TestBoundingBoxesIntersection_NoCheck(object->GetPhysicalBoundingBox(), it.GetObject()->obj->GetPhysicalBoundingBox()) )
+				if ( TestBoundingBoxesIntersection_NoCheck(object->GetPhysicalBoundingBox(), it.GetObject()->GetPhysicalBoundingBox()) )
 					listPotentiallyInteractingObjects.push_back(it.GetID());
 			}
 		}
@@ -209,7 +209,7 @@ public:
 		m_monitorInteractionsOnTheFly=true;
 		SceneObjectIterator<SceneType> it(m_scene);
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-			it.GetObject()->interactionData.clear();
+			it.GetObjectInScene()->interactionData.clear();
 		}
 		
 	}
@@ -224,14 +224,14 @@ public:
 			SceneObjectIterator<SceneType> it1(m_scene), it2(m_scene);
 			for (it1.GoToBegin() ; !it1.IsAtEnd() ; ++it1) {
 				for (it2 = ++it1 ; !it2.IsAtEnd() ; ++it2) {
-					if ( !TestBoundingBoxesIntersection_NoCheck(it1.GetObject()->obj->GetPhysicalBoundingBox(), it2.GetObject()->obj->GetPhysicalBoundingBox()) ) continue;
+					if ( !TestBoundingBoxesIntersection_NoCheck(it1.GetObject()->GetPhysicalBoundingBox(), it2.GetObject()->GetPhysicalBoundingBox()) ) continue;
 					//if the bboxes intersect, then do the exact test.
 					InteractionDataType interactionData;
 					ComputePairWiseObjectInteractionData(it1.GetObject(), it2.GetObject(), interactionData);
 					if ( !interactionData.interactionCostFlag ) continue;
 					//Register the interaction, bilaterally: store the information in both objects
-					it1.GetObject()->interactionData[it2.GetID()] = interactionData;
-					it2.GetObject()->interactionData[it1.GetID()] = interactionData;
+					it1.GetObjectInScene()->interactionData[it2.GetID()] = interactionData;
+					it2.GetObjectInScene()->interactionData[it1.GetID()] = interactionData;
 				}
 			}			
 		}

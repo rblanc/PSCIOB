@@ -71,6 +71,9 @@ public:
 			//update the LabelMap
 			VTK2DConvexPolyDataToLabelMap<LabelMapType>( GetObjectAsVTKPolyData(), m_outputLabelMap, m_imageSpacing );
 			m_uptodateLabelMap=true;
+			m_imageBBoxUpToDate=true;
+			m_imageOrigin = m_outputLabelMap->GetOrigin();
+			m_imageRegion = m_outputLabelMap->GetLargestPossibleRegion();
 		}
 		return m_outputLabelMap.GetPointer();
 	}

@@ -46,15 +46,15 @@ m_flagPostMultiply(false), m_interpolationType(NEARESTNEIGHBOR) {
 	m_inputShape = NULL;
 }
 
-//
-// Get Parameters
-//
-//GetParameters
-template < unsigned int VDimension, class TAppearance> 
-inline
-vnl_vector<double> PoseTransform<VDimension, TAppearance>::GetParameters() {
-	return m_parameters;
-}
+////
+//// Get Parameters
+////
+////GetParameters
+//template < unsigned int VDimension, class TAppearance> 
+//inline
+//vnl_vector<double> PoseTransform<VDimension, TAppearance>::GetParameters() {
+//	return m_parameters;
+//}
 
 
 //GetInverseTransformMatrix

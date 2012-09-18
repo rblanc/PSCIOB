@@ -68,19 +68,15 @@ public:
 		clonePtr->SetParameters(GetParameters()); //use set&get parameters methods, in particular because of the PoseTranformedShape, which needs to re-distribute those parameters
 		clonePtr->m_imageSpacing  = m_imageSpacing;
 		clonePtr->m_vtkResolution = m_vtkResolution;
-		clonePtr->m_imageRegion   = m_imageRegion;	
-		clonePtr->m_imageOrigin   = m_imageOrigin;
 		return static_cast<BaseClass*>( clonePtr );
 	}
 
 	/** This function creates a full copy object, including the vtkPolyData, LabelMap, and itkImage	*/
 	virtual BaseClassPointer CreateClone() {
 		Pointer clonePtr = static_cast<Self*>(this->CreateAnother().GetPointer());
-		clonePtr->SetParameters(GetParameters()); //use set&get parameters methods, in particular because of the PoseTranformedShape, which needs to re-distribute those parameters
+		clonePtr->SetParameters(GetParameters()); 
 		clonePtr->m_imageSpacing  = m_imageSpacing;
 		clonePtr->m_vtkResolution = m_vtkResolution;
-		clonePtr->m_imageRegion   = m_imageRegion;	
-		clonePtr->m_imageOrigin   = m_imageOrigin;
 
 		if (m_physicalBBoxUpToDate) {
 			clonePtr->m_physicalBoundingBox = m_physicalBoundingBox; 
@@ -89,7 +85,9 @@ public:
 
 		if (m_imageBBoxUpToDate) { 
 			clonePtr->m_imageBoundingBox = m_imageBoundingBox; 
-			clonePtr->m_imageBoundingBox = true; 
+			clonePtr->m_imageRegion   = m_imageRegion;	
+			clonePtr->m_imageOrigin   = m_imageOrigin;
+			clonePtr->m_imageBBoxUpToDate = true; 
 		}
 
 		if (m_uptodatePolyData) {
@@ -110,6 +108,10 @@ public:
 			clonePtr->m_uptodateLabelMap = true;
 		}
 
+		if (m_centerFlag)      clonePtr->m_center      = m_center;
+		if (m_inertiaFlag)     clonePtr->m_inertia     = m_inertia;
+		if (m_eigVInertiaFlag) clonePtr->m_eigVInertia = m_eigVInertia;
+
 		return static_cast<BaseClass*>( clonePtr );
 	}
 
@@ -129,14 +131,19 @@ public:
 				m_uptodatePolyData = false;
 				tmp = translation(i)*m_imageSpacing[i];
 				m_parameters(i) += tmp;
-				m_imageOrigin[i] += tmp;
+				if (m_imageBBoxUpToDate)    {m_imageOrigin[i] += tmp; m_imageBoundingBox(2*i) += tmp;m_imageBoundingBox(2*i+1) += tmp; }
 				if (m_physicalBBoxUpToDate) {m_physicalBoundingBox(2*i)+= tmp;m_physicalBoundingBox(2*i+1)+= tmp; }
-				if (m_imageBBoxUpToDate)    {m_imageBoundingBox(2*i)   += tmp;m_imageBoundingBox(2*i+1)   += tmp; }
 			}
 		}
 
-		if (m_uptodateBinaryImage)   m_outputBinaryImage->SetOrigin(m_imageOrigin);
-		if (m_uptodateLabelMap)      m_outputLabelMap->SetOrigin(m_imageOrigin);
+		if (m_uptodateBinaryImage)   { 
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("BinaryDeformableModel::IntegerGridTranslate : m_imageBBoxUpToDate should always be uptodate when m_uptodateBinaryImage is ; this is not the case");; 
+			m_outputBinaryImage->SetOrigin(m_imageOrigin); 
+		}
+		if (m_uptodateLabelMap)      {
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("BinaryDeformableModel::IntegerGridTranslate : m_imageBBoxUpToDate should always be uptodate when m_uptodateLabelMap is ; this is not the case");; 
+			m_outputLabelMap->SetOrigin(m_imageOrigin);
+		}
 
 		return true;
 	}

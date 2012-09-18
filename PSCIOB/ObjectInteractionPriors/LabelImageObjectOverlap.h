@@ -166,14 +166,14 @@ public:
 			SceneObjectIterator<SceneType> it1(m_scene), it2(m_scene);
 			for (it1.GoToBegin() ; !it1.IsAtEnd() ; ++it1) {
 				for (it2 = ++it1 ; !it2.IsAtEnd() ; ++it2) {
-					if ( !TestBoundingBoxesIntersection_NoCheck(it1.GetObject()->obj->GetPhysicalBoundingBox(), it2.GetObject()->obj->GetPhysicalBoundingBox()) ) continue;
+					if ( !TestBoundingBoxesIntersection_NoCheck(it1.GetObject()->GetPhysicalBoundingBox(), it2.GetObject()->GetPhysicalBoundingBox()) ) continue;
 					//if the bboxes intersect, then do the exact test.
 					InteractionDataType interactionData;
 					ComputePairWiseObjectInteractionData(it1.GetObject(), it2.GetObject(), interactionData);
 					if ( !interactionData.interactionCostFlag ) continue;
 					//Register the interaction, bilaterally: store the information in both objects
-					it1.GetObject()->interactionData[it2.GetID()] = interactionData;
-					it2.GetObject()->interactionData[it1.GetID()] = interactionData;
+					it1.GetObjectInScene()->interactionData[it2.GetID()] = interactionData;
+					it2.GetObjectInScene()->interactionData[it1.GetID()] = interactionData;
 				}
 			}			
 		}

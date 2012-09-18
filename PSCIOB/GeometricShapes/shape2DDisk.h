@@ -111,6 +111,10 @@ protected:
 
 	unsigned int m_thetaResolution; //nb of points of the polygon approximating the disk
 
+	void ComputeObjectCenter() { m_center.fill(0); m_centerFlag = true; }
+	//void ComputeObjectInertia()             { m_inertia.set_identity(); m_inertiaFlag = true;} 
+	//void ComputeObjectInertiaEigenVectors() { m_eigVInertia.set_identity(); m_eigVInertiaFlag = true; }
+
 private:
 	shape2DDisk(const Self&);			//purposely not implemented
 	const Self & operator=( const Self & );	//purposely not implemented

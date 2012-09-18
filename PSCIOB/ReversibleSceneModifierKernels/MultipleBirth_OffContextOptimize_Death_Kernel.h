@@ -140,7 +140,7 @@ public:
 		for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
 			label = objectIt.GetID();
 			//put the object in the local scene and optimize it there.
-			tmpLabel = m_localScene->AddObject( objectIt.GetObject()->obj );
+			tmpLabel = m_localScene->AddObject( objectIt.GetObject() );
 			m_localOptimizationManager->SelectObject(tmpLabel);
 			//m_localOptimizationManager->Optimize();
 			//modify the object in the scene, and collect the local cost with the real object ID.

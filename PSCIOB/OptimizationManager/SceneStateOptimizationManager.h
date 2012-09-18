@@ -171,7 +171,7 @@ public:
 		IndependentPDFs::Pointer pdf = IndependentPDFs::New();			
 		SceneObjectIterator<SceneType> objectIt(m_scene);
 		for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
-			pdf->AddMultivariatePDF( m_scene->GetObjectTypesLibrary()->GetObjectPDF( objectIt.GetObject()->objectTypeId , PDF_OBJECTGENERATIONPRIOR) );
+			pdf->AddMultivariatePDF( m_scene->GetObjectTypesLibrary()->GetObjectPDF( objectIt.GetObjectInScene()->objectTypeId , PDF_OBJECTGENERATIONPRIOR) );
 		}
 		return m_priorPDF.GetPointer();
 	}
@@ -183,7 +183,7 @@ public:
 		IndependentPDFs::Pointer pdf = IndependentPDFs::New();
 		SceneObjectIterator<SceneType> objectIt(m_scene);
 		for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
-			pdf->AddMultivariatePDF( m_scene->GetObjectTypesLibrary()->GetObjectPDF( objectIt.GetObject()->objectTypeId , PDF_RANDOMWALK) );
+			pdf->AddMultivariatePDF( m_scene->GetObjectTypesLibrary()->GetObjectPDF( objectIt.GetObjectInScene()->objectTypeId , PDF_RANDOMWALK) );
 		}
 		m_priorPDF = static_cast<MultivariatePDF::Pointer>(pdf);
 		return m_priorPDF.GetPointer();

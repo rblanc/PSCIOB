@@ -112,6 +112,10 @@ protected:
 	unsigned int m_Resolution;
 	vtkSmartPointer<vtkCylinderSource> m_cylinderSource;
 
+	void ComputeObjectCenter() { m_center.fill(0); m_centerFlag = true; }
+	//void ComputeObjectInertia();
+	//void ComputeObjectInertiaEigenVectors();
+
 private:
 	shape3DCylinder(const Self&);           //purposely not implemented
 	const Self & operator=( const Self & );	//purposely not implemented

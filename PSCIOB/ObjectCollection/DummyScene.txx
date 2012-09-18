@@ -123,6 +123,7 @@ DummyScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData
 	//Invalidate the labelMap representations
 	m_labelMapFlag = false;
 	m_labelImageFlag = false;
+	m_binaryImageFlag = false;
 	m_rendererFlag = false;
 	//m_arrayObjects[id-1].obj->GetObjectAsLabelMap();
 }
@@ -133,6 +134,7 @@ DummyScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData
 	//Invalidate the labelMap and labelImage representations
 	m_labelMapFlag = false;
 	m_labelImageFlag = false;
+	m_binaryImageFlag = false;
 	m_rendererFlag = false;
 }
 
@@ -141,6 +143,7 @@ void
 DummyScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::UpdateObjectInScene(IDType id, ObjectInScene *newObject) {
 	m_labelMapFlag = false;
 	m_labelImageFlag = false;
+	m_binaryImageFlag = false;
 	m_rendererFlag = false;
 	//newObject->obj->GetObjectAsLabelMap();
 }

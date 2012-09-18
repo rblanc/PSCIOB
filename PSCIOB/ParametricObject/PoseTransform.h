@@ -104,10 +104,10 @@ public:
 		return true;
 	}
 
-	/** Get the vector of parameters 
-	* not const, because the parameters may be updated with respect to the matrix
-	*/
-	inline vnl_vector<double> GetParameters();
+	///** Get the vector of parameters 
+	//* not const, because the parameters may be updated with respect to the matrix
+	//*/
+	//inline vnl_vector<double> GetParameters();
 	
 	/** Get the inverse transform matrix */
 	inline vnl_matrix<double> GetInverseTransformMatrix();

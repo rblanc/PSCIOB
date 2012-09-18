@@ -57,7 +57,6 @@ bool
 ParametricObject<VDimension, TAppearance>::SetParameters(const vnl_vector<double> &params) 
 {
 	if (!CheckParameters(params)) { return false;}
-
 	//First, look at the non-translation parameters
 	for (unsigned i=Dimension ; i<params.size() ; i++) { 
 		if ( fabs(m_parameters(i)-params(i))>TINY ) { m_parameters = params; Modified(); return true; }
@@ -166,13 +165,12 @@ void
 ParametricObject<VDimension, TAppearance>::ComputeObjectInertia() {
 	m_inertia.fill(0);
 	//browse the lines of the object
-	LabelMapType* lm = GetObjectAsLabelMap(); //make sure the labelMap is uptodate
+	LabelMapType* lm = this->GetObjectAsLabelMap(); //make sure the labelMap is uptodate
 	LabelObjectType* lo = lm->GetNthLabelObject(0);
 
 	LabelObjectType::ConstLineIterator lit( lo );
 	vnl_vector<double> coords(VDimension); unsigned nbPts=0;
-
-	GetObjectCenter(); //make sure the center is uptodate
+	this->GetObjectCenter(); //make sure the center is uptodate
 
 	for (lit.GoToBegin() ; ! lit.IsAtEnd() ; ++lit) {
 		//get the index, and convert it to physical coordinates
@@ -184,7 +182,8 @@ ParametricObject<VDimension, TAppearance>::ComputeObjectInertia() {
 		}
 	}
 
-	m_inertia /= nbPts-1.0;
+	if (nbPts>1) m_inertia /= nbPts-1.0;
+	else         m_inertia.set_identity();
 
 	m_inertiaFlag = true;
 }
@@ -193,53 +192,11 @@ ParametricObject<VDimension, TAppearance>::ComputeObjectInertia() {
 template <unsigned int VDimension, class TAppearance>
 void 
 ParametricObject<VDimension, TAppearance>::ComputeObjectInertiaEigenVectors() {
-	vnl_symmetric_eigensystem<double> eig(GetObjectInertiaMatrix());
+	vnl_symmetric_eigensystem<double> eig(this->GetObjectInertiaMatrix());
 	m_eigVInertia = eig.V;
 	m_eigVInertiaFlag=true;
 }
 
-//
-///** Get Center Of Gravity and Inertia matrix of the shape 
-//* the function fills the information in the provided structures
-//* this is a base implementation which computes it from the LabelObject, it can be re-implemented to be faster in child classes
-//*/
-//template <unsigned int VDimension, class TAppearance>
-//void 
-//ParametricObject<VDimension, TAppearance>::GetObjectCenterAndInertiaMatrix(vnl_vector<double> &center, vnl_matrix<double> &mat) {
-//	center.set_size(VDimension); center.fill(0);
-//	mat.set_size(VDimension,VDimension); mat.fill(0);
-//
-//	//browse the lines of the object
-//	LabelMapType* lm = GetObjectAsLabelMap(); //make sure the labelMap is uptodate
-//	LabelObjectType* lo = lm->GetNthLabelObject(0);
-//
-//	LabelObjectType::ConstLineIterator lit( lo );
-//	
-//	vnl_vector<double> coords(VDimension); unsigned nbPts=0;
-//	for (lit.GoToBegin() ; ! lit.IsAtEnd() ; ++lit) {
-//		//get the index, and convert it to physical coordinates
-//		const LabelObjectType::IndexType &index = lit.GetLine().GetIndex();
-//		for (unsigned d1=0 ; d1<VDimension ; d1++) coords(d1) = lm->GetOrigin()[d1] + index[d1]*m_imageSpacing[d1];
-//
-//		for (unsigned i=0 ; i< lit.GetLine().GetLength() ; i++, coords(0)+=m_imageSpacing[0], nbPts++) {
-//			center += coords;
-//		}
-//	}
-//
-//	center /= nbPts;
-//
-//	for (lit.GoToBegin() ; ! lit.IsAtEnd() ; ++lit) {
-//		//get the index, and convert it to physical coordinates
-//		index = lit.GetLine().GetIndex();
-//		for (unsigned d1=0 ; d1<VDimension ; d1++) coords(d1) = lm->GetOrigin()[d1] + index[d1]*m_imageSpacing[d1];
-//		coords -= center;
-//		for (unsigned i=0 ; i< lit.GetLine().GetLength() ; i++, coords(0)+=m_imageSpacing[0], nbPts++) {
-//			mat += outer_product(coords,coords);
-//		}
-//	}
-//
-//	mat = mat/(nbPts-1.0);
-//}
 
 } // namespace psciob
 

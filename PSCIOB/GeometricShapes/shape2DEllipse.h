@@ -112,6 +112,10 @@ protected:
 
 	unsigned int m_thetaResolution; //nb of points of the polygon approximating the disk
 
+	void ComputeObjectCenter() { m_center.fill(0); m_centerFlag = true; }
+	//void ComputeObjectInertia();
+	//void ComputeObjectInertiaEigenVectors();
+
 private:
 	shape2DEllipse(const Self&);			//purposely not implemented
 	const Self & operator=( const Self & );	//purposely not implemented

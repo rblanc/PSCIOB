@@ -115,6 +115,10 @@ protected:
 	unsigned int m_phiResolution, m_thetaResolution;
 	vtkSmartPointer<vtkSphereSource> m_sphereSource;
 
+	void ComputeObjectCenter() { m_center.fill(0); m_centerFlag = true; }
+	//void ComputeObjectInertia();
+	//void ComputeObjectInertiaEigenVectors();
+
 private:
 	shape3DSphere(const Self&);				//purposely not implemented
 	const Self & operator=( const Self & );	//purposely not implemented

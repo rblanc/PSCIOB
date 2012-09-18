@@ -240,14 +240,19 @@ PoseTransformedBinaryShape<VDimension>::IntegerGridTranslate(const vnl_vector<in
 			zeroTranslation = false;
 			tmp = translation(i)*m_imageSpacing[i];
 			m_parameters(i) += tmp;
-			m_imageOrigin[i] += tmp;
-			if (m_physicalBBoxUpToDate) {m_physicalBoundingBox(2*i)+= tmp;m_physicalBoundingBox(2*i+1)+= tmp; }
-			if (m_imageBBoxUpToDate)    {m_imageBoundingBox(2*i)   += tmp;m_imageBoundingBox(2*i+1)   += tmp; }
+			if (m_physicalBBoxUpToDate) { m_physicalBoundingBox(2*i) += tmp;m_physicalBoundingBox(2*i+1) += tmp; }
+			if (m_imageBBoxUpToDate)    { m_imageOrigin[i] += tmp; m_imageBoundingBox(2*i) += tmp;m_imageBoundingBox(2*i+1) += tmp; }
 		}
 	}
 
-	if (m_uptodateBinaryImage)   m_outputBinaryImage->SetOrigin(m_imageOrigin);
-	if (m_uptodateLabelMap)      m_outputLabelMap->SetOrigin(m_imageOrigin);
+	if (m_uptodateBinaryImage)   { 
+		if (!m_imageBBoxUpToDate) throw DeformableModelException("PoseTransformedBinaryShape::IntegerGridTranslate : m_imageBBoxUpToDate should always be uptodate when m_uptodateBinaryImage is ; this is not the case");; 
+		m_outputBinaryImage->SetOrigin(m_imageOrigin); 
+	}
+	if (m_uptodateLabelMap)      {
+		if (!m_imageBBoxUpToDate) throw DeformableModelException("PoseTransformedBinaryShape::IntegerGridTranslate : m_imageBBoxUpToDate should always be uptodate when m_uptodateLabelMap is ; this is not the case");; 
+		m_outputLabelMap->SetOrigin(m_imageOrigin);
+	}
 
 	if (!zeroTranslation) {
 		m_uptodatePolyData = false;
@@ -256,6 +261,31 @@ PoseTransformedBinaryShape<VDimension>::IntegerGridTranslate(const vnl_vector<in
 
 	return true;
 }
+
+template <unsigned int VDimension>
+void 
+PoseTransformedBinaryShape<VDimension>::ComputeObjectCenter() {
+	m_center = m_shape->GetObjectCenter() + m_parameters.extract(VDimension);
+	m_centerFlag = true;
+}
+
+//template <unsigned int VDimension>
+//void 
+//PoseTransformedBinaryShape<VDimension>::ComputeObjectInertia() {
+//std::cout<<"PoseTransformedBinaryShape::ComputeObjectInertia"<<std::endl;
+//	vnl_matrix<double> Rmat = m_transform->GetMatrixFromParameters(m_transform->GetParameters()).extract(VDimension,VDimension);
+//	m_inertia =  Rmat * m_shape->GetObjectInertiaMatrix() * Rmat.transpose();
+//	m_inertiaFlag = true;
+//}
+
+//in the general case of an affine transform, I need to recover the purely rotational component of the matrix...
+//template <unsigned int VDimension>
+//void 
+//PoseTransformedBinaryShape<VDimension>::ComputeObjectInertiaEigenVectors() {
+//	vnl_matrix<double> Rmat = m_transform->GetMatrixFromParameters(m_transform->GetParameters()).extract(VDimension,VDimension);
+//	m_inertia =  Rmat * m_shape->GetObjectInertiaMatrix() * Rmat.transpose();
+//	m_eigVInertiaFlag=true;
+//}
 
 
 } // namespace psciob

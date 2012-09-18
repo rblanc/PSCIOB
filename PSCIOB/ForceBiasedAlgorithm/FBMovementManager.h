@@ -122,23 +122,20 @@ public:
 	*/
 	virtual vnl_vector<double> UpdateMove(const vnl_vector<double> &currentMove, IDType id1, IDType id2, InteractionDataType overlapData) {
 		vnl_vector<double> t(Dimension), proposedMove = currentMove;
-		
+
 		//translation
-		t = m_translationFactor * element_product( (m_scene->GetParametersOfObject(id1).extract(Dimension) - m_scene->GetParametersOfObject(id2).extract(Dimension)).normalize(), m_scene->GetSceneSpacing().GetVnlVector());
+		vnl_vector<double> c1, c2;
+		c1 = m_scene->GetObject(id1)->obj->GetObjectCenter();
+		c2 = m_scene->GetObject(id2)->obj->GetObjectCenter();
+		t = m_translationFactor * element_product( (c1 - c2).normalize(), m_scene->GetSceneSpacing().GetVnlVector());
 		for (unsigned i=0 ; i<Dimension ; i++) proposedMove(i)+=t(i);
 
 		//rotation
 		if (m_rotationFactor!=0) {
-			//get the center of gravity, and matrices of inertia of both objects
-			//vnl_vector<double> c1, c2; 
+			//get the axes of inertia of both objects
 			vnl_matrix<double> V1, V2;
 			V1 = m_scene->GetObject(id1)->obj->GetObjectInertiaEigenVectors();
 			V2 = m_scene->GetObject(id2)->obj->GetObjectInertiaEigenVectors();
-			//I1 = m_scene->GetObject(id1)->obj->GetObjectInertiaMatrix();
-			//I2 = m_scene->GetObject(id2)->obj->GetObjectInertiaMatrix();
-
-			//vnl_symmetric_eigensystem<double> eig1(I1);
-			//vnl_symmetric_eigensystem<double> eig2(I2);
 
 			vnl_matrix<double> m1, m2;
 			double dp0, dp1;

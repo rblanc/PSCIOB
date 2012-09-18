@@ -873,17 +873,17 @@ std::cout<<"UPDATE_DATA, SIMPLESEMSENSOR... using vtk ; seems broken..."<<std::e
 		//SceneObjectIterator<SceneType> it(m_scene);
 
 		//for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) { 
-		//	if (!it.GetObject()->actorFlag) {
+		//	if (!it.GetObjectInScene()->actorFlag) {
 		//		vtkSmartPointer<vtkPolyDataMapper> map = vtkSmartPointer<vtkPolyDataMapper>::New(); 
-		//		map->SetInput( it.GetObject()->obj->GetObjectAsVTKPolyData() ); 
-		//		it.GetObject()->actor = vtkSmartPointer<vtkActor>::New(); 
-		//		it.GetObject()->actor->SetMapper(map); 
-		//		unsigned tmpid = it.GetObject()->id%(255*255), R = it.GetObject()->id/(255*255), G = tmpid/255, B = tmpid%255;
-		//		it.GetObject()->actor->GetProperty( )->SetColor(R/255.0,G/255.0,B/255.0); 
-		//		it.GetObject()->actorFlag = true;
+		//		map->SetInput( it.GetObject()->GetObjectAsVTKPolyData() ); 
+		//		it.GetObjectInScene()->actor = vtkSmartPointer<vtkActor>::New(); 
+		//		it.GetObjectInScene()->actor->SetMapper(map); 
+		//		unsigned tmpid = it.GetObjectInScene()->id%(255*255), R = it.GetObjectInScene()->id/(255*255), G = tmpid/255, B = tmpid%255;
+		//		it.GetObjectInScene()->actor->GetProperty( )->SetColor(R/255.0,G/255.0,B/255.0); 
+		//		it.GetObjectInScene()->actorFlag = true;
 		//	//}
 		//	//TODO: check that actor is uptodate... and remember that the object may not be instanciated!
-		//	renderer->AddActor( it.GetObject()->actor ); 
+		//	renderer->AddActor( it.GetObjectInScene()->actor ); 
 		//}
 
 		vtkRenderWindow *renderWindow = vtkRenderWindow::New(); 

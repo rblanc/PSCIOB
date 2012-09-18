@@ -167,7 +167,7 @@ public:
 		for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
 			label = objectIt.GetID();
 			//put the object in the local scene and get its local cost
-			tmpLabel = m_localScene->AddObject( objectIt.GetObject()->obj );
+			tmpLabel = m_localScene->AddObject( objectIt.GetObject() );
 			m_localOptimizationManager->SelectObject(tmpLabel);
 			listObjects.push_back( ObjectCosts(label, m_localOptimizationManager->GetValue()) );
 			//clean the local scene.

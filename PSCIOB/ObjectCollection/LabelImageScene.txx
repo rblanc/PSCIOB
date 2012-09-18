@@ -74,20 +74,15 @@ bool
 LabelImageScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::TestObjectFullyOutside_Internal(ObjectInScene *object) {
 	if (!TestBoundingBoxesIntersection(m_sceneBBox, object->obj->GetPhysicalBoundingBox())) return true;
 	m_dummyLabelMap->ClearLabels();
-	//LabelMapType::Pointer labelMap = LabelMapType::New();
-	//labelMap->SetRegions( m_sceneImageRegion );
-	//labelMap->SetSpacing( m_sceneSpacing );
-	//labelMap->SetOrigin( m_sceneOrigin );
 
 	object->obj->SetImageSpacing(m_sceneSpacing);
 	if (!object->sceneOffContextLabelObjectFlag) {
-		//if (!InsertSingleObjectLabelMapIntoAnother<DeformableObjectType::LabelMapType, LabelMapType>(object->obj->GetObjectAsLabelMap(), labelMap)) return true;
-		//object->sceneOffContextLabelObject = labelMap->GetNthLabelObject(0);
-		if (!InsertSingleObjectLabelMapIntoAnother<DeformableObjectType::LabelMapType, LabelMapType>(object->obj->GetObjectAsLabelMap(), m_dummyLabelMap)) return true;
+		if (!InsertSingleObjectLabelMapIntoAnother<DeformableObjectType::LabelMapType, LabelMapType>(object->obj->GetObjectAsLabelMap(), m_dummyLabelMap)) {
+			return true;
+		}
 		object->sceneOffContextLabelObject = m_dummyLabelMap->GetNthLabelObject(0);
 		object->sceneOffContextLabelObjectFlag = true;
 	}
-	//m_dummyLabelMap->ClearLabels();
 	return false;
 }
 
@@ -138,6 +133,7 @@ void
 LabelImageScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::DrawObjectInScene(TObjectId id) {	//this method be implemented only in the leaf class when all insertion policies have been defined (do I write in the label image, in both the label and the textured image, do I authorize object overlaps, etc...) 
 	//invalidate the vtk renderer flags
 	m_rendererFlag = false;
+	m_binaryImageFlag = false;
 
 	//update the object representation, label map and label image
 	if (!m_arrayObjects[id-1].sceneOffContextLabelObjectFlag) {
@@ -206,6 +202,7 @@ void
 LabelImageScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::EraseObjectFromScene(TObjectId id) {
 	//invalidate the vtk renderer
 	m_rendererFlag = false;
+	m_binaryImageFlag = false;
 
 	//remove the labelobject from the map.
 	m_labelMap->RemoveLabel( id );
@@ -242,6 +239,7 @@ void
 LabelImageScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::UpdateObjectInScene(IDType id, ObjectInScene *newObject) {
 	//invalidate the vtk renderer flags
 	m_rendererFlag = false;
+	m_binaryImageFlag = false;
 	m_arrayObjects[id-1].actorFlag = false;
 
 	//update the LabelObject and LabelMap representation

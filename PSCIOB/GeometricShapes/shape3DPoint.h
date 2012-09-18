@@ -98,6 +98,10 @@ protected:
 	vtkSmartPointer<vtkPoints> m_point;
 	vtkSmartPointer<vtkCellArray> m_vertex;
 
+	void ComputeObjectCenter()              { m_center.fill(0); m_centerFlag = true; }
+	void ComputeObjectInertia()             { m_inertia.set_identity(); m_inertiaFlag = true; }
+	void ComputeObjectInertiaEigenVectors() { m_eigVInertia.set_identity(); m_eigVInertiaFlag = true; }
+
 private:
 	shape3DPoint(const Self&);				//purposely not implemented
 	const Self & operator=( const Self & );	//purposely not implemented

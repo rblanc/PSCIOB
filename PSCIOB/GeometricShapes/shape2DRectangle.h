@@ -100,6 +100,10 @@ protected:
 	static const std::string m_name;
 	static const unsigned int m_nbParams = 1;
 
+	void ComputeObjectCenter() { m_center.fill(0); m_centerFlag = true; }
+	//void ComputeObjectInertia();
+	//void ComputeObjectInertiaEigenVectors();
+
 private:
 	shape2DRectangle(const Self&);			//purposely not implemented
 	const Self & operator=( const Self & );	//purposely not implemented

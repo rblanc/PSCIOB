@@ -646,7 +646,7 @@ void TestOverlaps() {
 	WriteITKImageToFile<Image3DType>("TestOverlaps_0_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			if (it.GetID()>iit->first) std::cout<<"  interaction between object: "<<it.GetID()<<" and "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -659,7 +659,7 @@ void TestOverlaps() {
 	WriteITKImageToFile<Image3DType>("TestOverlaps_1_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			if (it.GetID()>iit->first) std::cout<<"  interaction between object: "<<it.GetID()<<" and "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -671,7 +671,7 @@ void TestOverlaps() {
 	WriteITKImageToFile<Image3DType>("TestOverlaps_2_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			if (it.GetID()>iit->first) std::cout<<"  interaction between object: "<<it.GetID()<<" and "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -683,7 +683,7 @@ void TestOverlaps() {
 	WriteITKImageToFile<Image3DType>("TestOverlaps_3_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			if (it.GetID()>iit->first) std::cout<<"  interaction between object: "<<it.GetID()<<" and "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -696,7 +696,7 @@ void TestOverlaps() {
 	WriteITKImageToFile<Image3DType>("TestOverlaps_4_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			if (it.GetID()>iit->first) std::cout<<"  interaction between object: "<<it.GetID()<<" and "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -709,7 +709,7 @@ void TestOverlaps() {
 	WriteITKImageToFile<Image3DType>("TestOverlaps_5_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			if (it.GetID()>iit->first) std::cout<<"  interaction between object: "<<it.GetID()<<" and "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}	
@@ -722,7 +722,7 @@ void TestOverlaps() {
 	WriteITKImageToFile<Image3DType>("TestOverlaps_6_sensed.nii", img3D);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			if (it.GetID()>iit->first) std::cout<<"  interaction between object: "<<it.GetID()<<" and "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}	

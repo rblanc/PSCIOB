@@ -214,7 +214,7 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	psciob::UniformPDF::Pointer    uniformElongPDF = psciob::UniformPDF::New();
 	uniformElongPDF->SetParameters(0.25, 1);
 	psciob::UniformPDF::Pointer    uniformAnglePDF = psciob::UniformPDF::New();
-	uniformAnglePDF->SetParameters(0, PI);
+	uniformAnglePDF->SetParameters(0, 2.0*PI);
 
 	psciob::IndependentPDFs::Pointer ellipseGenerationPDF = psciob::IndependentPDFs::New();
 	ellipseGenerationPDF->AddMultivariatePDF(uniformTransPDF); ellipseGenerationPDF->AddUnivariatePDF(uniformRadiusPDF);
@@ -222,18 +222,18 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 
 	m_scene->GetObjectTypesLibrary()->SetObjectPDF(typeCode, psciob::PDF_OBJECTGENERATIONPRIOR, ellipseGenerationPDF);
 
-	////2 ellipses ... to test rotations work fine
+	////2 ellipses ... to test things are working fine
 	//vnl_vector<double> par(5);
-	//par(0) = 50; par(1) = 50; par(2) = 5; par(3) = 0.5; par(4) = 0;
+	//par(0) = -198; par(1) = -198; par(2) = 8; par(3) = 0.5; par(4) = 0;
 	//sampleEllipse->SetParameters(par);
 	//m_scene->AddObject( sampleEllipse );
 
-	//par(0) = 52; par(1) = 52; par(2) = 5; par(3) = 0.5; par(4) = PI/3.0;
+	//par(0) = 198; par(1) = 198; par(2) = 8; par(3) = 0.5; par(4) = PI/3.0;
 	//sampleEllipse->SetParameters(par);
 	//m_scene->AddObject( sampleEllipse );
 
 	//1000 random ellipses
-	for (unsigned i=0 ; i<1000 ; i++) {
+	for (unsigned i=0 ; i<600 ; i++) {
 		m_scene->AddObject(m_scene->GetObjectTypesLibrary()->GenerateNewRandomObject(typeCode));
 	}
 
@@ -247,11 +247,11 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 
 
 	psciob::ForceBiasedAlgorithm<SceneType>::Pointer fbAlgo = psciob::ForceBiasedAlgorithm<SceneType>::New();
-	fbAlgo->SetBoundaryEffectBehavior(psciob::ForceBiasedAlgorithm<SceneType>::SOLIDBOUNDARIES);
+	fbAlgo->SetBoundaryEffectBehavior(psciob::ForceBiasedAlgorithm<SceneType>::PERIODICBOUNDARIES);
 	fbAlgo->SetScene(m_scene);
 	fbAlgo->GetMovementManager()->SetTranslationFactor( 1 ); //unit is the pixel...
 	fbAlgo->GetMovementManager()->SetScalingFactor(0.999);
 	fbAlgo->GetMovementManager()->SetRotationFactor(0.2);
-	fbAlgo->IterateUntilConvergence();
+	fbAlgo->IterateUntilConvergence(true);
 
 }

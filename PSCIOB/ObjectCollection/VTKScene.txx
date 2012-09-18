@@ -127,6 +127,7 @@ VTKScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>:
 	//Invalidate the labelMap representations
 	m_labelMapFlag = false;
 	m_labelImageFlag = false;
+	m_binaryImageFlag = false;
 
 	//Update the renderer representation
 	//create an actor, assign a pseudo-color dependent on the id
@@ -152,6 +153,7 @@ VTKScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>:
 	//Invalidate the labelMap and labelImage representations
 	m_labelMapFlag = false;
 	m_labelImageFlag = false;
+	m_binaryImageFlag = false;
 
 	//Update the renderer representation
 	m_renderer->RemoveActor(m_arrayObjects[id-1].actor);
@@ -164,6 +166,7 @@ VTKScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>:
 	//m_rendererFlag = true; //this status is preserved
 	m_labelMapFlag = false;
 	m_labelImageFlag = false;
+	m_binaryImageFlag = false;
 
 	//update the mapper input... it is necessary to instanciate the new objects
 	if(!m_arrayObjects[id-1].mapper) {

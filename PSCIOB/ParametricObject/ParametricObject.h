@@ -116,7 +116,8 @@ public:
 	/** Get Parameters 
 	* not const, because the PoseTransform may need to update the parameters 
 	*/
-	virtual inline vnl_vector<double> GetParameters() { return m_parameters; }
+	//virtual inline vnl_vector<double> GetParameters() { return m_parameters; }
+	inline vnl_vector<double> GetParameters() { return m_parameters; }
 
 	/** Get Parameters */
 	virtual vnl_vector<double> GetDefaultParameters() const = 0;
@@ -279,11 +280,11 @@ public:
 	virtual bool IsObjectTexturedImageUpToDate()      = 0;
 
 	/** Get Center Of Gravity of the object	*/
-	vnl_vector<double> GetObjectCenter()                             { if (!m_centerFlag) ComputeObjectCenter();     return m_center; }
+	vnl_vector<double> GetObjectCenter()                             { if (!m_centerFlag) ComputeObjectCenter();     m_centerFlag = true; return m_center; }
 	/** Get the inertia matrix of the object */
-	vnl_matrix<double> GetObjectInertiaMatrix()                      { if (!m_inertiaFlag) ComputeObjectInertia();   return m_inertia; }
-	/** Get the eigenvectors of the inertia matrix (sorted by increasing eigenvalue) */
-	vnl_matrix<double> GetObjectInertiaEigenVectors() { if (!m_eigVInertiaFlag) ComputeObjectInertiaEigenVectors();   return m_eigVInertia; }
+	vnl_matrix<double> GetObjectInertiaMatrix()                      { if (!m_inertiaFlag) ComputeObjectInertia();   m_inertiaFlag = true; return m_inertia; }
+	/** Get the eigenvectors of the inertia matrix ( sorted by increasing eigenvalue !! ) */
+	vnl_matrix<double> GetObjectInertiaEigenVectors() { if (!m_eigVInertiaFlag) ComputeObjectInertiaEigenVectors();  m_eigVInertiaFlag = true; return m_eigVInertia; }
 
 	/** Get the corresponding representation of the object */
 	virtual vtkPolyData* GetObjectAsVTKPolyData() = 0;
@@ -296,6 +297,10 @@ public:
 			//update the labelMap = LabelMap
 			VTKPolyDataToLabelMap<LabelMapType>( GetObjectAsVTKPolyData(), m_outputLabelMap, m_imageSpacing );
 			m_uptodateLabelMap=true;
+
+			m_imageBBoxUpToDate=true;
+			m_imageOrigin = m_outputLabelMap->GetOrigin();
+			m_imageRegion = m_outputLabelMap->GetLargestPossibleRegion();
 		}
 		return m_outputLabelMap.GetPointer();
 	}
@@ -355,14 +360,21 @@ protected:
 				m_uptodatePolyData = false; 
 				tmp = translation(i)*m_imageSpacing[i];
 				m_parameters(i) += tmp;
-				m_imageOrigin[i] += tmp;
+				if (m_imageBBoxUpToDate) { m_imageOrigin[i] += tmp;  m_imageBoundingBox(2*i)    += tmp; m_imageBoundingBox(2*i+1) += tmp;  }
 				if (m_physicalBBoxUpToDate) { m_physicalBoundingBox(2*i) += tmp; m_physicalBoundingBox(2*i+1) += tmp; }
-				if (m_imageBBoxUpToDate)    { m_imageBoundingBox(2*i)    += tmp; m_imageBoundingBox(2*i+1)    += tmp; }
 			}
 		}
+		
+		if (m_uptodateBinaryImage)   { 
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("ParametricObject::_IntegerGridTranslate_NoCheck : m_imageBBoxUpToDate should always be uptodate when m_uptodateBinaryImage is ; this is not the case");; 
+			m_outputBinaryImage->SetOrigin(m_imageOrigin); 
+		}
+		if (m_uptodateLabelMap)      {
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("ParametricObject::_IntegerGridTranslate_NoCheck : m_imageBBoxUpToDate should always be uptodate when m_uptodateLabelMap is ; this is not the case");; 
+			m_outputLabelMap->SetOrigin(m_imageOrigin);
+		}
 
-		if (m_uptodateBinaryImage) m_outputBinaryImage->SetOrigin(m_imageOrigin);
-		if (m_uptodateLabelMap)    m_outputLabelMap->SetOrigin(m_imageOrigin);
+
 		return true;
 	}
 

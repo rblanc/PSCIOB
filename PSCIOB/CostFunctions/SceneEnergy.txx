@@ -192,7 +192,7 @@ SceneEnergy<TScene, TReferenceImage>
 		if ( m_useTypeSpecificMetric ) { //browse all objects, look at their types, compute the object specific metric and average the cost of every individual object.
 			std::cout<<"SceneEnergy::GetSceneToImageMetricValue : the use of type-specific object-to-image cost functions has not been fully tested yet..."<<std::endl;
 			for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-				TypeSpecificObjectToImageCostFunctionListType::iterator tmpIt = m_listObjectSpecificMetrics.find( it.GetObject()->objectTypeId );
+				TypeSpecificObjectToImageCostFunctionListType::iterator tmpIt = m_listObjectSpecificMetrics.find( it.GetObjectInScene()->objectTypeId );
 				if (tmpIt == m_listObjectSpecificMetrics.end()) {
 					throw DeformableModelException("SceneEnergy::GetSceneToImageMetricValue() - requesting type specific object-to-image cost functions, but not all object types have an associated metric !!");
 				}
@@ -229,7 +229,7 @@ SceneEnergy<TScene, TReferenceImage>
 		if ( m_useTypeSpecificMetric ) { //browse all objects, look at their types, compute the object specific metric and average the cost of every individual object.
 			std::cout<<"SceneEnergy::GetSceneToImageMetricValue : the use of type-specific object-to-image cost functions has not been fully tested yet..."<<std::endl;
 			for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-				TypeSpecificObjectToImageCostFunctionListType::iterator tmpIt = m_listObjectSpecificMetrics.find( it.GetObject()->objectTypeId );
+				TypeSpecificObjectToImageCostFunctionListType::iterator tmpIt = m_listObjectSpecificMetrics.find( it.GetObjectInScene()->objectTypeId );
 				if (tmpIt == m_listObjectSpecificMetrics.end()) {
 					throw DeformableModelException("SceneEnergy::GetSceneToImageMetricValue() - requesting type specific object-to-image cost functions, but not all object types have an associated metric !!");
 				}

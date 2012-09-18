@@ -54,10 +54,10 @@ template <unsigned int VDimension, class TAppearance = unsigned char>
 class TexturedDeformableModel : public ParametricObject<VDimension, TAppearance> {
 public:
 	/** Standard class typedefs. */
-	typedef TexturedDeformableModel			Self;
-	typedef ParametricObject			        Superclass;
-	typedef itk::SmartPointer<Self>			Pointer;
-	typedef itk::SmartPointer<const Self>	ConstPointer;
+	typedef TexturedDeformableModel       Self;
+	typedef ParametricObject              Superclass;
+	typedef itk::SmartPointer<Self>       Pointer;
+	typedef itk::SmartPointer<const Self> ConstPointer;
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(TexturedDeformableModel, ParametricObject);
 
@@ -89,7 +89,9 @@ public:
 
 		if (m_imageBBoxUpToDate) { 
 			clonePtr->m_imageBoundingBox = m_imageBoundingBox; 
-			clonePtr->m_imageBoundingBox = true; 
+			clonePtr->m_imageRegion   = m_imageRegion;	
+			clonePtr->m_imageOrigin   = m_imageOrigin;
+			clonePtr->m_imageBBoxUpToDate = true; 
 		}
 
 		if (m_uptodatePolyData) {
@@ -121,6 +123,10 @@ public:
 			clonePtr->m_outputLabelMap->Graft(m_outputLabelMap);
 			clonePtr->m_uptodateLabelMap = true;
 		}
+
+		if (m_centerFlag)      clonePtr->m_center      = m_center;
+		if (m_inertiaFlag)     clonePtr->m_inertia     = m_inertia;
+		if (m_eigVInertiaFlag) clonePtr->m_eigVInertia = m_eigVInertia;
 
 		return static_cast<BaseClass*>( clonePtr );
 	}
@@ -168,15 +174,24 @@ public:
 				m_uptodateTexturedPolyData = false;
 				tmp = translation(i)*m_imageSpacing[i];
 				m_parameters(i) += tmp;
-				m_imageOrigin[i] += tmp;
-				if (m_physicalBBoxUpToDate) {m_physicalBoundingBox(2*i)+= tmp;m_physicalBoundingBox(2*i+1)+= tmp; }
-				if (m_imageBBoxUpToDate)    {m_imageBoundingBox(2*i)   += tmp;m_imageBoundingBox(2*i+1)   += tmp; }
+				
+				if (m_physicalBBoxUpToDate) { m_physicalBoundingBox(2*i) += tmp;m_physicalBoundingBox(2*i+1)+= tmp; }
+				if (m_imageBBoxUpToDate)    { m_imageOrigin[i] += tmp; m_imageBoundingBox(2*i) += tmp;m_imageBoundingBox(2*i+1) += tmp; }
 			}
 		}
-
-		if (m_uptodateBinaryImage)   m_outputBinaryImage->SetOrigin(m_imageOrigin);
-		if (m_uptodateTexturedImage) m_outputTexturedImage->SetOrigin(m_imageOrigin);
-		if (m_uptodateLabelMap)      m_outputLabelMap->SetOrigin(m_imageOrigin);
+		
+		if (m_uptodateBinaryImage)   { 
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("TexturedDeformableModel::IntegerGridTranslate : m_imageBBoxUpToDate should always be uptodate when m_uptodateBinaryImage is ; this is not the case");; 
+			m_outputBinaryImage->SetOrigin(m_imageOrigin); 
+		}
+		if (m_uptodateTexturedImage) {
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("TexturedDeformableModel::IntegerGridTranslate : m_imageBBoxUpToDate should always be uptodate when m_uptodateTexturedImage is ; this is not the case");; 
+			m_outputTexturedImage->SetOrigin(m_imageOrigin);
+		}
+		if (m_uptodateLabelMap)      {
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("TexturedDeformableModel::IntegerGridTranslate : m_imageBBoxUpToDate should always be uptodate when m_uptodateLabelMap is ; this is not the case");; 
+			m_outputLabelMap->SetOrigin(m_imageOrigin);
+		}
 
 		return true;
 	}
@@ -200,23 +215,29 @@ protected:
 	// Apply an integer-grid translation, these can be applied very quickly to image representations and avoid recalculating these 
 	bool _IntegerGridTranslate_NoCheck(const vnl_vector<int> &translation) {
 		bool zeroTranslation = true;
-//std::cout<<"Entering  TexturedDeformableModel::_IntegerGridTranslate_NoCheck  with input: "<<translation<<std::endl;
 		double tmp;
 		for (unsigned i=0 ; i<Dimension ; i++) {
 			if ( translation(i)!=0 ) {
 				zeroTranslation = false;
-				//std::cout<<"   TexturedDeformableModel::_IntegerGridTranslate_NoCheck ,  initial param: "<<m_parameters(i)<<", trans vect: "<<translation(i)<<", sp: "<<m_imageSpacing[i]<<std::endl;
 				tmp = translation(i)*m_imageSpacing[i];
-				m_parameters(i) += tmp; //std::cout<<"   offset: "<<tmp<<", new param: "<<m_parameters(i)<<std::endl;
-				m_imageOrigin[i] += tmp;
-				if (m_physicalBBoxUpToDate) {m_physicalBoundingBox(2*i)+= tmp;m_physicalBoundingBox(2*i+1)+= tmp; }
-				if (m_imageBBoxUpToDate)    {m_imageBoundingBox(2*i)   += tmp;m_imageBoundingBox(2*i+1)   += tmp; }
+				m_parameters(i) += tmp;
+				if (m_imageBBoxUpToDate)    { m_imageOrigin[i] += tmp; m_imageBoundingBox(2*i) += tmp; m_imageBoundingBox(2*i+1) += tmp; }
+				if (m_physicalBBoxUpToDate) { m_physicalBoundingBox(2*i) += tmp; m_physicalBoundingBox(2*i+1) += tmp; }
 			}
 		}
 
-		if (m_uptodateBinaryImage)   m_outputBinaryImage->SetOrigin(m_imageOrigin);
-		if (m_uptodateTexturedImage) m_outputTexturedImage->SetOrigin(m_imageOrigin);
-		if (m_uptodateLabelMap)      m_outputLabelMap->SetOrigin(m_imageOrigin);
+		if (m_uptodateBinaryImage)   { 
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("TexturedDeformableModel::_IntegerGridTranslate_NoCheck : m_imageBBoxUpToDate should always be uptodate when m_uptodateBinaryImage is ; this is not the case");; 
+			m_outputBinaryImage->SetOrigin(m_imageOrigin); 
+		}
+		if (m_uptodateTexturedImage) {
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("TexturedDeformableModel::_IntegerGridTranslate_NoCheck : m_imageBBoxUpToDate should always be uptodate when m_uptodateTexturedImage is ; this is not the case");; 
+			m_outputTexturedImage->SetOrigin(m_imageOrigin);
+		}
+		if (m_uptodateLabelMap)      {
+			if (!m_imageBBoxUpToDate) throw DeformableModelException("TexturedDeformableModel::_IntegerGridTranslate_NoCheck : m_imageBBoxUpToDate should always be uptodate when m_uptodateLabelMap is ; this is not the case");; 
+			m_outputLabelMap->SetOrigin(m_imageOrigin);
+		}
 
 		if (!zeroTranslation) {
 			m_uptodatePolyData = false;

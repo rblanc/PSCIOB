@@ -338,8 +338,8 @@ void TestLabelMapScene() {
 	SceneObjectIterator<Scene3DType> it(scene3D);
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
 		std::cout<<"object label: "<<it.GetID()<<std::endl;
-		std::cout<<"number of interacting objects: "<<it.GetObject()->interactionData.size()<<std::endl;
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		std::cout<<"number of interacting objects: "<<it.GetObjectInScene()->interactionData.size()<<std::endl;
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			std::cout<<"  interaction with object: "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -350,8 +350,8 @@ void TestLabelMapScene() {
 	id = scene3D->AddObject(sphere);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		std::cout<<"object label: "<<it.GetID()<<" - number of interacting objects: "<<it.GetObject()->interactionData.size()<<std::endl;
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		std::cout<<"object label: "<<it.GetID()<<" - number of interacting objects: "<<it.GetObjectInScene()->interactionData.size()<<std::endl;
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			std::cout<<"  interaction with object: "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -360,8 +360,8 @@ void TestLabelMapScene() {
 	scene3D->RemoveObject(id);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		std::cout<<"object label: "<<it.GetID()<<" - number of interacting objects: "<<it.GetObject()->interactionData.size()<<std::endl;
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		std::cout<<"object label: "<<it.GetID()<<" - number of interacting objects: "<<it.GetObjectInScene()->interactionData.size()<<std::endl;
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			std::cout<<"  interaction with object: "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -428,8 +428,8 @@ void TestLabelImageScene() {
 	SceneObjectIterator<Scene3DType> it(scene3D);
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
 		std::cout<<"object label: "<<it.GetID()<<std::endl;
-		std::cout<<"number of interacting objects: "<<it.GetObject()->interactionData.size()<<std::endl;
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		std::cout<<"number of interacting objects: "<<it.GetObjectInScene()->interactionData.size()<<std::endl;
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			std::cout<<"  interaction with object: "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -440,8 +440,8 @@ void TestLabelImageScene() {
 	id = scene3D->AddObject(sphere);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		std::cout<<"object label: "<<it.GetID()<<" - number of interacting objects: "<<it.GetObject()->interactionData.size()<<std::endl;
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		std::cout<<"object label: "<<it.GetID()<<" - number of interacting objects: "<<it.GetObjectInScene()->interactionData.size()<<std::endl;
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			std::cout<<"  interaction with object: "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -450,8 +450,8 @@ void TestLabelImageScene() {
 	scene3D->RemoveObject(id);
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-		std::cout<<"object label: "<<it.GetID()<<" - number of interacting objects: "<<it.GetObject()->interactionData.size()<<std::endl;
-		for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+		std::cout<<"object label: "<<it.GetID()<<" - number of interacting objects: "<<it.GetObjectInScene()->interactionData.size()<<std::endl;
+		for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 			std::cout<<"  interaction with object: "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 		}
 	}
@@ -526,8 +526,8 @@ void TestModificationsLabelImageScene() {
 		std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 		SceneObjectIterator<Scene3DType> it(scene3D);
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-			std::cout<<"object label: "<<it.GetID()<<", number of interacting objects: "<<it.GetObject()->interactionData.size()<<std::endl;
-			for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+			std::cout<<"object label: "<<it.GetID()<<", number of interacting objects: "<<it.GetObjectInScene()->interactionData.size()<<std::endl;
+			for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 				std::cout<<"  interaction with object: "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 			}
 		}
@@ -547,8 +547,8 @@ void TestModificationsLabelImageScene() {
 		std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 		SceneObjectIterator<Scene3DType> it(scene3D);
 		for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
-			std::cout<<"object label: "<<it.GetID()<<", number of interacting objects: "<<it.GetObject()->interactionData.size()<<std::endl;
-			for (Scene3DType::ObjectInteractionIterator iit = it.GetObject()->interactionData.begin() ; iit!=it.GetObject()->interactionData.end() ; iit++) {
+			std::cout<<"object label: "<<it.GetID()<<", number of interacting objects: "<<it.GetObjectInScene()->interactionData.size()<<std::endl;
+			for (Scene3DType::ObjectInteractionIterator iit = it.GetObjectInScene()->interactionData.begin() ; iit!=it.GetObjectInScene()->interactionData.end() ; iit++) {
 				std::cout<<"  interaction with object: "<<iit->first<<", interaction cost: "<<iit->second.interactionCost<<", nb of overlapping pixels: "<<iit->second.nbOverlappingPixels<<std::endl;
 			}
 		}
