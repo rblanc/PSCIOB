@@ -132,7 +132,7 @@ PoseTransformedBinaryShape<VDimension>::SetParameters(const vnl_vector<double> &
 	//First, look at the non-translation pose parameters
 	for (unsigned i=Dimension ; i<m_transform->GetNumberOfParameters() ; i++) { 
 		if ( fabs(m_parameters(i)-poseParams(i))>TINY ) {
-			m_transform->_SetParameters_NoCheck( poseParams ); m_parameters = params; Modified();  
+			m_transform->_SetParameters_NoCheck( poseParams ); m_parameters = params; ParametricObject<VDimension, TexturedPixelType>::Modified();
 			return true; 
 		}
 	}
@@ -143,7 +143,7 @@ PoseTransformedBinaryShape<VDimension>::SetParameters(const vnl_vector<double> &
 		tmpval = (params(i)-m_parameters(i))/m_imageSpacing[i];
 		integerTranslation(i) = round(tmpval); 
 		if ( fabs(tmpval - round(tmpval)) > TINY ) { //non-grid integer translation
-			m_transform->_SetParameters_NoCheck( poseParams ); m_parameters = params; Modified(); 
+			m_transform->_SetParameters_NoCheck( poseParams ); m_parameters = params; ParametricObject<VDimension, TexturedPixelType>::Modified(); 
 			return true; 
 		}
 	}

@@ -317,7 +317,10 @@ public:
             if ( !ApplyOneIteration(verbose) ) converged = 1;
 			if (verbose) {
 				if (Dimension==2) psciob::Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>("FB_it" + stringify(nbIter) + ".png", m_scene->GetSceneAsLabelImage());
-				if (Dimension==3) psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
+				if (Dimension==3) {
+					psciob::WriteITKImageToFile("FB_it" + stringify(nbIter) + ".nii", m_scene->GetSceneAsLabelImage());
+					psciob::WriteMirrorPolyDataToFile("FB_it" + stringify(nbIter) + ".vtk", m_scene->GetSceneAsVTKPolyData());
+				}
 			}
         }
         return converged;

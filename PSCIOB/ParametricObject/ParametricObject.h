@@ -350,7 +350,7 @@ protected:
 	typename LabelMapToBinaryImageFilterType::Pointer m_labelMapToBinaryImageFilter;
 
 	// protected internal mechanism for setting the parameters, without checking for their validity or their non-novelty
-	virtual void _SetParameters_NoCheck(const vnl_vector<double> &params) { m_parameters = params; Modified(); }
+	void _SetParameters_NoCheck(const vnl_vector<double> &params) { m_parameters = params; Modified(); }
 
 	// protected internal mechanism for setting the parameters, without checking for their validity or their non-novelty
 	virtual bool _IntegerGridTranslate_NoCheck(const vnl_vector<int> &translation) {

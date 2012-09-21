@@ -252,7 +252,7 @@ public:
 
 	/** Initialize the internal random variable generators against a given seed (different seeds for different generators) */
 	void Initialize(int seed) {
-		for (unsigned i=0 ; i<m_univ_pdfs.size() ; i++) m_univ_pdfs[i]->Initialize(seed+i);
+		for (unsigned i=0 ; i<m_univ_pdfs.size() ; i++) m_univ_pdfs[i]->Initialize(147+seed+33*i); 
 	}
 
 protected:
@@ -306,7 +306,7 @@ public:
 
 	/** Initialize the internal random variable generators against a given seed (different seeds for different generators) */
 	void Initialize(int seed) {
-		for (unsigned i=0 ; i<m_multiv_pdfs.size() ; i++) m_multiv_pdfs[i]->Initialize(seed+i);
+		for (unsigned i=0 ; i<m_multiv_pdfs.size() ; i++) m_multiv_pdfs[i]->Initialize(14+7*seed+11*i);
 	}
 
 protected:

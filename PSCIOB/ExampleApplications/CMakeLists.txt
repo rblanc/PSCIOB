@@ -13,3 +13,9 @@ target_link_libraries (Example_SyntheticEllipses ${PSCIOB_LIBRARIES} ${GENERALUT
 add_executable (Example_FallingSpheres Example_FallingSpheres.cxx)
 ADD_DEPENDENCIES(Example_FallingSpheres PSCIOB)
 target_link_libraries (Example_FallingSpheres ${PSCIOB_LIBRARIES} ${GENERALUTILS_LIBRARIES} ${ITK_LIBRARIES} ${VTK_LIBRARIES}) 
+
+
+add_executable (Example_3DForceBiased_Algo Example_3DForceBiased_Algo.cxx)
+ADD_DEPENDENCIES(Example_3DForceBiased_Algo PSCIOB)
+target_link_libraries (Example_3DForceBiased_Algo ${PSCIOB_LIBRARIES} ${GENERALUTILS_LIBRARIES} ${ITK_LIBRARIES} ${VTK_LIBRARIES}) 
+

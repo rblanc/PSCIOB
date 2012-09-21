@@ -43,7 +43,8 @@ namespace psciob {
 /** 
 * \class PoseTransformedBinaryShape
 * \brief PoseTransformedBinaryShape this defines a BinaryDeformableModel applying a Pose Transform to a BinaryShape
-*
+* In this class, the pose transform is applied to the mesh (vtk) representation of the shape.
+* 
 * \WARNING do not modify the transform directly, it might lead to unexpected behaviors.
 * \todo compute analytically the inertia matrices for all shapes, and apply the transform to it (check what happens wrt scale & affine transforms...)
 */
