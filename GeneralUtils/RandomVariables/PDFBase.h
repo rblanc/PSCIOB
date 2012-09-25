@@ -54,6 +54,8 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(PDFBase, itk::LightObject);
 
+	virtual std::string GetPDFName() = 0;
+
 	/** Initialize the internal random variable generator against the clock time */
 	virtual void Initialize();
 	/** Initialize the internal random variable generator against a given seed */
@@ -73,16 +75,22 @@ public:
 	inline double GetMaximumLogLikelihoodValue() { return log(GetMaximumLikelihoodValue()); }
 
 	/** Draw a random sample */
-	inline TSampleType DrawSample() { m_lastSample = _DrawNewSample(); return m_lastSample; }
+	inline const TSampleType& DrawSample() { _DrawNewSample(); return m_lastSample; }
 
 	/** Get the last generated sample */
-	inline TSampleType GetLastSample() {return m_lastSample;}
+	inline const TSampleType& GetLastSample() {return m_lastSample;}
 
 	/** Dimensionality of the generated variables */
 	virtual unsigned int GetNumberOfDimensions() = 0;
 
 	/** Set generator seed */
 	void SetGeneratorSeed(int seed) { m_baseGenerator->Initialize(seed); }
+
+	/** Set PDF Parameters, return false if the parameters are invalid */
+	virtual bool SetParameters(const vnl_vector<double>& p) = 0;
+
+	/** Get PDF Parameters */
+	virtual const vnl_vector<double>& GetParameters() {return m_params;}
 
 protected:
 	PDFBase();
@@ -92,7 +100,9 @@ protected:
 	GeneratorType::Pointer m_baseGenerator;
 	TSampleType m_lastSample;
 
-	virtual TSampleType _DrawNewSample() = 0;
+	virtual void _DrawNewSample() = 0;
+
+	vnl_vector<double> m_params;
 
 private:
 	PDFBase(const Self&);					//purposely not implemented

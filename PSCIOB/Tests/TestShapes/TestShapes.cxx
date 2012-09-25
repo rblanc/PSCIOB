@@ -59,13 +59,13 @@ using namespace psciob;
 
 //disks with translation & scale
 void disks() {
-	std::cout<<"\n\n\n********DISKS: draw a few unit disks with translation & scale, using various parameteres"<<std::endl;
+	std::cout<<"\n\n\n********DISKS: draw a few unit disks with translation & scale, using various parameters"<<std::endl;
 
 	PoseTransformedBinaryShape<2>::Pointer object = PoseTransformedBinaryShape<2>::New();
 	TranslationScale2DTransform::Pointer transf = TranslationScale2DTransform::New();
 	shape2DDisk::Pointer shape = shape2DDisk::New();
 
-	vnl_vector<double> pp(2); pp(0)=0; pp(1)=0; pp(2) = 5.63045;
+	vnl_vector<double> pp(3); pp(0)=0; pp(1)=0; pp(2) = 5.63045;
 	transf->SetParameters(pp);
 
 	object->SetShapeAndTransform(shape, transf);
@@ -79,29 +79,30 @@ void disks() {
 	params(0) = 5; params(1) = 0; params(2) = 5; 
 	std::cout<<"\n\n set parameters of a new object"<<std::endl;
 	object->SetParameters(params);
-	std::cout<<"\n   params: "<<params<<std::endl;
+	std::cout<<"   params: "<<params<<std::endl;
 	Write2DGreyLevelRescaledImageToFile<shape2DDisk::BinaryImageType>("disk_1.png", object->GetObjectAsBinaryImage());
 
 	params(0) = 0.5; params(1) = 3; params(2) = 5; object->SetParameters(params);
-	std::cout<<"\n   params: "<<params<<std::endl;
+	std::cout<<"   params: "<<params<<std::endl;
 	Write2DGreyLevelRescaledImageToFile<shape2DDisk::BinaryImageType>("disk_2.png", object->GetObjectAsBinaryImage());
 
 	params(0) = 0.5; params(1) = 4.5; params(2) = 5; object->SetParameters(params);
-	std::cout<<"\n   params: "<<params<<std::endl;
+	std::cout<<"   params: "<<params<<std::endl;
 	Write2DGreyLevelRescaledImageToFile<shape2DDisk::BinaryImageType>("disk_3.png", object->GetObjectAsBinaryImage());
 
 	params(0) = 2.5; params(1) = 0.5; params(2) = 5.2; object->SetParameters(params);
-	std::cout<<"\n   params: "<<params<<std::endl;
+	std::cout<<"   params: "<<params<<std::endl;
 	Write2DGreyLevelRescaledImageToFile<shape2DDisk::BinaryImageType>("disk_4.png", object->GetObjectAsBinaryImage());
 
 	params(0) = 0.5; params(1) = 5.5; params(2) = 15.2; object->SetParameters(params);
-	std::cout<<"\n   params: "<<params<<std::endl;
+	std::cout<<"   params: "<<params<<std::endl;
 	Write2DGreyLevelRescaledImageToFile<shape2DDisk::BinaryImageType>("disk_5.png", object->GetObjectAsBinaryImage());
+	std::cout<<"********EXITING DISKS *************************************************************************"<<std::endl;
 }
 
 //ellipse with similarity transform
 void ellipses() {
-	std::cout<<"\n\n\n*******ELLIPSES: draw a few unit ellipses with similarity transforms, using various parameteers"<<std::endl;
+	std::cout<<"\n\n\n*******ELLIPSES: draw a few unit ellipses with similarity transforms, using various parameters"<<std::endl;
 
 	shape2DEllipse::Pointer shape = shape2DEllipse::New();
 	Similarity2DTransform::Pointer transf = Similarity2DTransform::New();

@@ -42,7 +42,7 @@ namespace psciob {
 /** 
  * \class shape3DCylinder
  * \brief shape3DCylinder is a class for generating a cylinder, usually in combination with a PoseTransform
- * cylinder centered at (0,0,0), with unit diameter (d), and extruded along the y direction (length h)
+ * cylinder centered at (0,0,0), with unit diameter (d), and extruded along the y direction (total length h -> halflength = h/2)
  * 1 parameters = elongation ( = h/d >0 ), elongation
 */
 

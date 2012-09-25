@@ -76,7 +76,6 @@ vtkPolyData* shape3DCuboid::GetObjectAsVTKPolyData() {
 
 		m_cubeSource->Update();
 		m_outputPolyData = m_cubeSource->GetOutput();
-
 		m_uptodatePolyData = true;
 	}
 	return m_outputPolyData.GetPointer();

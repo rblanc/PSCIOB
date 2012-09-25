@@ -45,11 +45,17 @@ unsigned int IntegerUnivariatePDF::GetNumberOfDimensions() { return m_dimension;
 //
 //UniformIntegerUnivariatePDF
 //
-UniformIntegerUnivariatePDF::UniformIntegerUnivariatePDF() : IntegerUnivariatePDF() { m_min=0; m_max=1; m_diff = 1;}
+UniformIntegerUnivariatePDF::UniformIntegerUnivariatePDF() : IntegerUnivariatePDF() { m_params.set_size(2); m_min=0; m_max=1; m_diff = 1; m_params(0) = m_min; m_params(1) = m_max;}
 UniformIntegerUnivariatePDF::~UniformIntegerUnivariatePDF() {}
-void UniformIntegerUnivariatePDF::SetParameters(long min, long max) {
-	if (m_max<m_min) throw DeformableModelException("UniformIntegerUnivariatePDF: inconsistent parameters ; max >= min");
+bool UniformIntegerUnivariatePDF::SetParameters(const vnl_vector<double> &p) {
+	if (p.size()!=2) return false;
+	return SetParameters(p(0), p(1));
+}
+bool UniformIntegerUnivariatePDF::SetParameters(long min, long max) {
+	if (m_max<m_min) return false;
 	m_min = min; m_max = max; m_diff = m_max-m_min; 
+	m_params(0) = m_min; m_params(1) = m_max;
+	return true;
 }
 inline double UniformIntegerUnivariatePDF::GetLikelihood(const long &x) { 
 	return (1.0/static_cast<double>(1.0+m_diff));
@@ -60,18 +66,23 @@ inline double UniformIntegerUnivariatePDF::GetMaximumLikelihoodValue() {
 inline double UniformIntegerUnivariatePDF::GetLogLikelihood(const long &x) { 
 	return (-log(static_cast<double>(1.0+m_diff))); 
 }
-long UniformIntegerUnivariatePDF::_DrawNewSample() { 
-	return (m_min + this->m_baseGenerator->GetIntegerVariate( m_diff )); 
+inline void UniformIntegerUnivariatePDF::_DrawNewSample() { 
+	m_lastSample = m_min + this->m_baseGenerator->GetIntegerVariate( m_diff );
 }
 
 //
 //PoissonPDF
 //
-PoissonPDF::PoissonPDF() : IntegerUnivariatePDF() { m_lambda = 1; }
+PoissonPDF::PoissonPDF() : IntegerUnivariatePDF() { m_params.set_size(1); m_lambda = 1; m_params(0) = m_lambda;}
 PoissonPDF::~PoissonPDF() {};
-void PoissonPDF::SetLambda(long lambda) {
-	if (lambda<=0) throw DeformableModelException("PoissonPDF: parameter must be >0");
-	m_lambda = lambda;
+bool PoissonPDF::SetParameters(const vnl_vector<double> &p) {
+	if (p.size()!=1) return false;
+	return SetLambda(p(0));
+}
+bool PoissonPDF::SetLambda(long lambda) {
+	if (lambda<=0) return false;
+	m_lambda = lambda; m_params(0) = m_lambda;
+	return true;
 }
 inline double PoissonPDF::GetLikelihood(const long &x) { 
 	double tmp=0; 
@@ -88,15 +99,16 @@ inline double PoissonPDF::GetLogLikelihood(const long &x) {
 	for (unsigned i=1 ; i<x ; i++) tmp+=log(static_cast<double>(i));
 	return ( x*log(m_lambda) - m_lambda - tmp ) ; 
 }
-inline long PoissonPDF::_DrawNewSample() { 
-	double L, p=1; unsigned k=0;
+inline void PoissonPDF::_DrawNewSample() { 
+	double L, p=1; 
+	m_lastSample = 0;
 	if (m_lambda<100) {
-		L = exp(-m_lambda);	while(p>L) { k++; p*=this->m_baseGenerator->GetUniformVariate(0,1); }
+		L = exp(-m_lambda);	while(p>L) { m_lastSample++; p*=this->m_baseGenerator->GetUniformVariate(0,1); }
 	}
 	else {//pb: if lambda is too large, there is a bad precision on exp(-lambda)
-		L = -m_lambda;		while(p>L) { k++; p+=log(this->m_baseGenerator->GetUniformVariate(0,1)); }
+		L = -m_lambda;		while(p>L) { m_lastSample++; p+=log(this->m_baseGenerator->GetUniformVariate(0,1)); }
 	}		
-	return (k-1); 
+	m_lastSample--;
 }
 
 
@@ -109,10 +121,16 @@ unsigned int UnivariatePDF::GetNumberOfDimensions() {return m_dimension;}
 //
 //DiracPDF
 //
-DiracPDF::DiracPDF() : UnivariatePDF() { SetParameters(0.0); }
+DiracPDF::DiracPDF() : UnivariatePDF() { m_params.set_size(1); SetParameters(0.0); }
 DiracPDF::~DiracPDF() {};
-void DiracPDF::SetParameters(double value) {
+bool DiracPDF::SetParameters(const vnl_vector<double> &p) {
+	if (p.size()!=1) return false;
+	return SetParameters(p(0));
+}
+bool DiracPDF::SetParameters(double value) {
 	m_lastSample = value;
+	m_params(0) = value;
+	return true;
 }
 inline double DiracPDF::GetLikelihood(const double &x) {
 	if (x==m_lastSample) return 1; 
@@ -125,19 +143,22 @@ inline double DiracPDF::GetLogLikelihood(const double &x)	{
 	if (x==m_lastSample) return 0;
 	else return MINUSINF; 
 }
-inline double DiracPDF::_DrawNewSample() { 
-	return m_lastSample;
-}
+inline void DiracPDF::_DrawNewSample() {}
 
 //
 //NormalPDF
 //
-NormalPDF::NormalPDF() : UnivariatePDF() { SetParameters(); }
+NormalPDF::NormalPDF() : UnivariatePDF() { m_params.set_size(2); SetParameters(); }
 NormalPDF::~NormalPDF() {}
-
-void NormalPDF::SetParameters(double mean, double var) {
-	if (var<0) throw DeformableModelException("Exception in NormalPDF::SetParameters() : cannot set a negative variance!"); 
+bool NormalPDF::SetParameters(const vnl_vector<double> &p) {
+	if (p.size()!=2) return false;
+	return SetParameters(p(0), p(1));
+}
+bool NormalPDF::SetParameters(double mean, double var) {
+	if (var<0) return false;
 	m_mean = mean; m_var = var; m_std = sqrt(m_var); 
+	m_params(0) = m_mean; m_params(1) = m_var;
+	return true;
 }
 inline double NormalPDF::GetLikelihood(const double &x)		{ 
 	return ( exp(-(x-m_mean)*(x-m_mean)/(2.0*m_var)) / (m_std*SQRT2PI) ); 
@@ -149,22 +170,23 @@ inline double NormalPDF::GetLogLikelihood(const double &x)	{
 	return ( -(x-m_mean)*(x-m_mean)/(2.0*m_var) - log(m_std*SQRT2PI) ); 
 }
 
-vnl_vector<double> NormalPDF::GetParameters() { 
-	vnl_vector<double> v(2); v(0) = m_mean; v(1) = m_var; 
-	return v;
-}
-inline double NormalPDF::_DrawNewSample() { 
-	return m_baseGenerator->GetNormalVariate(m_mean, m_var); 
+inline void NormalPDF::_DrawNewSample() { 
+	m_lastSample = m_baseGenerator->GetNormalVariate(m_mean, m_var); 
 }
 
 //
 //UniformPDF
 //
-UniformPDF::UniformPDF() : UnivariatePDF() {SetParameters();}
+UniformPDF::UniformPDF() : UnivariatePDF() { m_params.set_size(2); SetParameters(); }
 UniformPDF::~UniformPDF() {};
-void UniformPDF::SetParameters(double min, double max) {
-	if ( (min>max) ) throw DeformableModelException("Exception in NormalPDF::SetParameters() : parameters should be min<=max"); 
-	m_min = min; m_max = max;
+bool UniformPDF::SetParameters(const vnl_vector<double> &p) {
+	if (p.size()!=2) return false;
+	return SetParameters(p(0), p(1));
+}
+bool UniformPDF::SetParameters(double min, double max) {
+	if ( (min>max) ) return false;
+	m_min = min; m_max = max; m_params(0) = m_min; m_params(1) = m_max;
+	return true;
 }
 inline double UniformPDF::GetLikelihood(const double &x) {
 	if (x<m_min) return 0;
@@ -179,25 +201,33 @@ inline double UniformPDF::GetLogLikelihood(const double &x) {
 	if (x>m_max) return MINUSINF;
 	return (-log(m_max-m_min));
 }
-inline double UniformPDF::_DrawNewSample() { 
-	return m_baseGenerator->GetUniformVariate(m_min, m_max);
+inline void UniformPDF::_DrawNewSample() { 
+	m_lastSample = m_baseGenerator->GetUniformVariate(m_min, m_max);
 }
 
 //
 //LogNormalPDF
 //
-LogNormalPDF::LogNormalPDF() : UnivariatePDF() { SetParameters(); }
+LogNormalPDF::LogNormalPDF() : UnivariatePDF() { m_params.set_size(2); SetParameters(); }
 LogNormalPDF::~LogNormalPDF() {};
-void LogNormalPDF::SetParameters(double m, double s2) {
-	if (s2<0) throw DeformableModelException("Exception in LogNormalPDF::SetParameters() : cannot set a negative variance!"); 
-	m_mean = m; m_var = s2; m_std = sqrt(m_var); 
+bool LogNormalPDF::SetParameters(const vnl_vector<double> &p) {
+	if (p.size()!=2) return false;
+	return SetParameters(p(0), p(1));
 }
-void LogNormalPDF::SetParametersViaMeanAndMode(double mean, double mode) {
-	if (mean<mode) throw DeformableModelException("Exception in LogNormalPDF::SetParameters() : must have mean >= mode"); 
-	if (mode<0)    throw DeformableModelException("Exception in LogNormalPDF::SetParameters() : the mode must be positive"); 
+bool LogNormalPDF::SetParameters(double m, double s2) {
+	if (s2<0) return false;
+	m_mean = m; m_var = s2; m_std = sqrt(m_var); 
+	m_params(0) = m_mean; m_params(1) = m_var;
+	return true;
+}
+bool LogNormalPDF::SetParametersViaMeanAndMode(double mean, double mode) {
+	if (mean<mode) return false; //throw DeformableModelException("Exception in LogNormalPDF::SetParameters() : must have mean >= mode"); 
+	if (mode<0)    return false; //throw DeformableModelException("Exception in LogNormalPDF::SetParameters() : the mode must be positive"); 
 	m_mean = (log(mode)+2.0*log(mean))/3.0;
 	m_var = 2.0*(log(mean)-log(mode))/3.0; 
+	m_params(0) = m_mean; m_params(1) = m_var;
 	m_std = sqrt(m_var); 
+	return true;
 }
 inline double LogNormalPDF::GetLikelihood(const double &x) {
 	if (x<0) return 0; //throw DeformableModelException("Exception in LogNormalPDF::Evaluate() : undefined for negative values...");
@@ -214,26 +244,32 @@ inline double LogNormalPDF::GetLogLikelihood(const double &x) {
 	double tmp = log(x)-m_mean;
 	return ( (-tmp*tmp/(2.0*m_var)) - log(x*m_std*SQRT2PI) ); 
 }
-inline double LogNormalPDF::_DrawNewSample() { 
-	return exp(m_mean+m_std*m_baseGenerator->GetNormalVariate(0,1)); 
+inline void LogNormalPDF::_DrawNewSample() { 
+	m_lastSample = exp(m_mean+m_std*m_baseGenerator->GetNormalVariate(0,1)); 
 }
 
 //
 //TriangularPDF
 //
-TriangularPDF::TriangularPDF() : UnivariatePDF() { SetParameters(); }
+TriangularPDF::TriangularPDF() : UnivariatePDF() { m_params.set_size(3); SetParameters(); }
 TriangularPDF::~TriangularPDF() {};
-void TriangularPDF::SetParameters(double min, double mode, double max) {
-	if ( (min>mode) || (mode>max) ) throw DeformableModelException("Exception in NormalPDF::SetParameters() : parameters should be min<=mode<=max"); 
+bool TriangularPDF::SetParameters(const vnl_vector<double> &p) {
+	if (p.size()!=3) return false;//throw DeformableModelException("Exception in NormalPDF::SetParameters() : parameters should be min<=mode<=max"); 
+	return SetParameters(p(0), p(1), p(2));
+}
+bool TriangularPDF::SetParameters(double min, double mode, double max) {
+	if ( (min>mode) || (mode>max) ) return false;//throw DeformableModelException("Exception in NormalPDF::SetParameters() : parameters should be min<=mode<=max"); 
 	m_min = min;   //a
 	m_mode = mode; //c
 	m_max = max;   //b
+	m_params(0) = m_min; m_params(1) = m_mode; m_params(2) = m_max;
 	m_totalDiff = m_max-m_min; //b-a
 	m_leftDiff = m_mode-m_min; //c-a
 	m_rightDiff = m_max-m_mode;//b-c
 	m_diffRatio = m_leftDiff/m_totalDiff; // (c-a)/(b-a)
 	m_p1 = (m_totalDiff * m_leftDiff);  //   (b-a)*(c-a) 
 	m_p2 = (m_totalDiff * m_rightDiff); //   (b-a)*(b-c)
+	return true;
 }
 inline double TriangularPDF::GetLikelihood(const double &x) {
 	if (x<m_min) return 0;
@@ -250,20 +286,25 @@ inline double TriangularPDF::GetLogLikelihood(const double &x) {
 	if (x<=m_mode) return log(2.0*(x-m_min) / m_p1);
 	return log(2.0*(m_max-x) / m_p2);//else
 }
-inline double TriangularPDF::_DrawNewSample() { 
+inline void TriangularPDF::_DrawNewSample() { 
 	double tmp = m_baseGenerator->GetUniformVariate(0, 1);
-	if (tmp<m_diffRatio) return ( m_min + sqrt(   tmp   * m_p1) );
-	else                 return ( m_max - sqrt((1.0-tmp)* m_p2) );
+	if (tmp<m_diffRatio) m_lastSample = ( m_min + sqrt(   tmp   * m_p1) );
+	else                 m_lastSample = ( m_max - sqrt((1.0-tmp)* m_p2) );
 }
 
 //
 //TrapezoidalPDF
 //
-TrapezoidalPDF::TrapezoidalPDF() : UnivariatePDF() { SetParameters(); }
+TrapezoidalPDF::TrapezoidalPDF() : UnivariatePDF() { m_params.set_size(4); SetParameters(); }
 TrapezoidalPDF::~TrapezoidalPDF() {};
-void TrapezoidalPDF::SetParameters(double a, double b, double c, double d) {
-	if ( (a>b) || (b>c) || (c>d) ) throw DeformableModelException("Exception in NormalPDF::SetParameters() : parameters should be min<=mode<=max"); 
+bool TrapezoidalPDF::SetParameters(const vnl_vector<double> &p) {
+	if (p.size()!=4) return false;
+	return SetParameters(p(0), p(1), p(2), p(3));
+}
+bool TrapezoidalPDF::SetParameters(double a, double b, double c, double d) {
+	if ( (a>b) || (b>c) || (c>d) ) return false;//throw DeformableModelException("Exception in NormalPDF::SetParameters() : parameters should be min<=mode<=max"); 
 	m_a = a; m_b = b; m_c = c; m_d = d;
+	m_params(0) = m_a; m_params(1) = m_b; m_params(2) = m_c; m_params(3) = m_d; 
 	m_invdiff1 = 1.0/(m_b-m_a);
 	m_invdiff2 = 1.0/(m_d-m_c);
 	m_u = 2.0/(m_d+m_c-m_b-m_a);
@@ -272,6 +313,7 @@ void TrapezoidalPDF::SetParameters(double a, double b, double c, double d) {
 	m_f1 = 2.0*(m_b-m_a)/m_u;
 	m_o1 = (m_a+m_b)/2.0;
 	m_f2 = 2.0*(m_d-m_c)/m_u;
+	return true;
 }
 inline double TrapezoidalPDF::GetLikelihood(const double &x) {
 	if (x<m_a) return 0;
@@ -290,11 +332,11 @@ inline double TrapezoidalPDF::GetLogLikelihood(const double &x) {
 	if (x<m_d) return log(m_u*(m_d-x)*m_invdiff2);
 	return MINUSINF;
 }
-inline double TrapezoidalPDF::_DrawNewSample() { 
+inline void TrapezoidalPDF::_DrawNewSample() { 
 	double tmp = m_baseGenerator->GetUniformVariate(0, 1);
-	if ( tmp < m_th1 )  return ( m_a+sqrt(tmp * m_f1) );
-	if ( tmp < m_th2 )  return ( m_o1 + tmp/m_u );
-	return ( m_d - sqrt((1.0-tmp) * m_f2) );
+	if ( tmp < m_th1 )  {m_lastSample = ( m_a+sqrt(tmp * m_f1) ); return;}
+	if ( tmp < m_th2 )  {m_lastSample = ( m_o1 + tmp/m_u ); return;}
+	m_lastSample = ( m_d - sqrt((1.0-tmp) * m_f2) );
 }
 
 
@@ -307,8 +349,33 @@ DiracPDF::Pointer LinearCombinationPDF::m_default_a = DiracPDF::New();
 DiracPDF::Pointer LinearCombinationPDF::m_default_b = DiracPDF::New();
 LinearCombinationPDF::LinearCombinationPDF() : UnivariatePDF() { SetParameters( m_default_x, m_default_b, m_default_a); }
 LinearCombinationPDF::~LinearCombinationPDF() {};
-void LinearCombinationPDF::SetParameters(UnivariatePDF *x, UnivariatePDF *a, UnivariatePDF *b) {
-	m_a=a; m_b=b; m_x=x;
+bool LinearCombinationPDF::SetParameters(const vnl_vector<double> &p) {
+	if (p.size()!=m_nbP_a+m_nbP_b+m_nbP_x) return false;
+	//vnl_vector<double> backupParams = m_params;
+	if (!m_x->SetParameters(p.extract(m_nbP_x,0))) return false;
+	if (!m_a->SetParameters(p.extract(m_nbP_a, m_nbP_x))) { //undo the modifications of the previous pdfs
+		if (!m_x->SetParameters(m_params.extract(m_nbP_x,0))) throw DeformableModelException("LinearCombinationPDF::SetParameters : trying to set invalid parameters, and unable to rewind to previous parameters ; SHOULD NEVER HAPPEN!");
+		return false;
+	}
+	if (!m_b->SetParameters(p.extract(m_nbP_b, m_nbP_x+m_nbP_a))) { //undo the modifications of the previous pdfs
+		if (!m_a->SetParameters(m_params.extract(m_nbP_a, m_nbP_x))) throw DeformableModelException("LinearCombinationPDF::SetParameters : trying to set invalid parameters, and unable to rewind to previous parameters ; SHOULD NEVER HAPPEN!");
+		if (!m_x->SetParameters(m_params.extract(m_nbP_x,0))) throw DeformableModelException("LinearCombinationPDF::SetParameters : trying to set invalid parameters, and unable to rewind to previous parameters ; SHOULD NEVER HAPPEN!");
+		return false;
+	}
+	m_params = p;
+	return true;
+}
+bool LinearCombinationPDF::SetParameters(UnivariatePDF *x, UnivariatePDF *a, UnivariatePDF *b) {
+	m_x=x; m_a=a; m_b=b;
+	m_nbP_a = m_a->GetParameters().size();
+	m_nbP_b = m_b->GetParameters().size();
+	m_nbP_x = m_x->GetParameters().size();
+	m_params.set_size(m_nbP_a+m_nbP_b+m_nbP_x);
+	for (unsigned i=0 ; i<m_nbP_x ; i++) m_params(i) = m_x->GetParameters()(i);
+	for (unsigned i=0 ; i<m_nbP_a ; i++) m_params(m_nbP_x+i) = m_a->GetParameters()(i);
+	for (unsigned i=0 ; i<m_nbP_b ; i++) m_params(m_nbP_x+m_nbP_a+i) = m_b->GetParameters()(i);
+
+	return true;
 }
 inline double LinearCombinationPDF::GetLikelihood(const double &x) { 
 	//sum of RV => pdf = convolution of indiv. pdfs.		//product => integral (http://en.wikipedia.org/wiki/Product_distribution)
@@ -323,18 +390,42 @@ inline double LinearCombinationPDF::GetLogLikelihood(const double &x) {
 	//TODO: learn the pdf! questions is how to learn it? how many samples, kernel distrib? simple histogram? ...
 	throw DeformableModelException("LinearCombinationPDF::GetLogLikelihood() : not implemented... and not easy to implement in general..."); 
 }
-inline double LinearCombinationPDF::_DrawNewSample() { 
-	return (m_a->DrawSample() * m_x->DrawSample() + m_b->DrawSample() ); 
+inline void LinearCombinationPDF::_DrawNewSample() { 
+	m_lastSample = (m_a->DrawSample() * m_x->DrawSample() + m_b->DrawSample() ); 
 }
 
 
 //
 //UnivariateMixturePDF
 //
-UnivariateMixturePDF::UnivariateMixturePDF() : UnivariatePDF() { m_sumWeights=0; }
+UnivariateMixturePDF::UnivariateMixturePDF() : UnivariatePDF(), m_totalNbParams(0) { m_sumWeights=0; }
 UnivariateMixturePDF::~UnivariateMixturePDF() {};
+bool UnivariateMixturePDF::SetParameters(const vnl_vector<double> &p) {
+	if (p.size()!=m_totalNbParams) return false;
+	unsigned cumSumNbParams=0;
+	//set the parameters of each law, in turn...
+	for (unsigned i=0 ; i<m_univ_pdfs.size() ; i++) {
+		if (!m_univ_pdfs[i]->SetParameters(p.extract(m_nbP[i] ,cumSumNbParams))) {
+			//rewind modifications if those parameters are invalid
+			for (int j=i-1 ; j>=0 ; j--) {
+				cumSumNbParams -= m_nbP[j];
+				if (!m_univ_pdfs[j]->SetParameters(m_params.extract(m_nbP[j] ,cumSumNbParams))) throw DeformableModelException("UnivariateMixturePDF::SetParameters : trying to set invalid parameters, and unable to rewind to previous parameters ; SHOULD NEVER HAPPEN!");
+			}
+			return false;
+		}
+		cumSumNbParams+=m_nbP[i];
+	}
+	m_params = p;
+
+	return true;
+}
+
 void UnivariateMixturePDF::AddPDF(UnivariatePDF *pdf, double weight) {
 	m_univ_pdfs.push_back(pdf);
+	vnl_vector<double> previousParams = m_params, tmpParams = pdf->GetParameters();
+	m_nbP.push_back(tmpParams.size()); m_totalNbParams+=m_nbP.back(); m_params.set_size(m_totalNbParams);
+	if (!previousParams.empty()) for (unsigned i=0 ; i<previousParams.size() ; i++) m_params(i) = previousParams(i);
+	for (unsigned i=0 ; i<tmpParams.size() ; i++) m_params(previousParams.size()+i) = tmpParams(i);	
 	m_weights.push_back(weight);
 	m_sumWeights += weight;
 }
@@ -367,7 +458,7 @@ inline double UnivariateMixturePDF::GetLogLikelihood(const double &x) {
 	if (tmp==0) return MINUSINF;
 	return log(tmp); 
 }
-inline double UnivariateMixturePDF::_DrawNewSample() { 
+inline void UnivariateMixturePDF::_DrawNewSample() { 
 	//select the generating distribution based on the weights...
 	double rnd = m_baseGenerator->GetVariateWithOpenUpperRange(m_sumWeights);
 	unsigned int n_pdf;
@@ -375,5 +466,5 @@ inline double UnivariateMixturePDF::_DrawNewSample() {
 		if (rnd<m_weights[n_pdf]) break;
 		else rnd-=m_weights[n_pdf];
 	}
-	return m_univ_pdfs[n_pdf]->DrawSample();
+	m_lastSample = m_univ_pdfs[n_pdf]->DrawSample();
 }

@@ -44,9 +44,9 @@ int main(int argc, char** argv) {
 		
 		SceneType::Pointer scene = SceneType::New();
 		vnl_vector<double> bbox(6);
-		bbox(0) = -50; bbox(1) = 50; 
-		bbox(2) = -50; bbox(3) = 50;
-		bbox(4) = -50; bbox(5) = 50;
+		bbox(0) = -25; bbox(1) = 25; 
+		bbox(2) = -25; bbox(3) = 25;
+		bbox(4) = -25; bbox(5) = 25;
 
 		vnl_vector<double> sp(3);
 		sp(0) = 1;//'spacing in depth'
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
 		* Define a generative distribution for ferrites birth...
 		*/ 
 		shape3DCuboid::Pointer cub = shape3DCuboid::New();
-		shape3DCuboid::Pointer cyl = shape3DCuboid::New();
+		shape3DCylinder::Pointer cyl = shape3DCylinder::New();
 		Similarity3DTransform::Pointer transform_cub = Similarity3DTransform::New();
 		Similarity3DTransform::Pointer transform_cyl = Similarity3DTransform::New();
 		
@@ -73,21 +73,15 @@ int main(int argc, char** argv) {
 		sampleCub->SetShapeAndTransform(cub, transform_cub);
 		sampleCyl->SetShapeAndTransform(cyl, transform_cyl);
 		
-		//parameters: 3 translation, 3 rotation, 1 scale (ferrite length)
-		//            1 elongation (>1), 1 pointiness ([0,1]), 1 thickness (>=1)
 
 		unsigned int typeCode_cub = scene->GetObjectTypesLibrary()->RegisterObjectType(sampleCub);
 		unsigned int typeCode_cyl = scene->GetObjectTypesLibrary()->RegisterObjectType(sampleCyl);
-
-		//shrink the bounding box a little, to avoid putting objects too close to the borders
-		vnl_vector<double> enlargedBBox = scene->GetSceneBoundingBox();
-		enlargedBBox(0)+=5; enlargedBBox(1)-=5;
-		enlargedBBox(2)+=5; enlargedBBox(3)-=5;
-		enlargedBBox(4)+=5; enlargedBBox(5)-=5; 
-
+		std::cout<<"typeCode_cub = "<<typeCode_cub<<" ; typeCode_cyl = "<<typeCode_cyl<<std::endl;
+		
 		//translation
-		UniformBoxPDF::Pointer transPDF = UniformBoxPDF::New(); transPDF->SetBox(enlargedBBox);
-		file_out <<"\ninitial distribution: position uniform in "<<enlargedBBox<< std::endl;
+		UniformBoxPDF::Pointer transPDF = UniformBoxPDF::New(); 
+		transPDF->SetBox(bbox);
+		file_out <<"\ninitial distribution: position uniform in "<<bbox<< std::endl;
 		//rotation
 		IndependentEulerRotationsPDFs::Pointer rotationPrior = IndependentEulerRotationsPDFs::New();
 		//1st: rotation around z, so that the object is mostly oriented along y (horizontal axis of the image)
@@ -99,23 +93,27 @@ int main(int argc, char** argv) {
 		NormalPDF::Pointer prior_phi = NormalPDF::New(); prior_phi->SetParameters(0, (30.0*PI/180.0)*(30.0*PI/180.0));
 		rotationPrior->AddIndependentRotationPDF(IndependentEulerRotationsPDFs::Y_AXIS, prior_phi);
 		file_out <<"  rotation, 3 independent rotations"<< std::endl;
-		file_out <<"    1: around Z, angle follows a triangular distribution with parameters: -PI/2.0, PI/2.0, 3.0*PI/2.0"<< std::endl;
-		file_out <<"    2: around X, angle follows a normal distribution with mean 0 and std 30°"<< std::endl;
-		file_out <<"    3: around Z, angle follows a normal distribution with mean 0 and std 30°"<< std::endl;
+		file_out <<"    1: around Z, angle follows a "<<prior_alpha->GetPDFName()<<" with parameters: "<<prior_alpha->GetParameters()<< std::endl;
+		file_out <<"    2: around X, angle follows a "<<prior_theta->GetPDFName()<<" with parameters: "<<prior_theta->GetParameters()<< std::endl;
+		file_out <<"    3: around Z, angle follows a "<<prior_phi->GetPDFName()<<" with parameters: "<<prior_phi->GetParameters()<< std::endl;
 
-		TrapezoidalPDF::Pointer  scalePDF= TrapezoidalPDF::New();scalePDF->SetParameters(5, 6, 18, 23);    
-		file_out <<"  scale follows a TrapezoidalPDF with parameters 5, 6, 18, 23"<< std::endl;
+		//scale for the cube
+		TrapezoidalPDF::Pointer  scalePDF= TrapezoidalPDF::New();scalePDF->SetParameters(10, 12, 16, 19);    
+		file_out <<"  cube scale follows a "<<scalePDF->GetPDFName()<<" with parameters: "<<scalePDF->GetParameters()<< std::endl;
 		
 		//elongation for the cube
 		TrapezoidalPDF::Pointer elongPDF= TrapezoidalPDF::New();elongPDF->SetParameters(1, 1.25, 2.5, 3);
-		file_out <<"  cube elongation: TrapezoidalPDF with parameters 1, 1.25, 2.5, 3"<< std::endl;
+		file_out <<"  cube elongation: "<<elongPDF->GetPDFName()<<" with parameters: "<<elongPDF->GetParameters()<< std::endl;
 		//thickness for cuboids
 		TrapezoidalPDF::Pointer thicknessPDF = TrapezoidalPDF::New(); thicknessPDF->SetParameters(1.2, 1.5, 4, 7);
-		file_out <<"  cube thickness follows a TrapezoidalPDF with parameters 1.2, 1.5, 4, 7"<< std::endl;
+		file_out <<"  cube thickness follows a "<<thicknessPDF->GetPDFName()<<" with parameters: "<<thicknessPDF->GetParameters()<< std::endl;
 		
 		//elongation for the cylinder ~ length / diamter
-		TrapezoidalPDF::Pointer cylelongPDF= TrapezoidalPDF::New();elongPDF->SetParameters(1, 1.25, 2.5, 3);
-		file_out <<"  cube elongation: TrapezoidalPDF with parameters 1, 1.25, 2.5, 3"<< std::endl;
+		TrapezoidalPDF::Pointer  cylscalePDF= TrapezoidalPDF::New();cylscalePDF->SetParameters(5, 6, 9,12);    
+
+		//elongation for the cylinder ~ length / diamter
+		TrapezoidalPDF::Pointer cylelongPDF= TrapezoidalPDF::New();cylelongPDF->SetParameters(1, 1.5, 2, 3.5);
+		file_out <<"  cylinder elongation: "<<cylelongPDF->GetPDFName()<<" with parameters: "<<cylelongPDF->GetParameters()<< std::endl;
 
 		IndependentPDFs::Pointer cubGenerationPDF = IndependentPDFs::New();
 		cubGenerationPDF->AddMultivariatePDF(transPDF);   cubGenerationPDF->AddMultivariatePDF(rotationPrior);
@@ -126,10 +124,9 @@ int main(int argc, char** argv) {
 
 		IndependentPDFs::Pointer cylGenerationPDF = IndependentPDFs::New();
 		cylGenerationPDF->AddMultivariatePDF(transPDF);   cylGenerationPDF->AddMultivariatePDF(rotationPrior);
-		cylGenerationPDF->AddUnivariatePDF(scalePDF);     cylGenerationPDF->AddUnivariatePDF(cylelongPDF);
+		cylGenerationPDF->AddUnivariatePDF(cylscalePDF);     cylGenerationPDF->AddUnivariatePDF(cylelongPDF);
 
 		scene->GetObjectTypesLibrary()->SetObjectPDF(typeCode_cyl, PDF_OBJECTGENERATIONPRIOR, cylGenerationPDF);
-
 
 
 		clock_t t0=clock();
@@ -137,17 +134,14 @@ int main(int argc, char** argv) {
 		///*
 		//* put 100 random objects in the scene
 		//*/
-		for (unsigned i=0 ; i<5 ; i++) {
-			scene->AddObject(scene->GetObjectTypesLibrary()->GenerateNewRandomObject(typeCode_cub));
+		SceneType::IDType id;
+		for (unsigned i=0 ; i<10 ; i++) {
+			id = scene->AddObject(scene->GetObjectTypesLibrary()->GenerateNewRandomObject(typeCode_cub));
 		}
-		for (unsigned i=0 ; i<5 ; i++) {
-			scene->AddObject(scene->GetObjectTypesLibrary()->GenerateNewRandomObject(typeCode_cyl));
+		std::cout<<"added "<<scene->GetNumberOfObjects()<<" cuboids, now inserting cylinders"<<std::endl;
+		for (unsigned i=0 ; i<10 ; i++) {
+			id = scene->AddObject(scene->GetObjectTypesLibrary()->GenerateNewRandomObject(typeCode_cyl));
 		}
-
-		/* Test with only 2 objects, to check movements are correctly estimated and applied
-		* scale, rotation & translation look fine with the base algorithm 
-		*/
-
 
 		/*
 		* 
@@ -175,9 +169,9 @@ int main(int argc, char** argv) {
 		typedef psciob::ForceBiasedAlgorithm<SceneType> ForceBiasedAlgorithmType;
 		ForceBiasedAlgorithmType::Pointer fbAlgo = ForceBiasedAlgorithmType::New();
 		fbAlgo->SetScene(scene);
-		fbAlgo->GetMovementManager()->SetTranslationFactor(1);
+		fbAlgo->GetMovementManager()->SetTranslationFactor(2);
 		fbAlgo->GetMovementManager()->SetScalingFactor(0.999);
-		fbAlgo->GetMovementManager()->SetRotationFactor(0.2);
+		fbAlgo->GetMovementManager()->SetRotationFactor(0.1);
 		fbAlgo->SetBoundaryEffectBehavior(ForceBiasedAlgorithmType::PERIODICBOUNDARIES);
 
 		file_out <<"Applying the Force-Biased algorithm with PERIODICBOUNDARIES"<< std::endl;
@@ -188,6 +182,8 @@ int main(int argc, char** argv) {
 
 		psciob::WriteMirrorPolyDataToFile("FB_finalState.vtk", scene->GetSceneAsVTKPolyData());
 		psciob::WriteITKImageToFile("FB_finalState.nii", scene->GetSceneAsLabelImage());
+
+		file_out.close();
 	}
 	catch (DeformableModelException& e) {
 		std::cout << "Exception occured while performing the program..." << std::endl;

@@ -36,23 +36,24 @@
 
 #include "ParametricObject.h"
 #include "MultivariatePDF.h"
-#include "DeformableObjectGenerator.h"
 #include <typeinfo>
+#include "PoseTransformedBinaryShape.h" 
+//remember to add here all object types that cannot be further resolved, but can still show variety... (so we can differentiate between e.g. translation+sphere and similarity+cylinder...)
+//and to modify the method RegisterObjectType
 
 namespace psciob {
 
 
 /**\class ObjectTypesLibrary
  * \brief ObjectTypesLibrary
- * maintain a list of the various types of object that are available / registered
- * as well as object generators and pdfs
- * so that new objects can be generated / random parameters can be drawn
+ * maintain a list of the types of object that are available / registered with the scene
+ * as well as various pdfs so that new objects can be generated / random parameters can be drawn with respect to object-dependent laws
  *
- * add any name here that could be useful at some point...
  * the idea is to register the pdfs here, so they can be set &/ accessed easily, for all objects types that are of interest.
  * these pdfs can be used e.g. to generate new objects, propose random modifications, or compute an associated likelihood
  * these distribution do not need to have the same dimensionality as the object ; it is up to the user to use these distributions carefully...
 */
+// add any name here that could be useful at some point...
 typedef enum {
 	PDF_OBJECTGENERATIONPRIOR,		//intended to be a global prior for the object <-> typically related to the prior in the DeformableObjectGenerator
 	PDF_SCENEUNIFORMTRANSLATION,	//intended to be a uniform distribution of the translation parameters, over a given bounding box (-> scene)
@@ -76,12 +77,16 @@ public:
 	static const unsigned int Dimension = TObject::Dimension;
 	typedef TObject						  ObjectType;
 	typedef typename ObjectType::TexturedPixelType	AppearanceType;
+	
+	//add here all 'composite types', which wraps several subtypes under a same child type
+	typedef PoseTransformedBinaryShape<Dimension> PoseTransformedBinaryShapeType;
 
 	struct LibraryEntryType {
-		typename DeformableObjectGenerator<ObjectType>::Pointer objectGenerator;
+		typename ObjectType::Pointer objectSample;
 		unsigned int objectDimensionality;
 		std::map<ObjectPDFTypes, MultivariatePDF::Pointer> pdf;
 		double weight;
+		bool isAmbiguous;
 	};
 
 	typedef std::vector<LibraryEntryType>				ObjectTypesCollectionType;	
@@ -113,15 +118,14 @@ public:
 	
 	/** New object from the requested type, with default parameters */
 	typename ObjectType* GenerateNewObjectDefault(unsigned int i) {
-		ObjectType::Pointer obj = m_library[i].objectGenerator->GetNewObject();
-		return obj.GetPointer();
+		m_library[i].objectSample->SetDefaultParameters();
+		return m_library[i].objectSample.GetPointer();
 	}
 
 	/** New object with random parameters from the chosen distribution */
 	typename ObjectType* GenerateNewRandomObject(unsigned int i, ObjectPDFTypes pdfType = PDF_OBJECTGENERATIONPRIOR) {
-		ObjectType::Pointer obj = m_library[i].objectGenerator->GetNewObject();
-		while (!obj->SetParameters( m_library[i].pdf[pdfType]->DrawSample() )) {};
-		return obj.GetPointer();
+		while (!m_library[i].objectSample->SetParameters( m_library[i].pdf[pdfType]->DrawSample() )) {};
+		return m_library[i].objectSample.GetPointer();
 	}
 
 	/** Looks into the library for the index entry of the object type
@@ -134,14 +138,35 @@ public:
 	void SetObjectWeight(unsigned int entryIndex, double weight);
 	void SetObjectPDF(unsigned int entryIndex, ObjectPDFTypes pdfType, MultivariatePDF *pdf);
 
-	//some convenience methods for setting default pdfs for specific types
-	void SetDefaultScenePositionPDF(unsigned int entryIndex, vnl_vector<double> sceneBBox);
-	void SetIntegerTranslationPDF(unsigned int entryIndex, vnl_vector<double> sceneSpacing);
-	
-	//set default pdfs for the whole library!
-	void SetDefaultScenePositionPDF(vnl_vector<double> sceneBBox)  { for (unsigned i=0 ; i<m_library.size() ; i++) {SetDefaultScenePositionPDF(m_library[i].shapeName, m_library[i].transformName, sceneBBox);} }
-	void SetIntegerTranslationPDF(vnl_vector<double> sceneSpacing) { for (unsigned i=0 ; i<m_library.size() ; i++) {SetIntegerTranslationPDF(m_library[i].shapeName, m_library[i].transformName, sceneSpacing);}}
+	////some convenience methods for setting default pdfs for specific types
+	//void SetDefaultScenePositionPDF(unsigned int entryIndex, vnl_vector<double> sceneBBox);
+	//void SetIntegerTranslationPDF(unsigned int entryIndex, vnl_vector<double> sceneSpacing);
+	//
+	////set default pdfs for the whole library!
+	//void SetDefaultScenePositionPDF(vnl_vector<double> sceneBBox)  { for (unsigned i=0 ; i<m_library.size() ; i++) {SetDefaultScenePositionPDF(m_library[i].shapeName, m_library[i].transformName, sceneBBox);} }
+	//void SetIntegerTranslationPDF(vnl_vector<double> sceneSpacing) { for (unsigned i=0 ; i<m_library.size() ; i++) {SetIntegerTranslationPDF(m_library[i].shapeName, m_library[i].transformName, sceneSpacing);}}
 
+
+	/** checks if typeid of the input is the same as that of the reference object (2nd) */
+	inline bool TestSameTypeAsEntry(ObjectType *object, unsigned entryIndex) {	
+		if ( typeid(*object)==typeid( *m_library[entryIndex].objectSample.GetPointer() ) ) {
+			//if this is not an ambiguous type, than both objects are really of the same type.
+			if (!m_library[entryIndex].isAmbiguous) return false; 
+			
+			//else, need to resolve the ambiguity...
+			PoseTransformedBinaryShapeType* tmp1 = dynamic_cast<PoseTransformedBinaryShapeType*>(object);
+			if (!tmp1) {return true;} 
+			else {
+				PoseTransformedBinaryShapeType* tmp2 = dynamic_cast<PoseTransformedBinaryShapeType*>(m_library[entryIndex].objectSample.GetPointer());
+				if (!tmp2) {throw DeformableModelException("ObjectTypesLibrary::CompareTypes : types are 'identical', but both objects cannot be casted to the same type ; SHOULD NEVER HAPPEN!!"); }
+				if ( typeid(*tmp1->GetShape())!=typeid(*tmp2->GetShape()) ) return false;
+				if ( typeid(*tmp1->GetTransform())!=typeid(*tmp2->GetTransform()) ) return false;
+				return true;
+			}
+			
+		}
+		else return false;
+	}
 
 
 protected:

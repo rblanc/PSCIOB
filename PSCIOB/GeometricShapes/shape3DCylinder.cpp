@@ -45,7 +45,7 @@ shape3DCylinder::shape3DCylinder() : BinaryShape<3>() {
 	m_Resolution=36;		
 	m_cylinderSource->SetResolution(m_Resolution);
 	m_cylinderSource->SetCenter(0,0,0);
-	m_cylinderSource->SetRadius(1);
+	m_cylinderSource->SetRadius(0.5);
 	m_cylinderSource->SetHeight(m_parameters(0));
 
 	m_vtkResolution.set_size(1);
@@ -77,7 +77,7 @@ void shape3DCylinder::SetVTKPolyDataResolution(unsigned int res) {
 
 vtkPolyData* shape3DCylinder::GetObjectAsVTKPolyData() {
 	if (!m_uptodatePolyData) {
-		m_cylinderSource->SetRadius(1);
+		m_cylinderSource->SetRadius(0.5);
 		m_cylinderSource->SetHeight(m_parameters(0));
 
 		m_cylinderSource->Update();

@@ -86,18 +86,24 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(MVN_PDF,MultivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "MVN_PDF";}
 
 	/** Set the dimensionality of the distribution, and initialize it with 0 mean and identity covariance */
 	void SetNumberOfDimensions(unsigned int n);
 
-	/** Set the mean vector and covariance matrix - resets the dimensionality if necessary */
-	void SetParameters(const vnl_vector<double> &mean, const vnl_matrix<double> &cov);
-
+	/** Set the mean vector and covariance matrix - resets the dimensionality if necessary 
+	* \warning: no check is performed regarding the symmetry / positivity of the covariance matrix.
+	*/
+	bool SetParameters(const vnl_vector<double> &mean, const vnl_matrix<double> &cov);
+	/** add the parameters through a vector concatenating the mean, and the columns of the covariance matrix
+	 * essentially added for consistency of the interface, the dimensionality must be set before calling this function.
+	*/
+	bool SetParameters(const vnl_vector<double> &p);
 	/** this interface sets a mean vector with all elements equal to mean
 	* and a covariance which is cov * ID
-	* keeping the current dimensionality of the PDF.
+	* the current dimensionality of the PDF is preserved.
 	*/
-	void SetParameters(double mean = 0, double cov = 1);
+	bool SetParameters(double mean = 0, double cov = 1);
 	double GetLikelihood(const vnl_vector<double> &x);
 	double GetMaximumLikelihoodValue();
 	double GetLogLikelihood(const vnl_vector<double> &x);
@@ -105,8 +111,9 @@ protected:
 	MVN_PDF();
 	~MVN_PDF();
 
-	vnl_vector<double> _DrawNewSample();
+	void _DrawNewSample();
 
+	vnl_matrix<double> m_tmpMatrixSample;
 	vnl_matrix<double> m_mean;	vnl_matrix<double> m_cov;
 	vnl_matrix<double> m_std, m_invcov;
 	double m_det, m_normalizationFactor;
@@ -122,6 +129,7 @@ private:
 * The order in which the PDFs are inserted define the order of the variables in the generated samples, and cannot be modified
 * \warning by default, no pdf are given, so trying to draw a sample may result in a crash (not tested)
 * \todo It could potentially be useful to get access to the stored PDFs, to be able to modify their parameters.
+* \warning if you modify the parameters of the pdfs passed as arguments, then the get/setParameters methods here will produce invalid results
 */
 class IndependentPDFs : public MultivariatePDF {
 public:
@@ -133,7 +141,9 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(IndependentPDFs,MultivariatePDF);
 	itkNewMacro(IndependentPDFs);
+	std::string GetPDFName() {return "IndependentPDFs";}
 
+	bool SetParameters(const vnl_vector<double> &p);
 	/** Add another univariate PDF */
 	void AddUnivariatePDF(UnivariatePDF *pdf);
 	/** Add another multivariate PDF */
@@ -164,10 +174,12 @@ protected:
 	IndependentPDFs();
 	~IndependentPDFs();
 
-	vnl_vector<double> _DrawNewSample();
+	void _DrawNewSample();
 
 	std::vector<bool> m_univ_multiv_law; //true = multivariate law / false = univariate law... necessary in case of 'multivariate' distr of dimensionality 1 ......
 	std::vector<unsigned int> m_dim_laws;
+	std::vector<unsigned int> m_nbP; unsigned m_totalNbParams;    // indicates the number of parameters of the pdf for each law.
+
 	std::vector<UnivariatePDF::Pointer> m_univ_pdfs;
 	std::vector<MultivariatePDF::Pointer> m_multiv_pdfs;
 private: 
@@ -180,6 +192,7 @@ private:
 * \brief UniformBoxPDF multidimensional uniform continuous variable
 * Given a vector v of size 2N, it concatenates N independent univariate uniform distributions, each in the interval [v(2*i) v(2*i+1)]
 * default is a [0 1; 0 1] box
+* \warning if you modify the parameters of the pdfs passed as arguments, then the get/setParameters methods here will produce invalid results
 */
 class UniformBoxPDF : public MultivariatePDF {
 public:
@@ -191,11 +204,13 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(UniformBoxPDF,MultivariatePDF);
 	itkNewMacro(UniformBoxPDF);
+	std::string GetPDFName() {return "UniformBoxPDF";}
 
 	/** Set the box in which to draw variables 
 	* dimension of the vector must be pair, and formatted as [min_d1 max_d1 min_d2 max_d2...]
 	*/
-	void SetBox(const vnl_vector<double> &bbox);
+	bool SetParameters(const vnl_vector<double> &p);
+	bool SetBox(const vnl_vector<double> &bbox);
 
 	double GetLikelihood(const vnl_vector<double> &x);
 	double GetMaximumLikelihoodValue();
@@ -210,7 +225,7 @@ protected:
 	UniformBoxPDF();
 	~UniformBoxPDF();
 
-	vnl_vector<double> _DrawNewSample();
+	void _DrawNewSample();
 	IndependentPDFs::Pointer m_pdf;
 private: 
 	UniformBoxPDF(const Self&);				//purposely not implemented
@@ -221,6 +236,7 @@ private:
 * \brief IndependentEulerRotationsPDFs 3D distribution of the 3 euler angles resulting from a composition of an arbitrary number of independent simples rotations
 * The convention for the Euler Angle rotation is 
 * the angle of each simple rotation is characterized by a univariate density, and applied around either X_AXIS, Y_AXIS or Z_AXIS
+* \warning if you modify the parameters of the pdfs passed as arguments, then the get/setParameters methods here will produce invalid results
 */
 class IndependentEulerRotationsPDFs : public MultivariatePDF {
 public:
@@ -232,10 +248,12 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(IndependentEulerRotationsPDFs,MultivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "IndependentEulerRotationsPDFs";}
 
 	enum ROTATIONAROUND { X_AXIS, Y_AXIS, Z_AXIS };
 
 	/** Around which axis to rotate, and associated density */
+	bool SetParameters(const vnl_vector<double> &p);
 	void AddIndependentRotationPDF(ROTATIONAROUND dir, UnivariatePDF *pdf);
 
 	double GetLikelihood(const vnl_vector<double> &x);
@@ -259,7 +277,9 @@ protected:
 	IndependentEulerRotationsPDFs();
 	~IndependentEulerRotationsPDFs();
 
-	vnl_vector<double> _DrawNewSample();
+	void _DrawNewSample();
+
+	std::vector<unsigned int> m_nbP; unsigned m_totalNbParams;    // indicates the number of parameters of the pdf for each law.
 
 	std::vector<ROTATIONAROUND> m_rotation_axis;
 	std::vector<UnivariatePDF::Pointer > m_univ_pdfs;
@@ -275,6 +295,7 @@ private:
 * Instances of this class shall be feed with one or more input multivariate pdfs of the same dimensionality, each with an associated relative weight
 * To generate a random variable, one of the input pdfs is randomly selected with a probability proportional to its associated weight, and a sample is drawn from this one
 * \warning By default, no PDF is available - however, no check is performed, so the program may crash...
+* \warning if you modify the parameters of the pdfs passed as arguments, then the get/setParameters methods here will produce invalid results
 */
 class MultivariateMixturePDF : public MultivariatePDF {
 public:
@@ -285,6 +306,9 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(MultivariateMixturePDF,MultivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "MultivariateMixturePDF";}
+
+	bool SetParameters(const vnl_vector<double> &p);
 
 	/** Add a new multivariate PDF to the mixture
 	* the dimensionality is determined by the first PDF inserted 
@@ -313,10 +337,12 @@ protected:
 	MultivariateMixturePDF();
 	~MultivariateMixturePDF();
 
+	std::vector<unsigned int> m_nbP; unsigned m_totalNbParams;    // indicates the number of parameters of the pdf for each law.
+
 	std::vector<MultivariatePDF::Pointer> m_multiv_pdfs;
 	std::vector<double> m_weights; double m_sumWeights;
 
-	vnl_vector<double> _DrawNewSample();
+	void _DrawNewSample();
 
 private: 
 	MultivariateMixturePDF(const Self&);	//purposely not implemented

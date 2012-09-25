@@ -74,9 +74,11 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(UniformIntegerUnivariatePDF,IntegerUnivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "UniformIntegerUnivariatePDF";}
 
 	/** Set minimum and maximum values */
-	void SetParameters(long min = 0.0, long max = 1.0);
+	bool SetParameters(const vnl_vector<double> &p);
+	bool SetParameters(long min = 0.0, long max = 1.0);
 	/** p(x) = 1/(max-min+1) */
 	double GetLikelihood(const long &x);
 	double GetMaximumLikelihoodValue();
@@ -87,7 +89,7 @@ protected:
 	~UniformIntegerUnivariatePDF();
 
 	long m_min, m_max, m_diff;
-	long _DrawNewSample();
+	void _DrawNewSample();
 private:
 	UniformIntegerUnivariatePDF(const Self&);//purposely not implemented
 	const Self & operator=( const Self & );	 //purposely not implemented
@@ -106,8 +108,10 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(PoissonPDF,IntegerUnivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "PoissonPDF";}
 
-	void SetLambda(long lambda = 1);
+	bool SetParameters(const vnl_vector<double> &p);
+	bool SetLambda(long lambda = 1);
 
 	/** more stable estimation than the direct one... from http://en.wikipedia.org/wiki/Poisson_distribution */
 	double GetLikelihood(const long &x);
@@ -119,7 +123,7 @@ protected:
 
 	double m_lambda;
 	/** using Knuth method http://en.wikipedia.org/wiki/Poisson_distribution */
-	long _DrawNewSample();
+	void _DrawNewSample();
 private: 
 	PoissonPDF(const Self&);				//purposely not implemented
 	const Self & operator=( const Self & );	//purposely not implemented
@@ -165,9 +169,11 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(DiracPDF,UnivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "DiracPDF";}
 
 	/** position of the dirac impulsion*/
-	void SetParameters(double value = 0.0);
+	bool SetParameters(const vnl_vector<double> &p);
+	bool SetParameters(double value = 0.0);
 
 	double GetLikelihood(const double &x);
 	double GetMaximumLikelihoodValue();
@@ -176,7 +182,7 @@ protected:
 	DiracPDF();
 	~DiracPDF();
 
-	double _DrawNewSample();
+	void _DrawNewSample();
 private:
 	DiracPDF(const Self&);//purposely not implemented
 	const Self & operator=( const Self & );	 //purposely not implemented
@@ -195,20 +201,20 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(NormalPDF,UnivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "NormalPDF";}
 
 	/** Specify the mean and variance of the distribution */
-	void SetParameters(double mean=0.0, double var=1.0);
+	bool SetParameters(const vnl_vector<double> &p);
+	bool SetParameters(double mean=0.0, double var=1.0);
 	double GetLikelihood(const double &x);
 	double GetMaximumLikelihoodValue();
 	double GetLogLikelihood(const double &x);
-
-	vnl_vector<double> GetParameters();
 
 protected:
 	NormalPDF();
 	~NormalPDF();
 
-	double _DrawNewSample();
+	void _DrawNewSample();
 	double m_mean, m_var, m_std;
 private:
 	NormalPDF(const Self&); //purposely not implemented
@@ -230,8 +236,10 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(UniformPDF,UnivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "UniformPDF";}
 
-	void SetParameters(double min=0, double max=1);
+	bool SetParameters(const vnl_vector<double> &p);
+	bool SetParameters(double min=0, double max=1);
 	double GetLikelihood(const double &x);
 	double GetMaximumLikelihoodValue();
 	double GetLogLikelihood(const double &x);
@@ -239,7 +247,7 @@ protected:
 	UniformPDF();
 	~UniformPDF();
 
-	double _DrawNewSample();
+	void _DrawNewSample();
 	double m_min, m_max;
 private:
 	UniformPDF(const Self&); //purposely not implemented
@@ -259,9 +267,12 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(LogNormalPDF,UnivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "LogNormalPDF";}
 
-	void SetParameters(double m=0.0, double s2=1.0);
-	void SetParametersViaMeanAndMode(double mean=1.648721270700128, double mode=0.367879441171442);
+	/** SetParameters: mean and variance */
+	bool SetParameters(const vnl_vector<double> &p);
+	bool SetParameters(double m=0.0, double s2=1.0);
+	bool SetParametersViaMeanAndMode(double mean=1.648721270700128, double mode=0.367879441171442);
 	double GetLikelihood(const double &x);
 	double GetMaximumLikelihoodValue();
 	double GetLogLikelihood(const double &x);
@@ -270,7 +281,7 @@ protected:
 	LogNormalPDF();
 	~LogNormalPDF();
 
-	double _DrawNewSample();
+	void _DrawNewSample();
 	double m_mean, m_var, m_std;
 private:
 	LogNormalPDF(const Self&); //purposely not implemented
@@ -294,8 +305,10 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(TriangularPDF,UnivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "TriangularPDF";}
 
-	void SetParameters(double min=0.0, double mode=0.5, double max=1.0);
+	bool SetParameters(const vnl_vector<double> &p);
+	bool SetParameters(double min=0.0, double mode=0.5, double max=1.0);
 	double GetLikelihood(const double &x);
 	double GetMaximumLikelihoodValue();
 	double GetLogLikelihood(const double &x);
@@ -303,7 +316,7 @@ protected:
 	TriangularPDF();
 	~TriangularPDF();
 
-	double _DrawNewSample();
+	void _DrawNewSample();
 	double m_min, m_mode, m_max;
 	double m_totalDiff, m_leftDiff, m_rightDiff, m_diffRatio, m_p1, m_p2; //useful temporary variables.
 
@@ -328,8 +341,10 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(TrapezoidalPDF,UnivariatePDF);
 	itkNewMacro(Self);
+	std::string GetPDFName() {return "TrapezoidalPDF";}
 
-	void SetParameters(double a=0.0, double b=0.1, double c=0.9, double d=1.0);
+	bool SetParameters(const vnl_vector<double> &p);
+	bool SetParameters(double a=0.0, double b=0.1, double c=0.9, double d=1.0);
 	double GetLikelihood(const double &x);
 	double GetMaximumLikelihoodValue();
 	double GetLogLikelihood(const double &x);
@@ -337,7 +352,7 @@ protected:
 	TrapezoidalPDF();
 	~TrapezoidalPDF();
 
-	double _DrawNewSample();
+	void _DrawNewSample();
 	double m_a, m_b, m_c, m_d;
 	double m_invdiff1, m_invdiff2, m_u, m_th1, m_th2, m_f1, m_o1, m_f2; //intermediate variables for speeding up computations.
 private:
@@ -352,6 +367,7 @@ private:
 * by default, a and b are DiracPDF with positions 0
 * \todo add method to access the involved distributions a,b and x, to simplify usage by allowing modifications of their parameters instead of setting new distributions
 * \todo GetLikelihood and GetLogLikelihood member methods are not implemented
+* \warning if you modify the parameters of the pdfs passed as arguments, then the get/setParameters methods here will produce invalid results
 */
 class LinearCombinationPDF : public UnivariatePDF {
 public:
@@ -363,8 +379,11 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(LinearCombinationPDF,UnivariatePDF);
 	itkNewMacro(Self);
-	
-	void SetParameters(UnivariatePDF *x = static_cast<UnivariatePDF *>(m_default_x),
+	std::string GetPDFName() {return "LinearCombinationPDF";}
+
+	/** Expected to be the concatenation of the parameters of the laws x, a, b*/
+	bool SetParameters(const vnl_vector<double> &p);
+	bool SetParameters(UnivariatePDF *x = static_cast<UnivariatePDF *>(m_default_x),
 		UnivariatePDF *a = static_cast<UnivariatePDF *>(m_default_a), 
 		UnivariatePDF *b = static_cast<UnivariatePDF *>(m_default_b));
 	/** NOT IMPLEMENTED*/
@@ -376,8 +395,9 @@ protected:
 	LinearCombinationPDF();
 	~LinearCombinationPDF();
 
-	double _DrawNewSample();
+	void _DrawNewSample();
 	UnivariatePDF::Pointer m_a, m_b, m_x;
+	unsigned m_nbP_a, m_nbP_b, m_nbP_x; //nb of parameters of each law
 	static NormalPDF::Pointer m_default_x;
 	static DiracPDF::Pointer m_default_a, m_default_b;
 private:
@@ -390,6 +410,7 @@ private:
 * Instances of this class shall be feed with one or more input univariate pdfs, each with an associated relative weight
 * To generate a random variable, one of the input pdfs is randomly selected with a probability proportional to its associated weight, and a sample is drawn from this one
 * \warning By default, no PDF is available - however, no check is performed, so the program may crash...
+* \warning if you modify the parameters of the pdfs passed as arguments, then the get/setParameters methods here will produce invalid results
 */
 class UnivariateMixturePDF : public UnivariatePDF {
 public:
@@ -401,7 +422,9 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(UnivariateMixturePDF,UnivariatePDF);
 	itkNewMacro(Self);
-
+	std::string GetPDFName() {return "UnivariateMixturePDF";}
+	
+	bool SetParameters(const vnl_vector<double> &p);
 	void AddPDF(UnivariatePDF *pdf, double weight = 1.0);
 	double GetLikelihood(const double &x);
 	double GetMaximumLikelihoodValue();
@@ -412,8 +435,9 @@ protected:
 
 	std::vector<UnivariatePDF::Pointer> m_univ_pdfs;
 	std::vector<double> m_weights; double m_sumWeights;
+	std::vector<unsigned> m_nbP; unsigned m_totalNbParams;
 
-	double _DrawNewSample();
+	void _DrawNewSample();
 private:
 	UnivariateMixturePDF(const Self&); //purposely not implemented
 	const Self & operator=( const Self & );	 //purposely not implemented
