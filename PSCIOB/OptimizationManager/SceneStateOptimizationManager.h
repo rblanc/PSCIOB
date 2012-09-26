@@ -212,18 +212,6 @@ public:
 	//CLEAN: access should be restricted to some optimizers ... use friendship?
 	void SaveCurrentStateAsBest() { 
 		m_bestCost = this->GetValue();
-//std::cout<<"BEST COST: "<<m_bestCost<<", nb objects: "<<m_scene->GetNumberOfObjects()<<std::endl;
-//std::string filename;
-//filename = "BestConfig_Energy_"+stringify( (int)(-m_bestCost*10))+".png";
-//Write2DGreyLevelRescaledImageToFile<SceneType::LabelImageType>(filename, m_scene->GetSceneAsLabelImage());
-//SceneObjectIterator<SceneType> objectIt(m_scene);
-//objectIt.GoToBegin();
-//SceneEnergy<SceneType, itk::Image<double, 2>>* tmp = dynamic_cast<SceneEnergy<SceneType, itk::Image<double, 2>>*>(m_costFunction.GetPointer());
-//for (objectIt.GoToBegin(); !objectIt.IsAtEnd() ; ++objectIt) {
-//	std::cout<<"  label "<<objectIt.GetID()<<", params: "<<m_scene->GetParametersOfObject(objectIt.GetID());
-//	if (tmp!=0) std::cout<<", energy = "<<tmp->GetEnergyForObject(objectIt.GetID())<<std::endl;
-//	else std::cout<<std::endl;
-//}
 		m_bestKnownState.clear();
 		m_nbObjectAtBestState = m_scene->GetNumberOfObjects();
 		m_scene->GetObjectSetCopy(m_bestKnownState); 

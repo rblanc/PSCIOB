@@ -65,6 +65,9 @@ public:
 	/** Give Information about Self */
 	std::string GetClassName() const { return ("PoseTransformedBinaryShape"); }
 	void PrintInfo() const { std::cout<<"PoseTransformedBinaryShape composed of:\n"; m_shape->PrintInfo(); m_transform->PrintInfo(); }
+	void PrintInfo(std::ostream & os, itk::Indent indent = 0) const {
+		os << indent << GetClassName() << " with " << m_transform->GetClassName() << " and " << m_shape->GetClassName()<<std::endl;
+	}
 
 	/** Get Number of Parameters */
 	inline unsigned int GetNumberOfParameters() const { 

@@ -95,6 +95,9 @@ public:
 	void Clear() {m_sumWeights = 0;m_library.clear();}
 	void Reset() {m_sumWeights = 0;m_library.clear();}
 
+	/** Print info into a stream */
+	void PrintInfo(std::ostream & os, itk::Indent indent = 0) const;
+
 	/** Get properties */
 	unsigned int GetNumberOfEntries()		const			{ return m_library.size(); }
 	ObjectTypesCollectionType* GetLibrary() const			{ return const_cast<ObjectTypesCollectionType*>(&m_library); }

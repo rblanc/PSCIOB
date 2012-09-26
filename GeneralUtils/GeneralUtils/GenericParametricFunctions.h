@@ -317,6 +317,39 @@ private:
 	const Self & operator=( const Self & );		//purposely not implemented
 };
 
+/** \class GPF_ScaledOffsetExpFunction
+* \brief GPF_ScaledOffsetExpFunction: p0*exp(-(p1-x)/p2)
+* default: p0=1, p1=1, p2=1
+*/
+template<class TInputType, class TOutputType>
+class GPF_ScaledOffsetExpFunction : public GenericParametricFunctions<TInputType, TOutputType> {
+public:
+	static const unsigned int nbParams = 3;
+
+	typedef GPF_ScaledOffsetExpFunction Self;
+	typedef GenericParametricFunctions  Superclass;
+	typedef itk::SmartPointer<Self>     Pointer;
+	/** Run-time type information (and related methods). */
+	itkTypeMacro(GPF_ScaledOffsetExpFunction, GenericParametricFunctions);
+	itkNewMacro(Self);
+
+	unsigned int GetNumberOfParameters() {return nbParams;}
+
+	//overload for easy user access ; remember to check the validity of the parameters...
+	bool SetParameter(double p0, double p1, double p2) { 
+		m_params(0)=p0; m_params(1)=p1; m_params(2)=p2; return true;
+	}
+
+	inline TOutputType Evaluate( TInputType input ) { return static_cast<TOutputType>( m_params(0)*exp( static_cast<double>(input-m_params(1))/m_params(2)) ); }
+
+protected:
+	GPF_ScaledOffsetExpFunction() : GenericParametricFunctions() {m_params.set_size(nbParams); m_params.fill(1);};
+	~GPF_ScaledOffsetExpFunction() {};
+private:
+	GPF_ScaledOffsetExpFunction(const Self&); //purposely not implemented
+	const Self & operator=( const Self & );   //purposely not implemented
+};
+
 /** \class GPF_ScaledExpPlusConstantFunction
 * \brief GPF_ScaledExpPlusConstantFunction: p0+exp(p1*x)
 * default: p0=0, p1=1
@@ -336,8 +369,8 @@ public:
 	unsigned int GetNumberOfParameters() {return nbParams;}
 
 	//overload for easy user access ; remember to check the validity of the parameters...
-	bool SetParameter(double p) { 
-		m_params(0)=p; return true;
+	bool SetParameter(double p0, double p1) { 
+		m_params(0)=p0; m_params(1)=p1; return true;
 	}
 
 	inline TOutputType Evaluate( TInputType input ) { return static_cast<TOutputType>( m_params(0) + exp( m_params(1)*static_cast<double>(input)) ); }
@@ -348,6 +381,40 @@ protected:
 private:
 	GPF_ScaledExpPlusConstantFunction(const Self&);				//purposely not implemented
 	const Self & operator=( const Self & );		//purposely not implemented
+};
+
+
+/** \class GPF_ScaledOffsetExpPlusConstantFunction
+* \brief GPF_ScaledOffsetExpPlusConstantFunction: p0+exp(p1*(x-p2))
+* default: p0=0, p1=1, p2=0
+*/
+template<class TInputType, class TOutputType>
+class GPF_ScaledOffsetExpPlusConstantFunction : public GenericParametricFunctions<TInputType, TOutputType> {
+public:
+	static const unsigned int nbParams = 3;
+
+	typedef GPF_ScaledOffsetExpPlusConstantFunction Self;
+	typedef GenericParametricFunctions    Superclass;
+	typedef itk::SmartPointer<Self>	      Pointer;
+	/** Run-time type information (and related methods). */
+	itkTypeMacro(GPF_ScaledOffsetExpPlusConstantFunction, GenericParametricFunctions);
+	itkNewMacro(Self);
+
+	unsigned int GetNumberOfParameters() {return nbParams;}
+
+	//overload for easy user access ; remember to check the validity of the parameters...
+	bool SetParameter(double p) { 
+		m_params(0)=p0; m_params(1)=p1; m_params(2)=p2; return true;
+	}
+
+	inline TOutputType Evaluate( TInputType input ) { return static_cast<TOutputType>( m_params(0) + exp( m_params(1)*static_cast<double>(input-m_params(2))) ); }
+
+protected:
+	GPF_ScaledOffsetExpPlusConstantFunction() : GenericParametricFunctions() {m_params.set_size(nbParams); m_params(0) = 0; m_params(1) = 1; m_params(2) = 0;};
+	~GPF_ScaledOffsetExpPlusConstantFunction() {};
+private:
+	GPF_ScaledOffsetExpPlusConstantFunction(const Self&); //purposely not implemented
+	const Self & operator=( const Self & );               //purposely not implemented
 };
 
 

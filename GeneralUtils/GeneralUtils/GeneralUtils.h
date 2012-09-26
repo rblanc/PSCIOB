@@ -104,7 +104,8 @@ inline std::string stringify(int x) {
 /** Cast to a different type ; in case this new type has a narrower dynamic, the value is set to the minimum/maximum possible value*/
 template <class T1, class T2>
 inline T2 saturate_cast(T1 a) {
-	return static_cast<T2>( std::max<T1>(std::min<T1>(a, std::numeric_limits<T2>::max()), std::numeric_limits<T2>::min()) );
+	if (std::numeric_limits<T2>::is_signed) return static_cast<T2>( std::max<T1>(std::min<T1>(a, std::numeric_limits<T2>::max()), -std::numeric_limits<T2>::max()) );
+	else return static_cast<T2>( std::max<T1>(std::min<T1>(a, std::numeric_limits<T2>::max()), std::numeric_limits<T2>::min()) );
 }
 
 

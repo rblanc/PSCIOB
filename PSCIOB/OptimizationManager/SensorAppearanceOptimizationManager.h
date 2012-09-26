@@ -26,14 +26,14 @@
  */
 
 /**
- * \file SensorOptimizationManager.h
+ * \file SensorAppearanceOptimizationManager.h
  * \author Rémi Blanc 
  * \date 29. September 2011
  */
 
 
-#ifndef SENSOROPTIMIZATIONMANAGER_H_
-#define SENSOROPTIMIZATIONMANAGER_H_
+#ifndef SENSORAPPEARANCEOPTIMIZATIONMANAGER_H_
+#define SENSORAPPEARANCEOPTIMIZATIONMANAGER_H_
 
 
 #include "OptimizationManager_Base.h"

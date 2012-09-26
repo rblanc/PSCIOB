@@ -583,8 +583,27 @@ BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>
 template<unsigned int VDimension, class TAppearance, class TObjectId, class TAssociatedData, class TInteractionData>
 bool 
 BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::SaveSceneToFile(std::string filename)	{
-	throw DeformableModelException("SaveSceneToFile: not implemented -- TODO ");
+	std::ofstream file_out;
+	file_out.open(filename.c_str());
+
+	file_out << "Scene Class Name: "<<GetClassName()<<std::endl;
+	file_out << "Scene Dimension: "<<Dimension<<std::endl;
+	file_out << "Scene Bounding Box: "<<Dimension<<std::endl;
+	file_out << "Scene spacing: "<<m_sceneSpacing.GetVnlVector()<<std::endl<<std::endl;
+
+	m_objectTypesLibrary->PrintInfo(file_out);
+
+	file_out << "\nList of objects: type_id   object_id   parameters\n";
+	SceneObjectIterator<SceneType> it(this);
+	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
+		file_out<<(long)it.GetObjectInScene()->objectTypeId<<" "<<(long)it.GetObjectInScene()->id<<" "<<it.GetObject()->GetParameters()<<std::endl;
+	}
+
+	//add stuff about associated interactionManager? prior?
+	//I would say no...
+	file_out.close();
 }
+
 
 template<unsigned int VDimension, class TAppearance, class TObjectId, class TAssociatedData, class TInteractionData>
 bool 

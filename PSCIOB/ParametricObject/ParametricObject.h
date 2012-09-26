@@ -109,7 +109,9 @@ public:
 	/** Give Information about Self */
 	virtual std::string GetClassName() const = 0;
 	virtual void PrintInfo()           const = 0;
-
+	virtual void PrintInfo(std::ostream & os, itk::Indent indent = 0) const {
+		os << indent << GetClassName() <<std::endl;
+	}
 	/** Get Number of Parameters */
 	virtual unsigned int GetNumberOfParameters()      const = 0;
 

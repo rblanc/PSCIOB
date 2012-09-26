@@ -37,6 +37,21 @@
 namespace psciob {
 
 
+/** Print info into a stream */
+template<class TObject>
+void 
+ObjectTypesLibrary<TObject>::PrintInfo(std::ostream & os, itk::Indent indent) const {
+	os << indent << "Number of entries: " << m_library.size() << std::endl;
+	if (m_library.size()==0) return;
+	
+	for (unsigned i=0 ; i<m_library.size() ; i++) {
+		os << indent << "entry " << i <<" ; weight = "<<m_library[i].weight<< std::endl;
+		os << indent << "object type: "<<m_library[i].objectSample->PrintInfo(os);
+		//TODO: add info about pdfs...
+	}
+}
+
+
 template<class TObject>
 inline
 unsigned int ObjectTypesLibrary<TObject>::RegisterObjectType(ObjectType *object, double weight = 1) {
