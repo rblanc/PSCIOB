@@ -581,20 +581,20 @@ BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>
 // Save / Load scene to /from file
 //
 template<unsigned int VDimension, class TAppearance, class TObjectId, class TAssociatedData, class TInteractionData>
-bool 
+void 
 BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::SaveSceneToFile(std::string filename)	{
 	std::ofstream file_out;
 	file_out.open(filename.c_str());
 
 	file_out << "Scene Class Name: "<<GetClassName()<<std::endl;
 	file_out << "Scene Dimension: "<<Dimension<<std::endl;
-	file_out << "Scene Bounding Box: "<<Dimension<<std::endl;
+	file_out << "Scene Bounding Box: "<<m_sceneBBox<<std::endl;
 	file_out << "Scene spacing: "<<m_sceneSpacing.GetVnlVector()<<std::endl<<std::endl;
 
-	m_objectTypesLibrary->PrintInfo(file_out);
+	m_objectTypesLibrary->PrintInfo(file_out, 0, true);
 
 	file_out << "\nList of objects: type_id   object_id   parameters\n";
-	SceneObjectIterator<SceneType> it(this);
+	SceneObjectIterator<Self> it(this);
 	for (it.GoToBegin() ; !it.IsAtEnd() ; ++it) {
 		file_out<<(long)it.GetObjectInScene()->objectTypeId<<" "<<(long)it.GetObjectInScene()->id<<" "<<it.GetObject()->GetParameters()<<std::endl;
 	}

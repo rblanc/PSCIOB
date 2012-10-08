@@ -86,7 +86,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(MVN_PDF,MultivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "MVN_PDF";}
+	std::string GetPDFName() const {return "MVN_PDF";}
 
 	/** Set the dimensionality of the distribution, and initialize it with 0 mean and identity covariance */
 	void SetNumberOfDimensions(unsigned int n);
@@ -141,7 +141,21 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(IndependentPDFs,MultivariatePDF);
 	itkNewMacro(IndependentPDFs);
-	std::string GetPDFName() {return "IndependentPDFs";}
+	std::string GetPDFName() const {return "IndependentPDFs";}
+
+	void PrintInfo(std::ostream & os, itk::Indent indent = 0) const { 
+		os << indent << GetPDFName() << " ( ";
+		unsigned univInd = 0, multiInd = 0;
+		if (!m_univ_multiv_law.empty()) {
+			if (m_univ_multiv_law[0]) { os << m_multiv_pdfs[multiInd++]->GetPDFName(); } //get the 0th element, and increment the index
+			else                      { os << m_univ_pdfs[univInd++]->GetPDFName(); }
+			for (unsigned i=1 ; i<m_univ_multiv_law.size() ; i++) {
+				if (m_univ_multiv_law[i]) { os << ", " << m_multiv_pdfs[multiInd++]->GetPDFName(); } //get the 0th element, and increment the index
+				else                      { os << ", " << m_univ_pdfs[univInd++]->GetPDFName(); }
+			}				
+		}
+		os << " ) with parameters: " << GetParameters() << std::endl; 
+	}
 
 	bool SetParameters(const vnl_vector<double> &p);
 	/** Add another univariate PDF */
@@ -204,7 +218,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(UniformBoxPDF,MultivariatePDF);
 	itkNewMacro(UniformBoxPDF);
-	std::string GetPDFName() {return "UniformBoxPDF";}
+	std::string GetPDFName() const {return "UniformBoxPDF";}
 
 	/** Set the box in which to draw variables 
 	* dimension of the vector must be pair, and formatted as [min_d1 max_d1 min_d2 max_d2...]
@@ -248,9 +262,21 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(IndependentEulerRotationsPDFs,MultivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "IndependentEulerRotationsPDFs";}
+	std::string GetPDFName() const {return "IndependentEulerRotationsPDFs";}
 
 	enum ROTATIONAROUND { X_AXIS, Y_AXIS, Z_AXIS };
+
+
+	void PrintInfo(std::ostream & os, itk::Indent indent = 0) const { 
+		os << indent << this->GetPDFName() << " ( ";
+		if (!m_univ_pdfs.empty()) {
+			os << m_univ_pdfs[0]->GetPDFName() << "(axis " << m_rotation_axis[0] << ")";
+			for (unsigned i=1 ; i<m_univ_pdfs.size() ; i++) {
+				os << ", " << m_univ_pdfs[i]->GetPDFName() << "(axis " << m_rotation_axis[i] << ")";
+			}				
+		}
+		os << " ) with parameters: " << GetParameters() << std::endl; 
+	}
 
 	/** Around which axis to rotate, and associated density */
 	bool SetParameters(const vnl_vector<double> &p);
@@ -306,7 +332,18 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(MultivariateMixturePDF,MultivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "MultivariateMixturePDF";}
+	std::string GetPDFName() const {return "MultivariateMixturePDF";}
+
+	void PrintInfo(std::ostream & os, itk::Indent indent = 0) const { 
+		os << indent << GetPDFName() << " ( ";
+		if (!m_multiv_pdfs.empty()) {
+			os << m_multiv_pdfs[0]->GetPDFName() << "(" << m_weights[0] << ")";
+			for (unsigned i=1 ; i<m_multiv_pdfs.size() ; i++) {
+				os << ", " << m_multiv_pdfs[i]->GetPDFName() << "(" << m_weights[i] << ")";
+			}				
+		}
+		os << " ) with parameters: " << GetParameters() << std::endl; 
+	}
 
 	bool SetParameters(const vnl_vector<double> &p);
 

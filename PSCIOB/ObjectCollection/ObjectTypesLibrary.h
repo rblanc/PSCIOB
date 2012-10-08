@@ -71,7 +71,7 @@ public:
 	typedef itk::LightObject				Superclass;
 	typedef itk::SmartPointer<Self>			Pointer;
 	/** Run-time type information (and related methods). */
-	itkTypeMacro(ObjectTypesLibrary,itk::LightObject);
+	itkTypeMacro(ObjectTypesLibrary, itk::LightObject);
 	itkNewMacro(Self);
 	
 	static const unsigned int Dimension = TObject::Dimension;
@@ -96,11 +96,11 @@ public:
 	void Reset() {m_sumWeights = 0;m_library.clear();}
 
 	/** Print info into a stream */
-	void PrintInfo(std::ostream & os, itk::Indent indent = 0) const;
+	void PrintInfo(std::ostream & os, itk::Indent indent = 0, bool printPDF = false) const;
 
 	/** Get properties */
-	unsigned int GetNumberOfEntries()		const			{ return m_library.size(); }
-	ObjectTypesCollectionType* GetLibrary() const			{ return const_cast<ObjectTypesCollectionType*>(&m_library); }
+	unsigned int GetNumberOfEntries()		const          { return m_library.size(); }
+	ObjectTypesCollectionType* GetLibrary() const          { return const_cast<ObjectTypesCollectionType*>(&m_library); }
 	
 	/** */
 	LibraryEntryType* GetObjectEntry(unsigned int i) const { 
@@ -153,8 +153,7 @@ public:
 	/** checks if typeid of the input is the same as that of the reference object (2nd) */
 	inline bool TestSameTypeAsEntry(ObjectType *object, unsigned entryIndex) {	
 		if ( typeid(*object)==typeid( *m_library[entryIndex].objectSample.GetPointer() ) ) {
-			//if this is not an ambiguous type, than both objects are really of the same type.
-			if (!m_library[entryIndex].isAmbiguous) return false; 
+			if (!m_library[entryIndex].isAmbiguous) return true; //if this is not an ambiguous type, than both objects are really of the same type.
 			
 			//else, need to resolve the ambiguity...
 			PoseTransformedBinaryShapeType* tmp1 = dynamic_cast<PoseTransformedBinaryShapeType*>(object);

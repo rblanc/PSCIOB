@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 		sceneGenerator.SetNoiseSeed(rndSeed);
 
 		Write2DGreyLevelRescaledImageToFile<Example_Ellipses2D_Synthese::ImageType>("ReferenceImage.png", sceneGenerator.GetImage());
-std::cout<<"Testing ForceBiased ellipse generation and exiting prematurely..."<<std::endl;
+std::cout<<"Testing ForceBiased ellipse generation and exiting prematurely the example..."<<std::endl;
 return 1;
 		/*
 		* LOAD THE INPUT IMAGE

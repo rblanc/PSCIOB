@@ -198,8 +198,8 @@ void Example_Ellipses2D_Synthese::GenerateScene_0() {
 void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	m_scene = SceneType::New();
 	vnl_vector<double> sceneBBox(4); 
-	sceneBBox(0) = -300; sceneBBox(1) = 300;
-	sceneBBox(2) = -300; sceneBBox(3) = 300;
+	sceneBBox(0) = -1000; sceneBBox(1) = 1000;
+	sceneBBox(2) = -1000; sceneBBox(3) = 1000;
 
 	m_scene->SetPhysicalDimensions(sceneBBox);
 
@@ -209,10 +209,10 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	ObjectType::Pointer object = ObjectType::New();
 	psciob::UniformBoxPDF::Pointer uniformTransPDF = psciob::UniformBoxPDF::New();
 	uniformTransPDF->SetBox(sceneBBox);
-	psciob::UniformPDF::Pointer    uniformRadiusPDF= psciob::UniformPDF::New();
-	uniformRadiusPDF->SetParameters(3, 10);
+	psciob::NormalPDF::Pointer    uniformRadiusPDF= psciob::NormalPDF::New();
+	uniformRadiusPDF->SetParameters(6.5, 1);//uniformRadiusPDF->SetParameters(3, 10);
 	psciob::UniformPDF::Pointer    uniformElongPDF = psciob::UniformPDF::New();
-	uniformElongPDF->SetParameters(0.25, 1);
+	uniformElongPDF->SetParameters(0.25, 0.75);
 	psciob::UniformPDF::Pointer    uniformAnglePDF = psciob::UniformPDF::New();
 	uniformAnglePDF->SetParameters(0, 2.0*PI);
 
@@ -220,6 +220,7 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	ellipseGenerationPDF->AddMultivariatePDF(uniformTransPDF); ellipseGenerationPDF->AddUnivariatePDF(uniformRadiusPDF);
 	ellipseGenerationPDF->AddUnivariatePDF(uniformElongPDF);   ellipseGenerationPDF->AddUnivariatePDF(uniformAnglePDF);
 
+	ellipseGenerationPDF->Initialize(10);
 	m_scene->GetObjectTypesLibrary()->SetObjectPDF(typeCode, psciob::PDF_OBJECTGENERATIONPRIOR, ellipseGenerationPDF);
 
 	////a few ellipses ... to test things are working fine
@@ -244,7 +245,7 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	//sampleEllipse->SetParameters(par);	m_scene->AddObject( sampleEllipse );
 
 	//1000 random ellipses
-	for (unsigned i=0 ; i<1500 ; i++) {
+	for (unsigned i=0 ; i<16000 ; i++) {
 		m_scene->AddObject(m_scene->GetObjectTypesLibrary()->GenerateNewRandomObject(typeCode));
 	}
 
@@ -262,7 +263,8 @@ void Example_Ellipses2D_Synthese::GenerateScene_1() {
 	fbAlgo->SetScene(m_scene);
 	fbAlgo->GetMovementManager()->SetTranslationFactor( 1 ); //unit is the pixel...
 	fbAlgo->GetMovementManager()->SetScalingFactor(0.999);
-	fbAlgo->GetMovementManager()->SetRotationFactor(0.2);
+	fbAlgo->GetMovementManager()->SetRotationFactor(0.05);
 	fbAlgo->IterateUntilConvergence(true);
 
+	m_scene->SaveSceneToFile("FBEllipses_Scene.txt");
 }

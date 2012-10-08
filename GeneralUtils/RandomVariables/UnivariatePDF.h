@@ -74,7 +74,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(UniformIntegerUnivariatePDF,IntegerUnivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "UniformIntegerUnivariatePDF";}
+	std::string GetPDFName() const {return "UniformIntegerUnivariatePDF";}
 
 	/** Set minimum and maximum values */
 	bool SetParameters(const vnl_vector<double> &p);
@@ -108,7 +108,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(PoissonPDF,IntegerUnivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "PoissonPDF";}
+	std::string GetPDFName() const {return "PoissonPDF";}
 
 	bool SetParameters(const vnl_vector<double> &p);
 	bool SetLambda(long lambda = 1);
@@ -169,7 +169,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(DiracPDF,UnivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "DiracPDF";}
+	std::string GetPDFName() const {return "DiracPDF";}
 
 	/** position of the dirac impulsion*/
 	bool SetParameters(const vnl_vector<double> &p);
@@ -201,7 +201,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(NormalPDF,UnivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "NormalPDF";}
+	std::string GetPDFName() const {return "NormalPDF";}
 
 	/** Specify the mean and variance of the distribution */
 	bool SetParameters(const vnl_vector<double> &p);
@@ -236,7 +236,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(UniformPDF,UnivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "UniformPDF";}
+	std::string GetPDFName() const {return "UniformPDF";}
 
 	bool SetParameters(const vnl_vector<double> &p);
 	bool SetParameters(double min=0, double max=1);
@@ -267,7 +267,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(LogNormalPDF,UnivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "LogNormalPDF";}
+	std::string GetPDFName() const {return "LogNormalPDF";}
 
 	/** SetParameters: mean and variance */
 	bool SetParameters(const vnl_vector<double> &p);
@@ -305,7 +305,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(TriangularPDF,UnivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "TriangularPDF";}
+	std::string GetPDFName() const {return "TriangularPDF";}
 
 	bool SetParameters(const vnl_vector<double> &p);
 	bool SetParameters(double min=0.0, double mode=0.5, double max=1.0);
@@ -341,7 +341,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(TrapezoidalPDF,UnivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "TrapezoidalPDF";}
+	std::string GetPDFName() const {return "TrapezoidalPDF";}
 
 	bool SetParameters(const vnl_vector<double> &p);
 	bool SetParameters(double a=0.0, double b=0.1, double c=0.9, double d=1.0);
@@ -379,7 +379,12 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(LinearCombinationPDF,UnivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "LinearCombinationPDF";}
+	std::string GetPDFName() const {return "LinearCombinationPDF";}
+
+	void PrintInfo(std::ostream & os, itk::Indent indent = 0) const { 
+		os << indent << GetPDFName() << " (" << m_x->GetPDFName() << ", " << m_a->GetPDFName() << ", "<< m_b->GetPDFName() << ") with parameters: " << GetParameters() << std::endl; 
+	}
+
 
 	/** Expected to be the concatenation of the parameters of the laws x, a, b*/
 	bool SetParameters(const vnl_vector<double> &p);
@@ -422,8 +427,20 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(UnivariateMixturePDF,UnivariatePDF);
 	itkNewMacro(Self);
-	std::string GetPDFName() {return "UnivariateMixturePDF";}
+	std::string GetPDFName() const {return "UnivariateMixturePDF";}
 	
+	void PrintInfo(std::ostream & os, itk::Indent indent = 0) const { 
+		os << indent << GetPDFName() << " ( ";
+		if (!m_univ_pdfs.empty()) {
+			os << m_univ_pdfs[0]->GetPDFName() << "(" << m_weights[0] << ")";
+			for (unsigned i=1 ; i<m_univ_pdfs.size() ; i++) {
+				os << ", " << m_univ_pdfs[i]->GetPDFName() << "(" << m_weights[i] << ")";
+			}				
+		}
+		os << " ) with parameters: " << GetParameters() << std::endl; 
+	}
+
+
 	bool SetParameters(const vnl_vector<double> &p);
 	void AddPDF(UnivariatePDF *pdf, double weight = 1.0);
 	double GetLikelihood(const double &x);

@@ -626,7 +626,7 @@ public:
 	* NOT IMPEMENTED
 	* requirements: find a way to write / read the type of object ...
 	*/
-	bool SaveSceneToFile(std::string filename);
+	void SaveSceneToFile(std::string filename);
 	// Actually, in this case, all types related to scene have already been decided... so it is unclear what should be done here... 
 	bool LoadSceneFromFile(std::string filename);
 
