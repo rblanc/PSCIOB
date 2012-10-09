@@ -45,7 +45,6 @@ namespace psciob {
 template<unsigned int VDimension, class TAppearance, class TObjectId, class TAssociatedData, class TInteractionData>
 BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>::BaseScene() : m_maxIDReached(0), m_nbObjectsInScene(0), m_totalNumberOfParameters(0),
 m_labelMapFlag(false), m_rendererFlag(false), m_labelImageFlag(false) {
-	m_appendPolyDataFilter = vtkSmartPointer<vtkAppendPolyData>::New();
 	m_addCounter=0; m_remCounter=0; m_modCounter=0;
 	//new object types library
 	m_objectTypesLibrary = ObjectTypesLibraryType::New();
@@ -68,6 +67,10 @@ m_labelMapFlag(false), m_rendererFlag(false), m_labelImageFlag(false) {
 	//normalization function for the prior, by default, it is the identity function...
 	m_priorNormalizationFunction = GPF_IdentityFunction<double, double>::New();
 
+	//initialize some filters to NULL, to make sure they can be created as requested
+	m_labelMapToLabelImageFilter = NULL;
+	m_appendPolyDataFilter = NULL;
+	
 }
 
 
@@ -611,71 +614,6 @@ BaseScene<VDimension, TAppearance, TObjectId, TAssociatedData, TInteractionData>
 	throw DeformableModelException("LoadSceneFromFile: not implemented -- TODO ");
 }
 
-
-
-
-
-//
-//
-////ModifyObjectParameters
-//template<class TObject, class TLabel>
-//bool BaseScene<TObject, TLabel>::ModifyObjectParameters(TLabel label, const vnl_vector<double> &p) {
-//	//first check wether the parameters are different at all !!
-//	if ( (p - this->GetParametersOfObject(label)).inf_norm() < TINY ) { return true; } //the parameters are exactly the same -> can exit right now!*
-//	//then test whether the proposed parameters are valid object parameters
-//	DeformableObjectType::Pointer test_object = m_objectTypesLibrary->GetObjectEntry(m_objectSet[label-1]->indexObjectType)->objectGenerator->GetNewObject();
-//	if (!test_object->SetParameters(p)) {return false;}
-//	
-//	//now, test whether the scene accepts such an object 
-//	//WARNING: there may be problems if a scene wants to forbid the insertion of an object which overlaps something...
-//	//there should be a TestObjectInsertionAcceptanceExcludingObject(test_object ,label);
-//	if (!TestObjectInsertionAcceptance(test_object)) return 0;
-//
-//	DeformableObjectType::Pointer oldObject = m_objectSet[label-1]->object;
-//	//erase the old object
-//	EraseObjectFromScene( label );
-//
-//	//invalidate the data costs
-//	m_objectSet[label-1]->priorCostFlag = false; m_objectSet[label-1]->dataCostFlag = false; m_objectSet[label-1]->offContextDataCostFlag = false; //obj->sumInteractionCostFlag=false;
-//	m_objectSet[label-1]->sensedOffContextPixelSetFlag = false;
-//
-//	m_interactionManager->RemoveObject(m_objectSet[label-1]);
-//	m_objectSet[label-1]->interactions.clear();
-//	
-//	//draw the new one in place - first update the object
-//	m_objectSet[label-1]->object = test_object;
-//
-//	DrawObjectInScene(label);
-//	m_interactionManager->AddObject(m_objectSet[label-1]); 
-//
-//	//TEST ...
-//	//updating the scene prior must be called while both objects are available...
-//	m_scenePrior->Update_ModifyingObject(oldObject, m_objectSet[label-1]->object);
-//
-//	return true;
-//}
-//
-
-
-
-//
-////write a simple vtk representation from scratch each time the function is called; object deletion would be difficult to handle otherwise
-//template<class TObject, class TLabel>
-//void BaseScene<TObject, TLabel>::WriteSimpleVTKRepresentation(std::string filename) {
-//	vtkSmartPointer<vtkPolyData> tmpPolyData;
-//	vtkSmartPointer<vtkAppendPolyData> appendPolyDataFilter = vtkSmartPointer<vtkAppendPolyData>::New();
-//	appendPolyDataFilter->SetNumberOfInputs(m_nbObjectsInSceneInScene);
-//	appendPolyDataFilter->SetUserManagedInputs(m_nbObjectsInSceneInScene);
-//
-//	for (unsigned i=0 ; i<m_nbObjectsInSceneInScene ; i++) {
-//		tmpPolyData = m_objectSet[ m_objectLabels[i]-1 ]->object->GetObjectAsVTKPolyData();
-//		//appendPolyDataFilter->SetInputByNumber(i, tmpPolyData);
-//		appendPolyDataFilter->AddInput(tmpPolyData);
-//	}
-//
-//	appendPolyDataFilter->Update();
-//	WriteMirrorPolyDataToFile(filename, appendPolyDataFilter->GetOutput());
-//}
 
 
 //

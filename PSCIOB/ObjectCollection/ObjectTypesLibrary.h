@@ -99,8 +99,8 @@ public:
 	void PrintInfo(std::ostream & os, itk::Indent indent = 0, bool printPDF = false) const;
 
 	/** Get properties */
-	unsigned int GetNumberOfEntries()		const          { return m_library.size(); }
-	ObjectTypesCollectionType* GetLibrary() const          { return const_cast<ObjectTypesCollectionType*>(&m_library); }
+	unsigned int GetNumberOfEntries()       const   { return m_library.size(); }
+	ObjectTypesCollectionType* GetLibrary() const   { return const_cast<ObjectTypesCollectionType*>(&m_library); }
 	
 	/** */
 	LibraryEntryType* GetObjectEntry(unsigned int i) const { 

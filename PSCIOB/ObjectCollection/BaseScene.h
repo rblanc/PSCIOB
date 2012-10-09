@@ -549,7 +549,7 @@ public:
 	}
 
 	/** Get the itk::LabelMap representing the scene */
-	LabelMapType* GetSceneAsLabelMap() {
+	virtual LabelMapType* GetSceneAsLabelMap() {
 		if (!m_labelMapFlag) {
 			m_labelMap->ClearLabels();
 			m_labelMap->SetRegions( m_sceneImageRegion );
@@ -569,7 +569,8 @@ public:
 
 
 	/** Get a single vtkPolyData representing the scene, appending all entries */
-	vtkPolyData* GetSceneAsVTKPolyData() {
+	virtual vtkPolyData* GetSceneAsVTKPolyData() {
+		if (!m_appendPolyDataFilter) m_appendPolyDataFilter = vtkSmartPointer<vtkAppendPolyData>::New();
 		m_appendPolyDataFilter->RemoveAllInputs();
 		for (unsigned i=0 ; i<m_arrayObjects.size() ; i++) {
 			if ( m_arrayObjects[i].id != 0 ) {
@@ -604,20 +605,19 @@ public:
 	}
 	
 	/** */
-	LabelImageType* GetSceneAsLabelImage() {
+	virtual LabelImageType* GetSceneAsLabelImage() {
 		if (!m_labelImageFlag) {			
 			GetSceneAsLabelMap(); //make sure the label map is uptodate
-			typedef itk::LabelMapToLabelImageFilter< LabelMapType, LabelImageType> LabelMapToLabelImageFilterType;
-			LabelMapToLabelImageFilterType::Pointer labelMapToLabelImageFilter = LabelMapToLabelImageFilterType::New();
-	
-			labelMapToLabelImageFilter->SetInput( m_labelMap );
-			labelMapToLabelImageFilter->Update();
-			m_labelImage = labelMapToLabelImageFilter->GetOutput();
+			if (!m_labelMapToLabelImageFilter) m_labelMapToLabelImageFilter = LabelMapToLabelImageFilterType::New();
+			m_labelMapToLabelImageFilter->SetInput( m_labelMap );
+			m_labelMapToLabelImageFilter->Update();
+			m_labelImage = m_labelMapToLabelImageFilter->GetOutput();
 
 			m_labelImageFlag = true;
 		}
 		return m_labelImage.GetPointer();
 	}
+
 
 	/** Opens a window for interactive visualization of the scene */
 	void InteractiveSceneVisualization();
@@ -680,10 +680,10 @@ protected:
 	unsigned int m_totalNumberOfParameters;
 
 	vnl_vector<double> m_sceneBBox;
-	typename BinaryImageType::RegionType	m_sceneImageRegion;
-	typename BinaryImageType::SpacingType	m_sceneSpacing;
-	typename BinaryImageType::PointType		m_sceneOrigin;
-	typename BinaryImageType::SizeType		m_sceneSize;
+	typename BinaryImageType::RegionType  m_sceneImageRegion;
+	typename BinaryImageType::SpacingType m_sceneSpacing;
+	typename BinaryImageType::PointType   m_sceneOrigin;
+	typename BinaryImageType::SizeType    m_sceneSize;
 
 	typename LabelMapType::Pointer      m_labelMap;      bool m_labelMapFlag; //don't forget to invalidate it in DrawObject/EraseObject in the corresponding child classes, maintained by the LabelMapScene but not by the VTKScene
 	vtkSmartPointer<vtkRenderer>        m_renderer;      bool m_rendererFlag; //don't forget to invalidate it in DrawObject/EraseObject in the corresponding child classes, maintained by the VTKScene but not by the LabelMapScene
@@ -691,6 +691,9 @@ protected:
 	typename BinaryImageType::Pointer   m_binaryImage;   bool m_binaryImageFlag;
 	typename LabelImageType::Pointer    m_labelImage;    bool m_labelImageFlag;
 	//typename TexturedImageType::Pointer m_texturedImage; bool m_texturedImageFlag;
+
+	typedef itk::LabelMapToLabelImageFilter< LabelMapType, LabelImageType> LabelMapToLabelImageFilterType;
+	typename LabelMapToLabelImageFilterType::Pointer m_labelMapToLabelImageFilter;
 
 	SceneBoundaryConditionCode m_BoundaryConditionManagement; //this should also affect the interaction manager!
 	SceneObjectInsertionPolicyCode m_insertionPolicy;

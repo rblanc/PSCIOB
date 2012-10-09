@@ -95,7 +95,7 @@ public:
 	virtual bool SetParameters(const vnl_vector<double>& p) = 0;
 
 	/** Get PDF Parameters */
-	const vnl_vector<double>& GetParameters() const { return m_params; }
+	virtual const vnl_vector<double>& GetParameters() const { return m_params; }
 
 protected:
 	PDFBase();

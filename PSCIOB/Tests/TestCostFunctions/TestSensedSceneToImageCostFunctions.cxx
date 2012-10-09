@@ -89,7 +89,7 @@ void GenerateReferenceDiskImage() {
 	SensorType::Pointer sensor2D = SensorType::New();
 	sensor2D->SetScene(scene2D);
 
-	Write2DGreyLevelRescaledImageToFile<Image2DType>("referenceDiskImage.png", sensor2D->GetOutput());
+	Write2DGreyLevelRescaledImageToFile<Image2DType>("referenceDiskImage.png", sensor2D->GetOutputImage());
 	
 	Scene2DType::LabelMapType::Pointer labelMap = Scene2DType::LabelMapType::New();
 	std::cout<<"getting off context labelmap"<<std::endl;
@@ -164,7 +164,7 @@ t0=clock();
 	std::cout<<"measuring the cost again, with a worst state..."<<std::endl;
 	std::cout<<"value = "<<costFunction->GetValue()<<std::endl;
 std::cout<<"  time to add 2 objects and get the value again: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;		
-	Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testImage.png", sensor3D->GetOutput());
+	Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testImage.png", sensor3D->GetOutputImage());
 
 
 	//image-based term
@@ -189,7 +189,7 @@ std::cout<<"  time to add 2 objects and get the value again: "<<(clock()-t0)/((d
 		if (i==0) {
 			std::cout<<"single object metric: "<<val<<std::endl;
 			std::cout<<"1-params of object 3: "<<scene3D->GetParametersOfObject(3)<<std::endl;
-			Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testImage_1.png", sensor3D->GetOutput());
+			Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testImage_1.png", sensor3D->GetOutputImage());
 			Write2DGreyLevelRescaledImageToFile<WholeImageCostFunctionType::ReferenceImageType>("testImage_ref1.png", costFunction->GetInterpolatedReferenceImage());
 		}
 
@@ -200,7 +200,7 @@ std::cout<<"  time to add 2 objects and get the value again: "<<(clock()-t0)/((d
 		if (i==0) {
 			std::cout<<"single object metric: "<<val<<std::endl;
 			std::cout<<"2-params of object 3: "<<scene3D->GetParametersOfObject(3)<<std::endl;
-			Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testImage_2.png", sensor3D->GetOutput());
+			Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testImage_2.png", sensor3D->GetOutputImage());
 			Write2DGreyLevelRescaledImageToFile<WholeImageCostFunctionType::ReferenceImageType>("testImage_ref2.png", costFunction->GetInterpolatedReferenceImage());
 		}
 		if (i==10) std::cout<<"10 iterations, after "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;

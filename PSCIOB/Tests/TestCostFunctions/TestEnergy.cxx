@@ -96,7 +96,7 @@ void GenerateReferenceDiskImage() {
 	SensorType::Pointer sensor2D = SensorType::New();
 	sensor2D->SetScene(scene2D);
 
-	Write2DGreyLevelRescaledImageToFile<Image2DType>("referenceDiskImage.png", sensor2D->GetOutput());
+	Write2DGreyLevelRescaledImageToFile<Image2DType>("referenceDiskImage.png", sensor2D->GetOutputImage());
 	
 	Scene2DType::LabelMapType::Pointer labelMap = Scene2DType::LabelMapType::New();
 	std::cout<<"getting off context labelmap"<<std::endl;

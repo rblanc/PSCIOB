@@ -102,7 +102,7 @@ protected:
 	typedef itk::ImageRegionConstIterator<ImageType> IteratorType;
 	double ComputeGlobalPrior_Internal() {
 		//first, compute the density
-		ImageType::Pointer img = m_sensor->GetLabelOutput();
+		ImageType::Pointer img = m_sensor->GetOutputImageLabelMap();
 		IteratorType it(img, img->GetLargestPossibleRegion());
 		unsigned int n_on=0, n_total = img->GetLargestPossibleRegion().GetNumberOfPixels();
 		for ( it.GoToBegin() ; !it.IsAtEnd() ; ++it ) { if (it.Get()!=0) n_on++; }

@@ -49,12 +49,16 @@ namespace psciob {
 /**
 * \class SimpleSEMSensor
 * \brief SimpleSEMSensor from a 3D scene, generates a 2D image => parallel / projective view, etc...
-* uses a VTK camera
+* uses a VTK camera ; the field of view is automatically adjusted to look at the whole scene
 *	
-* the direction is either HORIZONTAL (default), SAGITTAL or CORONAL
+* the sensor orientation is either HORIZONTAL (default), SAGITTAL or CORONAL (1st pose param)
+* the direction is either toward positive (p1>0, default) or negative values (p2<=0) in the given orientation (2nd pose param)
+* the sensor position in physical coordinates (default: lowest scene bbox value).
+* 
 * the default appearance function is decreasing exponentially (ExpDecrFunction) with initial parameter value 250
+
 *
-* TODO: this seem to be broken... check the whole class
+* \TODO: this calss is broken... check the whole image generation processes, and also update them to account for the full set of pose parameters
 *
 */
 
@@ -63,7 +67,7 @@ namespace psciob {
 template<class TScene, class TOutputImage>
 class SimpleSEMSensor : public ImageSensor_Base<TScene, TOutputImage> { 
 protected:
-	static const unsigned int m_nbOrientationParams = 1;	//code for the direction (horizontal/sagittal/coronal)
+	static const unsigned int m_nbPoseParams = 3;	//code for the direction (horizontal/sagittal/coronal) 
 	static const unsigned int m_nbDistortionParams  = 0;	//no distortion
 	static const unsigned int m_nbNoiseParams		= 0;	//no noise
 	static const unsigned int m_nbResolutionParams  = 0;	//no resolution params ~> best would be to set the requested resolution, and an interpolator rather than a set of parameters...
@@ -77,9 +81,14 @@ public:
 	itkTypeMacro(SimpleSEMSensor, ImageSensor_Base);
 	itkNewMacro(Self);
 
+	/** Set the scene, connect scene&sensor ; and set the default sensor position */
+	void SetScene(SceneType *scene) {
+		Superclass::SetScene(scene);
+		if (m_position!=0) SetPosition(scene->GetSceneBoundingBox()(2*m_dirAxis2));
+	}
 
-	/** One orientation parameters */
-	unsigned int GetNumberOfOrientationParameters() { return m_nbOrientationParams; } 
+	/** number of pose parameters */
+	unsigned int GetNumberOfPoseParameters() { return m_nbPoseParams; } 
 	/** No distortion parameters */
 	unsigned int GetNumberOfDistortionParameters()	{ return m_nbDistortionParams; }
 	/** No noise parameters */
@@ -88,18 +97,25 @@ public:
 	unsigned int GetNumberOfResolutionParameters()	{ return m_nbResolutionParams; }
 
 	/** Set the direction: Generic interface */ 
-	bool SetOrientationParameters(vnl_vector<double> p) {
-		if (p.size()!=GetNumberOfOrientationParameters()) return false;
-		if ( fabs( p(0) ) <TINY) { SetObservationDirectionType(HORIZONTAL);return true;}
-		if ( fabs(p(0)-1) <TINY) { SetObservationDirectionType(SAGITTAL);  return true;}
-		if ( fabs(p(0)-2) <TINY) { SetObservationDirectionType(CORONAL);   return true;}
-		return false; //
+	bool SetPoseParameters(vnl_vector<double> p) {
+		if (p.size()!=GetNumberOfPoseParameters()) return false;
+		//1st param: code corresponding to the orientation
+		if ( fabs( p(0) ) <TINY) { SetObservationDirectionType(HORIZONTAL);}
+		else if ( fabs(p(0)-1) <TINY) { SetObservationDirectionType(SAGITTAL);}
+		else if ( fabs(p(0)-2) <TINY) { SetObservationDirectionType(CORONAL);}
+		else return false; //
+		//2nd param: direction of view
+		SetOrientation(p(1));
+		//3rd param: position of the sensor plane
+		SetPosition(p(2));		
+		return true;
 	}
 
 	/** Set the direction, specific to this class : HORIZONTAL / SAGITTAL / CORONAL */ 
 	void SetObservationDirectionType(ObservationDirectionType dir)	{
-		m_orientationParams(0) = dir ; m_orientationFlag=true;
+		m_poseParams(0) = dir ; m_orientationFlag=true;
 		if (m_direction!=dir) { m_direction = dir; Modified(); } //if nothing really changed, don't set raise the ->Modified() flag
+		m_poseParams(0) = m_direction;
 		switch(m_direction) { // 0 = first axis in 3D = X ; 1: second axis => Y ; Z = 3rd axis => Z
 		case SAGITTAL:	 m_dirAxis0=1;m_dirAxis1=2;m_dirAxis2=0; break; //if the observation direction is SAGITTAL, then the axes of the output image correspond to the (y,z) plane in 3D
 		case CORONAL:	 m_dirAxis0=0;m_dirAxis1=2;m_dirAxis2=1; break; //CORONAL -> (x,z) plane
@@ -108,6 +124,20 @@ public:
 		}
 	}
 	ObservationDirectionType GetObservationDirectionType()			{return m_direction;}	
+	/** Set the orientation: view toward positive, or negative values in the given axis */
+	void SetOrientation(double o) {
+		if (o>0) { if (m_orientation!= 1) { m_orientation= 1; Modified(); } }
+		else     { if (m_orientation!=-1) { m_orientation=-1; Modified(); }	}
+		m_poseParams(1) = m_orientation;
+	}
+	double GetOrientation() {return m_orientation;}
+	/** SetSensorPosition along the normal axis */
+	void SetPosition(double d) {
+		if (fabs(m_position-d)>=TINY) { m_position=d; Modified(); }
+		m_poseParams(2) = m_position;
+	}
+	double GetPosition() {return m_position;}
+
 
 
 	/** bounding box of the sensed scene */
@@ -734,10 +764,18 @@ public:
 		return true;
 	}
 
+	/** Get 3D Index for horizontal direction of the output */
+	unsigned GetOutputHorizontalDimensionIndex() {return m_dirAxis0;}
+	/** Get 3D Index for vertical direction of the output */
+	unsigned GetOutputVerticalDimensionIndex() {return m_dirAxis1;}
+	/** Get 3D Index for in-depth direction of the output */
+	unsigned GetOutputDepthDimensionIndex() {return m_dirAxis2;}
+
 protected:
 	SimpleSEMSensor() : ImageSensor_Base() {
 		m_direction = HORIZONTAL; m_dirAxis0=0;m_dirAxis1=1;m_dirAxis2=2;
-		m_orientationParams.set_size(1); m_orientationParams(0)=m_direction;
+		m_orientation = 1; m_position = 0;
+		m_poseParams.set_size(3); m_poseParams(0)=m_direction; m_poseParams(1) = m_orientation; m_poseParams(2) = m_position;
 
 		GPF_ScExpDecrFunction<double, double>::Pointer exp_fct = GPF_ScExpDecrFunction<double, double>::New();	
 		vnl_vector<double> params(2); params(0) = 250; params(1) = 1.0/10.0;
@@ -772,6 +810,8 @@ protected:
 
 	ObservationDirectionType m_direction;
 	unsigned int m_dirAxis0, m_dirAxis1, m_dirAxis2; //maps the sensor image axes with the original scene axes ; see SetObservationDirectionType
+
+	double m_orientation, m_position;
 
 	vtkSmartPointer<vtkRenderWindow> m_renderWindow;
 	vtkSmartPointer<vtkCamera> m_camera;
@@ -1349,12 +1389,12 @@ public:
 	//if (!ITKImagesIntersectionRegions<SceneType::LabelImageType, SceneType::BinaryImageType>(sceneLabelImage, objectImage, &sceneBBRegion, &objectSceneRegion))  return 0; 
 	////get the sensed bounding box of the object, to get the region where it could possibly be on the sensed image
 	//OutputLabelImageType::RegionType objectSensedImageRegion = this->GetSensedBoundingBox( sceneBBRegion );
-	////number of visible pixels for this object: look at the GetLabelOutput()
+	////number of visible pixels for this object: look at the GetOutputLabelMap()
 	//unsigned int nbVisiblePixels = 0, nbPotentialPixels = 0;
 
 	////nbVisiblePixels: look at the sensed label image, and count how many pixels have the right label.
 	//typedef itk::ImageRegionConstIteratorWithIndex< OutputLabelImageType > SensedIteratorType;
-	//SensedIteratorType labelIt( this->GetLabelOutput(), objectSensedImageRegion );
+	//SensedIteratorType labelIt( this->GetOutputLabelMap(), objectSensedImageRegion );
 	//OutputLabelImageType::PixelType requestedLabel = objectIt->first;
 	//bool ok; InputLabelImageType::PixelType inValue;
 	//for ( labelIt.GoToBegin() ; !labelIt.IsAtEnd(); ++labelIt) { //Iterate over the pixels in the requested region of the sensed label image
