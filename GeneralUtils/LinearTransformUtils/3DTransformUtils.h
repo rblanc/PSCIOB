@@ -37,7 +37,6 @@
 #include "GeneralUtils.h"
 #include "TransformUtils.h"
 
-
 namespace psciob {
 
 
@@ -88,6 +87,17 @@ vnl_matrix<double> Get3DRotationMatrixFromQuaternion_44(const vnl_vector<double>
 void GetVectorAndAngleFromQuaternion(vnl_vector<double> &v, double &a, const vnl_vector<double> &Q);
 /** Get quaternion (w, x, y, z) from vector and angle */
 void GetQuaternionFromVectorAndAngle(const vnl_vector<double> &v, double a, vnl_vector<double> &Q);
+
+/** template function that is specialized for D=2 and D=3, though not implemented otherwise
+* It computes a new versions of the bases, such that they are both direct bases, and they are oriented as similarly as possible (direction can be reversed such that the corresponding scalar product is >0 ; last axis has priority)
+* \warning no checks are performed on the validity of the input matrices (dimension, orthonormality of entries, etc...)
+*/
+void ReOrient3DCoordinateSystems(const vnl_matrix<double> &U1, const vnl_matrix<double> &U2, vnl_matrix<double> &newU1, vnl_matrix<double> &newU2);
+
+/** Ouptuts the average 3D Orientation system of a list 
+* assumes that each rotation matrix is given as a 3*3 orthonormal matrix, where each column indicate a basis vector, and the vectors are ordered meaningfully (e.g. principal eigenvectors of the inertia matrix...)
+*/
+vnl_matrix<double> Average3DCoordinateSystems(std::vector< vnl_matrix<double> > &listRotMat);
 
 } // namespace psciob
 

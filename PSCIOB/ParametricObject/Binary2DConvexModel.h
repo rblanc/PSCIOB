@@ -57,7 +57,7 @@ public:
 	typedef itk::SmartPointer<Self>			Pointer;
 	typedef itk::SmartPointer<const Self>	ConstPointer;
 	/** Run-time type information (and related methods). */
-	itkTypeMacro(Binary2DConvexModel,BinaryDeformableModel);
+	itkTypeMacro(Binary2DConvexModel, BinaryDeformableModel);
 
 	/** Get the set of pixel occupied by the object, at the given spacing and with respect to the tightest bounding box containing the object 
 	 * Use a code specific to 2D convex polygons, requesting a list of points ordered so that each point is connected to the next (+wraparound)

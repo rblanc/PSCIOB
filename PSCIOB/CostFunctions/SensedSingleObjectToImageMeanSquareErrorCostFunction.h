@@ -77,7 +77,7 @@ public:
 	*/
 	double ComputeOffContextValue() {
 		//pointers to the images of interest
-		SensedImageType *sensedImage = m_sensor->GetOutput();
+		SensedImageType *sensedImage = m_sensor->GetOutputImage();
 		ReferenceImageType *referenceImage = this->GetInterpolatedReferenceImage();
 
 		//PixelSet of interest
@@ -111,11 +111,11 @@ public:
 	*/
 	double ComputeInContextValue() {
 		//pointers to the images of interest
-		SensedImageType *sensedImage = m_sensor->GetOutput();
+		SensedImageType *sensedImage = m_sensor->GetOutputImage();
 		ReferenceImageType *referenceImage = this->GetInterpolatedReferenceImage();
 
 		//PixelSet of interest
-		SensedLabelMapType* labelMap = m_sensor->GetLabelOutput();
+		SensedLabelMapType* labelMap = m_sensor->GetOutputLabelMap();
 		SensedLabelObjectType* labelObject = labelMap->GetLabelObject( m_requestedLabel );
 
 		//Do the real job!

@@ -54,7 +54,12 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(PDFBase, itk::LightObject);
 
-	virtual std::string GetPDFName() = 0;
+	virtual std::string GetPDFName() const = 0;
+	/** Print info into a stream 
+	* should be overloaded by composites pdfs, which are constructed by aggregating various other pdfs
+	*/
+	virtual void PrintInfo(std::ostream & os, itk::Indent indent = 0) const { os << indent << GetPDFName() << " with parameters: " << GetParameters() <<std::endl; }
+
 
 	/** Initialize the internal random variable generator against the clock time */
 	virtual void Initialize();
@@ -90,7 +95,7 @@ public:
 	virtual bool SetParameters(const vnl_vector<double>& p) = 0;
 
 	/** Get PDF Parameters */
-	virtual const vnl_vector<double>& GetParameters() {return m_params;}
+	virtual const vnl_vector<double>& GetParameters() const { return m_params; }
 
 protected:
 	PDFBase();

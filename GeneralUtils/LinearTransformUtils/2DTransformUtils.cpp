@@ -48,3 +48,21 @@ vnl_matrix<double> psciob::Get2DRotationMatrixFromAngle(double angle) {
 double psciob::GetAngleFrom2DRotationMatrix(const vnl_matrix<double> &mat) {
 	return atan2(mat(1,0),mat(0,0));
 }
+
+
+
+/** template function that is specialized for D=2 and D=3, though not implemented otherwise
+* It computes a new versions of the bases, such that they are both direct bases, and they are oriented as similarly as possible (direction can be reversed such that the corresponding scalar product is >0 ; last axis has priority)
+* \warning no checks are performed on the validity of the input matrices (dimension, orthonormality of entries, etc...)
+*/
+void psciob::ReOrient2DCoordinateSystems(const vnl_matrix<double> &U1, const vnl_matrix<double> &U2, vnl_matrix<double> &newU1, vnl_matrix<double> &newU2) {
+	newU1.set_size(2,2); newU2.set_size(2,2);
+	newU1.set_column(0, U1.get_column(1));
+	newU2.set_column(0, U2.get_column(1));
+	//now, make sure their axes tend to point in the same direction
+	double dp0 = dot_product(newU1.get_column(0), newU2.get_column(0));
+	//then, the second axis is obtained such that is is orthogonal, and form a direct basis
+	if (dp0<0) newU2.set_column(0, -newU2.get_column(0));
+	newU1(0,1) = -newU1(1,0); newU1(1,1) = newU1(0,0);
+	newU2(0,1) = -newU2(1,0); newU2(1,1) = newU2(0,0);
+}

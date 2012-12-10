@@ -139,7 +139,7 @@ protected:
 		m_filter->SetInterpolator(m_interpolator);
 		m_filter->SetDefaultPixelValue( 0 );
 
-		SensedImageType::Pointer sensedImage = m_sensor->GetOutput();
+		SensedImageType *sensedImage = m_sensor->GetOutputImage();
 
 		m_filter->SetOutputSpacing( sensedImage->GetSpacing() );
 		m_filter->SetOutputOrigin( sensedImage->GetOrigin() );

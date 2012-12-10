@@ -46,6 +46,12 @@ vnl_matrix<double> Get2DRotationMatrixFromAngle(double angle);
 /** */
 double GetAngleFrom2DRotationMatrix(const vnl_matrix<double> &mat);
 
+/** template function that is specialized for D=2 and D=3, though not implemented otherwise
+* It computes a new versions of the bases, such that they are both direct bases, and they are oriented as similarly as possible (direction can be reversed such that the corresponding scalar product is >0 ; last axis has priority)
+* \warning no checks are performed on the validity of the input matrices (dimension, orthonormality of entries, etc...)
+*/
+void ReOrient2DCoordinateSystems(const vnl_matrix<double> &U1, const vnl_matrix<double> &U2, vnl_matrix<double> &newU1, vnl_matrix<double> &newU2);
+
 
 } // namespace psciob
 

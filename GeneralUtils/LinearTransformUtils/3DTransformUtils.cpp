@@ -240,3 +240,79 @@ void psciob::GetQuaternionFromVectorAndAngle(const vnl_vector<double> &v, double
 	Q(2) = v(1) * sina;
 	Q(3) = v(2) * sina;
 }
+
+
+
+/** template function that is specialized for D=2 and D=3, though not implemented otherwise
+* It computes a new versions of the bases, such that they are both direct bases, and they are oriented as similarly as possible (direction can be reversed such that the corresponding scalar product is >0 ; last axis has priority)
+* Additionnally, the vectors from the system are expected to be produced by vnl_symmetric_eigensystem (thus by increasing eigenvalue), and returned in reverse, by decreasing eigenvalue...
+* \warning no checks are performed on the validity of the input matrices (dimension, orthonormality of entries, etc...)
+*/
+void psciob::ReOrient3DCoordinateSystems(const vnl_matrix<double> &U1, const vnl_matrix<double> &U2, vnl_matrix<double> &newU1, vnl_matrix<double> &newU2) {
+	newU1.set_size(3,3); newU2.set_size(3,3);
+	//make sure both systems are direct
+	newU1.set_column(0, U1.get_column(2)); newU1.set_column(1, U1.get_column(1)); 
+	newU2.set_column(0, U2.get_column(2)); newU2.set_column(1, U2.get_column(1)); 
+
+	//now, make sure their axes tend to point in the same direction
+	double dp0 = dot_product(newU1.get_column(0), newU2.get_column(0));
+	double dp1 = dot_product(newU1.get_column(1), newU2.get_column(1));
+
+	if (dp0<0) newU2.set_column(0, -newU2.get_column(0));
+	if (dp1<0) newU2.set_column(1, -newU2.get_column(1));
+
+	newU1.set_column(2, vnl_cross_3d( newU1.get_column(0), newU1.get_column(1)) ); 
+	newU2.set_column(2, vnl_cross_3d( newU2.get_column(0), newU2.get_column(1)) ); 
+
+	if ( (dp0==0) && (dp1==0) && dot_product(newU1.get_column(2), newU2.get_column(2))<0 ) { 
+		newU2.set_column(0, -newU2.get_column(0)); 
+		newU2.set_column(2, vnl_cross_3d( newU2.get_column(0), newU2.get_column(1)));
+	}
+
+}
+
+
+/** Ouptuts the average 3D Orientation system of a list 
+*
+*/
+vnl_matrix<double> psciob::Average3DCoordinateSystems(std::vector< vnl_matrix<double> > &listRotMat) {
+	//1: find the average main axis.
+	vnl_matrix<double> avg(3,3), refMat(3,3);
+	avg.fill(0);
+
+	//take the first object as reference, to decide on the direction of the axes.
+	refMat = listRotMat[0];
+	refMat.set_column(2, vnl_cross_3d( refMat.get_column(0), refMat.get_column(1)) );
+	const vnl_vector<double> &refU0 = refMat.get_column(0);
+	const vnl_vector<double> &refU1 = refMat.get_column(1);
+	const vnl_vector<double> &refU2 = refMat.get_column(2);
+	
+	vnl_vector<double> avgU0(3, 0), avgU1(3,0); 
+	
+	double dp0, dp1;
+	for (unsigned i=0 ; i<listRotMat.size() ; i++) {
+		dp0 = dot_product(refU0, listRotMat[i].get_column(0));
+		dp1 = dot_product(refU1, listRotMat[i].get_column(1));
+		if (dp0<0) listRotMat[i].set_column(0, -listRotMat[i].get_column(0));
+		if (dp1<0) listRotMat[i].set_column(1, -listRotMat[i].get_column(1));
+	
+		listRotMat[i].set_column(2, vnl_cross_3d( listRotMat[i].get_column(0), listRotMat[i].get_column(1)) ); 
+
+		if ( (dp0==0) && (dp1==0) && dot_product(refU2, listRotMat[i].get_column(2))<0 ) { 
+			listRotMat[i].set_column(0, -listRotMat[i].get_column(0)); 
+			listRotMat[i].set_column(2, vnl_cross_3d( listRotMat[i].get_column(0), listRotMat[i].get_column(1)));
+		}
+
+		avgU0 += listRotMat[i].get_column(0);
+		avgU1 += listRotMat[i].get_column(1);
+	}
+	avgU0.normalize();
+	avg.set_column(0, avgU0);
+
+	//project avgU1 on the plane normal to avgU0.
+	avgU1 -= dot_product(avgU0, avgU1)*avgU0;
+	avg.set_column(1, avgU1.normalize());
+
+	avg.set_column(2, vnl_cross_3d( avgU0, avgU1 ));
+	return avg;
+}

@@ -108,41 +108,41 @@ void TestOverlap_PixelSet_QuadTree() {
 	
 	scene->AddObject(object);
 	std::cout<<"Added first object to the scene..."<<std::endl;
-	nb++;name = "overlap_" + stringify(nb) + ".png"; //Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+	nb++;name = "overlap_" + stringify(nb) + ".png"; //Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	params(0) = 42.0589; params(1) =  49.9891; params(2) = 6.16854; params(3) =  0.836838; params(4) = 2.1312  ; object->SetParameters(params); scene->AddObject(object);
 	std::cout<<"Added second object to the scene..."<<std::endl;
-	nb++;name = "overlap_" + stringify(nb) + ".png"; //Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+	nb++;name = "overlap_" + stringify(nb) + ".png"; //Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	std::cout<<"Added second object to the scene..."<<std::endl;
 	params(0) = 14.0115; params(1) =  14.6685; params(2) = 4.39277; params(3) =  0.588911; params(4) = 0.799745; 	std::cout<<"Added second object to the scene..."<<std::endl;
 object->SetParameters(params); 	std::cout<<"Adding 3rd object to the scene..."<<std::endl;
 scene->AddObject(object);
 	std::cout<<"Added third object to the scene..."<<std::endl;
-	nb++;name = "overlap_" + stringify(nb) + ".png"; //Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+	nb++;name = "overlap_" + stringify(nb) + ".png"; //Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	params(0) = 18.0507; params(1) =  35.0293; params(2) = 4.00183; params(3) =  0.728091; params(4) = 1.56986 ; object->SetParameters(params); scene->AddObject(object);
 	std::cout<<"Added fourth object to the scene..."<<std::endl;
-	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	params(0) = 26.0634; params(1) =  4.9733 ; params(2) = 4.97155; params(3) =  0.633991; params(4) = 1.53275 ; object->SetParameters(params); scene->AddObject(object);
 	std::cout<<"Added fifth object to the scene..."<<std::endl;
-	sensorImage = sensor->GetOutput();
+	sensorImage = sensor->GetOutputImage();
 	std::cout<<"..toto"<<std::endl;
 	std::cout<<"size of sensor image: "<<sensorImage->GetLargestPossibleRegion().GetSize(0)<<std::endl;
 	std::cout<<"writing image..."<<std::endl;
 	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensorImage);
 	params(0) = 9.99796; params(1) =  35.083 ; params(2) = 4.03536; params(3) =  0.708747; params(4) = 1.57316 ; object->SetParameters(params); scene->AddObject(object);
 	std::cout<<"Added 6 object to the scene..."<<std::endl;
-	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	params(0) = 72.72847; params(1) =  10.0644; params(2) = 7.73396; params(3) =  0.50603 ; params(4) = 0.856896; object->SetParameters(params); scene->AddObject(object);
 	std::cout<<"Added 7 object to the scene..."<<std::endl;
-	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	params(0) = 88.7036; params(1) =  63.1676; params(2) = 3.66358; params(3) =  0.510954; params(4) = 1.83045 ; object->SetParameters(params); scene->AddObject(object);
 	std::cout<<"Added 8 object to the scene..."<<std::endl;
-	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	params(0) = 20.3914; params(1) =  49.5284; params(2) = 5.17163; params(3) =  0.721595; params(4) = 0.889653; object->SetParameters(params); scene->AddObject(object);
 	std::cout<<"Added 9 object to the scene..."<<std::endl;
-	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	params(0) = 90.3914; params(1) =  22.5284; params(2) = 5.17163; params(3) =  0.721595; params(4) = 0.889653; object->SetParameters(params); scene->AddObject(object);
 	std::cout<<"Added 10 object to the scene..."<<std::endl;
-	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+	nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 
 	std::cout<<"browsing all objects in the scene, and checking for interactions"<<std::endl;
 	for (objectIt.GoToBegin() ; !objectIt.IsAtEnd() ; ++objectIt) {
@@ -157,7 +157,7 @@ scene->AddObject(object);
 		requestedIndex = rndgen->GetIntegerVariate(scene->GetNumberOfObjects()-1);
 		objectIt.GoToBegin(); objectIt.Advance(requestedIndex); id = objectIt.GetID();
 		scene->RemoveObject(id);
-		nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+		nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	}
 
 	std::cout<<"\n\nAdding 29 random objects..."<<std::endl;
@@ -166,7 +166,7 @@ scene->AddObject(object);
 		params = scene->GetObjectTypesLibrary()->GetObjectPDF(typeCode, PDF_OBJECTGENERATIONPRIOR)->DrawSample();
 		object->SetParameters(params);
 		scene->AddObject(object);
-		nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+		nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	}
 
 	std::cout<<"\n\nModifying randomly 50 objects..."<<std::endl;
@@ -177,7 +177,7 @@ scene->AddObject(object);
 		params = scene->GetParametersOfObject(id);
 		params += scene->GetObjectTypesLibrary()->GetObjectPDF(typeCode, PDF_RANDOMWALK)->DrawSample();
 		scene->ModifyObjectParameters(id, params);
-		nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+		nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	}
 
 	std::cout<<"\n\nRemoving randomly 20 objects"<<std::endl;
@@ -185,7 +185,7 @@ scene->AddObject(object);
 		requestedIndex = rndgen->GetIntegerVariate(scene->GetNumberOfObjects()-1);
 		objectIt.GoToBegin(); objectIt.Advance(requestedIndex); id = objectIt.GetID();
 		scene->RemoveObject(id);
-		nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutput());
+		nb++;name = "overlap_" + stringify(nb) + ".png"; Write2DGreyLevelRescaledImageToFile<SensorType::OutputImageType>(name, sensor->GetOutputImage());
 	}
 
 }

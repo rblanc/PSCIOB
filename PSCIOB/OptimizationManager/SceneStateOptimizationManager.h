@@ -90,7 +90,6 @@ public:
 
 			if ( !m_scene->ModifyObjectParameters( objectIt.GetID(), objectParams ) ) {
 				//if something goes wrong, rewind all modifications... and return false
-				std::cout<<"invalid parameters - rewinding all modifications..."<<std::endl;
 				oldParams.pop_back(); --objectIt;
 				for (std::vector< vnl_vector<double> >::reverse_iterator rit = oldParams.rbegin() ; rit!=oldParams.rend() ; ++rit, --objectIt) {
 					if ( !m_scene->ModifyObjectParameters( objectIt.GetID(), *rit) ) throw DeformableModelException("SceneStateOptimizationManager::SetParameters : unable to rewing the modifications ; SHOULD NEVER HAPPEN");

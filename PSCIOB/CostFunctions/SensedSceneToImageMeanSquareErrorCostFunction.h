@@ -68,7 +68,7 @@ public:
 	double GetRawValue() {
 		double output = 0, tmp;
 
-		SensedImageType* sensedImage    = m_sensor->GetOutput();
+		SensedImageType* sensedImage    = m_sensor->GetOutputImage();
 		ReferenceImageType* referenceImage = this->GetInterpolatedReferenceImage();
 		
 		itk::ImageRegionIterator< ReferenceImageType > referenceIt( referenceImage, referenceImage->GetLargestPossibleRegion() );

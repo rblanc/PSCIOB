@@ -52,7 +52,7 @@ namespace psciob {
 template<class TScene, class TOutputImage = typename TScene::BinaryImageType>
 class SimpleUniformSensor : public ImageSensor_Base<TScene, TOutputImage> {
 protected:
-	static const unsigned int m_nbOrientationParams = 0;	//no orientation
+	static const unsigned int m_nbPoseParams = 0;	//no orientation
 	static const unsigned int m_nbDistortionParams  = 0;	//no distortion
 	static const unsigned int m_nbNoiseParams		= 0;	//no noise
 	static const unsigned int m_nbResolutionParams  = 0;	//no resolution params
@@ -71,7 +71,7 @@ public:
 
 
 	/** No orientation parameters */
-	unsigned int GetNumberOfOrientationParameters() { return m_nbOrientationParams; } 
+	unsigned int GetNumberOfPoseParameters() { return m_nbPoseParams; } 
 	/** No distortion parameters */
 	unsigned int GetNumberOfDistortionParameters()	{ return m_nbDistortionParams; }
 	/** No noise parameters */
@@ -128,11 +128,44 @@ public:
 		LabelMapToBinaryImageFilterType::Pointer labelMapToBinaryImageFilter = LabelMapToBinaryImageFilterType::New();
 		labelMapToBinaryImageFilter->SetInput( labelMap );
 		labelMapToBinaryImageFilter->SetForegroundValue( m_function->Evaluate(1) );
+		labelMapToBinaryImageFilter->SetBackgroundValue( m_backgroundValue );
 		labelMapToBinaryImageFilter->Update();
 		image = labelMapToBinaryImageFilter->GetOutput();
 
 		return true;
 	}
+
+	/** Off Context image of an object: as if it was alone in the scene 
+	* The image and label maps are expressed relative to the smallest possible region of the sensor frame (to same memory and computation time...)
+	* 	OPTIMIZATION: different possibilities for optimization
+	*  - caching the images / labelMap for each object, exploiting particular DataContainer for the scene?
+	* returns false if the object is not in the scene
+	*/
+	bool GetOffContextObjectImage(ObjectInScene *objectPtr, OutputImageType* image) {
+		if (!m_imageAllocated) AllocateOutputImage();
+		if (!objectPtr) return false;
+		//compute the bounding box of interest and the corresponding image grid
+		vnl_vector<double> roiBBox;
+		if (!IntersectionBoundingBoxes( m_scene->GetSceneBoundingBox(), objectPtr->obj->GetPhysicalBoundingBox(), &roiBBox )) return false;
+		OutputImageType::PointType origin; 
+		OutputImageType::RegionType region;
+		ITKGridImageInformationFromPhysicalBoundingBoxAndSpacing<InputDimension>(roiBBox, m_outputSpacing.GetVnlVector(), &origin, &region);
+		
+		//Compute the label map
+		OutputLabelMapType::Pointer labelMap = OutputLabelMapType::New();
+		labelMap->SetOrigin( origin ); labelMap->SetSpacing( m_outputSpacing ); labelMap->SetRegions( region );
+		CastLabelMapToOtherFrame<ObjectLabelMapType, OutputLabelMapType>(objectPtr->obj->GetObjectAsLabelMap(), labelMap);
+
+		LabelMapToBinaryImageFilterType::Pointer labelMapToBinaryImageFilter = LabelMapToBinaryImageFilterType::New();
+		labelMapToBinaryImageFilter->SetInput( labelMap );
+		labelMapToBinaryImageFilter->SetForegroundValue( m_function->Evaluate(1) );
+		labelMapToBinaryImageFilter->SetBackgroundValue( m_backgroundValue );
+		labelMapToBinaryImageFilter->Update();
+		image = labelMapToBinaryImageFilter->GetOutput();
+
+		return true;
+	}
+
 	//	//1: dimension the output image
 	//	//Get the bounding box containing the object in the scene
 	//	vnl_vector<double> objectInSceneBBox(2*InputDimension);
@@ -229,6 +262,7 @@ protected:
 		// TEST the ~ set requested region... 
 		m_labelMapToBinaryImageFilter->SetInput( m_outputLabelMap );
 		m_labelMapToBinaryImageFilter->SetForegroundValue( m_function->Evaluate(1) );
+		m_labelMapToBinaryImageFilter->SetBackgroundValue( m_backgroundValue );
 
 		m_labelMapToBinaryImageFilter->Update();
 

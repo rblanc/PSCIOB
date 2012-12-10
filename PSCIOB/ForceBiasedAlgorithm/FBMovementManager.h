@@ -40,8 +40,6 @@
 
 #include "2DTransformUtils.h"
 #include "3DTransformUtils.h"
-#include "vnl/vnl_cross.h"
-#include <vnl/algo/vnl_symmetric_eigensystem.h>
 
 namespace psciob {
 
@@ -138,7 +136,6 @@ public:
 			V2 = m_scene->GetObject(id2)->obj->GetObjectInertiaEigenVectors();
 
 			vnl_matrix<double> m1, m2;
-			double dp0, dp1;
 
 			vnl_matrix<double> RotMat_Full, RotMat_Part;
 			double ang;
@@ -146,60 +143,17 @@ public:
 
 			switch(Dimension) {
 				case 2: //just interpolate the angle that brings both systems in alignement
-					m1.set_size(2,2); m2.set_size(2,2);
-					m1.set_column(0, V1.get_column(1));
-					m2.set_column(0, V2.get_column(1));
-					//now, make sure their axes tend to point in the same direction
-					dp0 = dot_product(m1.get_column(0), m2.get_column(0));
-					if (id1<id2) {
-						if (dp0<0) m2.set_column(0, -m2.get_column(0));
-						m1(0,1) = -m1(1,0); m1(1,1) = m1(0,0);
-						m2(0,1) = -m2(1,0); m2(1,1) = m2(0,0);
-					}
-					else {
-						if (dp0<0) m1.set_column(0, -m1.get_column(0));
-						m1(0,1) = -m1(1,0); m1(1,1) = m1(0,0);
-						m2(0,1) = -m2(1,0); m2(1,1) = m2(0,0);
-					}
-						
+					if (id1<id2) ReOrient2DCoordinateSystems(V1, V2, m1, m2);
+					else         ReOrient2DCoordinateSystems(V2, V1, m2, m1);
+
 					RotMat_Full = m2 * m1.transpose();
 					//now, interpolate the rotation
 					ang = psciob::GetAngleFrom2DRotationMatrix( RotMat_Full );
 					RotMat_Part = psciob::Get2DRotationMatrixFromAngle( -m_rotationFactor*ang );
 					break;
 				case 3:
-					m1.set_size(3,3); m2.set_size(3,3);
-					//make sure both systems are direct
-					m1.set_column(0, V1.get_column(2)); m1.set_column(1, V1.get_column(1)); 
-					m2.set_column(0, V2.get_column(2)); m2.set_column(1, V2.get_column(1)); 
-
-					//now, make sure their axes tend to point in the same direction
-					dp0 = dot_product(m1.get_column(0), m2.get_column(0));
-					dp1 = dot_product(m1.get_column(1), m2.get_column(1));
-					if (id1<id2) { //flip the axis of the object with larger id (to be consistent when processing the interaction from the other side id2->id1)
-						if (dp0<0) m2.set_column(0, -m2.get_column(0));
-						if (dp1<0) m2.set_column(1, -m2.get_column(1));
-
-						m1.set_column(2, vnl_cross_3d( m1.get_column(0), m1.get_column(1)) ); 
-						m2.set_column(2, vnl_cross_3d( m2.get_column(0), m2.get_column(1)) ); 
-
-						if ( (dp0==0) && (dp1==0) && dot_product(m1.get_column(2), m2.get_column(2))<0 ) { 
-							m2.set_column(0, -m2.get_column(0)); 
-							m2.set_column(2, vnl_cross_3d( m2.get_column(0), m2.get_column(1)));
-						}
-					}
-					else {
-						if (dp0<0) m1.set_column(0, -m1.get_column(0));
-						if (dp1<0) m1.set_column(1, -m1.get_column(1));
-
-						m1.set_column(2, vnl_cross_3d( m1.get_column(0), m1.get_column(1)) ); 
-						m2.set_column(2, vnl_cross_3d( m2.get_column(0), m2.get_column(1)) ); 
-
-						if ( (dp0==0) && (dp1==0) && dot_product(m1.get_column(2), m2.get_column(2))<0 ) { 
-							m1.set_column(0, -m1.get_column(0)); 
-							m1.set_column(2, vnl_cross_3d( m1.get_column(0), m1.get_column(1)));
-						}
-					}
+					if (id1<id2) ReOrient3DCoordinateSystems(V1, V2, m1, m2);
+					else         ReOrient3DCoordinateSystems(V2, V1, m2, m1);
 
 					RotMat_Full = m2 * m1.transpose();
 					//use quaternion to get the axis of rotation, and angle

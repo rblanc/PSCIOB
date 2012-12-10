@@ -48,6 +48,8 @@
 
 #include <vnl/algo/vnl_matrix_inverse.h>
 #include <vnl/algo/vnl_determinant.h>
+#include "vnl/vnl_cross.h"
+#include <vnl/algo/vnl_symmetric_eigensystem.h>
 
 
 namespace psciob {

@@ -96,7 +96,7 @@ void GenerateReferenceEllipsesImage() {
 	SensorType::Pointer sensor2D = SensorType::New();
 	sensor2D->SetScene(scene2D);
 
-	Write2DGreyLevelRescaledImageToFile<Image2DType>("referenceEllipsesImage.png", sensor2D->GetOutput());
+	Write2DGreyLevelRescaledImageToFile<Image2DType>("referenceEllipsesImage.png", sensor2D->GetOutputImage());
 	
 }
 
@@ -166,10 +166,10 @@ clock_t t0=clock();
 	//by default, with a HORIZONTAL view, and a exponentially decreasing appearance function, with max = 250 (decreases with the distance to the sensor)
 
 	std::cout<<"writing the sensed image: testSensed3DScene.png"<<std::endl;
-	Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testSensed3DScene.png", sensor3D->GetOutput());
+	Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testSensed3DScene.png", sensor3D->GetOutputImage());
 	typedef itk::LabelMapToLabelImageFilter< SEMSensorType::OutputLabelMapType, SEMSensorType::OutputLabelImageType> LabelMapTo2DLabelImageFilterType;
 	LabelMapTo2DLabelImageFilterType::Pointer m_labelMapTo2DLabelImageFilter = LabelMapTo2DLabelImageFilterType::New();
-	m_labelMapTo2DLabelImageFilter->SetInput( sensor3D->GetLabelOutput() );
+	m_labelMapTo2DLabelImageFilter->SetInput( sensor3D->GetOutputLabelMap() );
 	m_labelMapTo2DLabelImageFilter->Update();
 	Write2DGreyLevelRescaledImageToFile<SEMSensorType::OutputLabelImageType>("testSensed3DScene_LabelImage.png", m_labelMapTo2DLabelImageFilter->GetOutput());
 
@@ -287,7 +287,7 @@ clock_t t0=clock();
 	//by default, with a HORIZONTAL view, and a exponentially decreasing appearance function, with max = 250 (decreases with the distance to the sensor)
 
 	std::cout<<"writing the sensed image"<<std::endl;
-	Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testSensed3DScene.png", sensor3D->GetOutput());
+	Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testSensed3DScene.png", sensor3D->GetOutputImage());
 
 
 	//typedef SensedSingleObjectInOutCoherence<Scene3DType, Image2DUCharType, Image2DFloatType> SingleObjectCostFunctionType;
@@ -386,7 +386,7 @@ clock_t t0=clock();
 	
 
 	std::cout<<"writing the sensed image"<<std::endl;
-	Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testSensed3DScene.png", sensor3D->GetOutput());
+	Write2DGreyLevelRescaledImageToFile<Image2DFloatType>("testSensed3DScene.png", sensor3D->GetOutputImage());
 
 	//parameters prior
 	UniformBoxPDF::Pointer uniformTransPDF = UniformBoxPDF::New(); uniformTransPDF->SetBox(sceneBBox);
@@ -479,7 +479,7 @@ void TestSceneEnergy() {
 	typedef SensedSingleObjectInOutContrast<Scene2DType, Image2DType, Image2DType> SingleObjectCostFunctionType;
 	SingleObjectCostFunctionType::Pointer costFunction = SingleObjectCostFunctionType::New();
 	costFunction->SetScene(scene2D);
-	costFunction->SetReferenceImage(sensor2D->GetOutput());
+	costFunction->SetReferenceImage(sensor2D->GetOutputImage());
 	costFunction->SetSensor(sensor2D);
 	costFunction->SelectOffContextComputation();
 

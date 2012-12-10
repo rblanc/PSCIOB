@@ -40,14 +40,19 @@ namespace psciob {
 /** Print info into a stream */
 template<class TObject>
 void 
-ObjectTypesLibrary<TObject>::PrintInfo(std::ostream & os, itk::Indent indent) const {
+ObjectTypesLibrary<TObject>::PrintInfo(std::ostream & os, itk::Indent indent, bool printPDF) const {
 	os << indent << "Number of entries: " << m_library.size() << std::endl;
 	if (m_library.size()==0) return;
 	
 	for (unsigned i=0 ; i<m_library.size() ; i++) {
 		os << indent << "entry " << i <<" ; weight = "<<m_library[i].weight<< std::endl;
-		os << indent << "object type: "<<m_library[i].objectSample->PrintInfo(os);
-		//TODO: add info about pdfs...
+		os << indent.GetNextIndent() << "object type: "; m_library[i].objectSample->PrintInfo(os);
+		if (printPDF) {
+			for (std::map<ObjectPDFTypes, MultivariatePDF::Pointer>::const_iterator pdfIt = m_library[i].pdf.begin() ; pdfIt != m_library[i].pdf.end() ; ++pdfIt) {
+				os << indent.GetNextIndent() << "pdf code " << pdfIt->first << ": ";
+				pdfIt->second->PrintInfo(os);
+			}
+		}
 	}
 }
 

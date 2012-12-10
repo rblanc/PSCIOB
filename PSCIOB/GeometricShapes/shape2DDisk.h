@@ -41,7 +41,7 @@ namespace psciob {
 /** 
  * \class shape2DDisk
  * \brief shape2DDisk is a class for generating a disk, usually in combination with a PoseTransform
- * 0 parameters: disk with unit radius, centered at (0,0)
+ * 0 parameters: disk with unit diameter, centered at (0,0)
 */
 
 class shape2DDisk : public BinaryShape<2> {

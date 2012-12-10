@@ -135,7 +135,22 @@ template<class T> struct index_more {
 	T arr;
 };
 
-
+/** \class less_vnlvector
+* \brief implements a 'less' comparator for 2 vnl_vector
+*/
+template <class T> 
+struct less_vnlvector : public std::binary_function<T,T,bool> {
+	bool operator() (const vnl_vector<T>& x, const vnl_vector<T>& y) const {
+		while ( pos < std::min(x.size(), y.size()) ) {
+			if (x(pos)==y(pos)) {pos++; continue;}
+			if ( x(pos)<y(pos) ) return true;
+			else return false;
+		}
+		//all comparable elements are equal... check on size...
+		if (x.size() < y.size()) return true;
+		else return false;
+	}
+};
 
 /** \class key_iterator
 * \brief key_iterator helper classes to iterate directly on the map keys -> enables using e.g. std::set_difference( key_begin(mymap), key_end(mymap), myset.begin(), myset.end(), result_vec.begin() );
