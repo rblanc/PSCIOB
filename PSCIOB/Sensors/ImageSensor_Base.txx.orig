@@ -1,0 +1,281 @@
+/*
+ * This file is part of the psciob library.
+ *
+ * Copyright (c) 2012, Remi Blanc, University of Bordeaux
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met: 
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer. 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution. 
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+* \file ImageSensor_Base.txx
+* \author Rémi Blanc 
+* \date 28. September 2011
+*/
+
+#ifndef __IMAGESENSORBASE_TXX_
+#define __IMAGESENSORBASE_TXX_
+
+#include "ImageSensor_Base.h"
+
+namespace psciob {
+
+//CONSTRUCTOR
+template<class TScene, class TOutputImage>
+ImageSensor_Base<TScene, TOutputImage>::ImageSensor_Base() { 
+	m_imageAllocated=false; 
+<<<<<<< HEAD
+	m_backgroundValue = 0;
+=======
+>>>>>>> fb48d8019928453c495cbb5dce92fa0563fd67fc
+	m_appearanceFunctionFlag = false; //are these flags really necessary?? when the functionality is managed by a specific class, this class could be responsible for this...
+	m_orientationFlag=false; m_distortionFlag=false; m_noiseFlag=false; m_resolutionFlag=false;
+
+	m_outputImage = OutputImageType::New();
+	m_outputLabelMap = OutputLabelMapType::New();
+	m_tmpSingleObjectLabelMap = OutputLabelMapType::New();
+
+	m_contextRadius=0;
+	m_StructuringElement = OutputLabelObjectType::New();
+
+	m_sceneInterface = SensorSceneInterfaceType::New();
+	//nb_updates=0;
+	m_outputLabelMapToLabelImageFilterType = OutputLabelMapToLabelImageFilterType::New();
+}
+
+
+
+template<class TScene, class TOutputImage>
+typename ImageSensor_Base<TScene, TOutputImage>::BaseClassPointer 
+ImageSensor_Base<TScene, TOutputImage>::CreateClone() {
+	BaseClassPointer clonePtr = static_cast<Self*>(this->CreateAnother().GetPointer());
+	if (!m_scene) {} else {clonePtr->SetScene(m_scene);}
+	if (!m_function) {} else {clonePtr->SetAppearanceFunction(m_function);}
+
+	if (m_orientationFlag) clonePtr->SetPoseParameters( m_poseParams );
+	if (m_distortionFlag)  clonePtr->SetDistortionParameters( m_distortionParams );
+	if (m_noiseFlag)       clonePtr->SetNoiseParameters( m_noiseParams );
+	if (m_resolutionFlag)  clonePtr->SetResolutionParameters( m_resolutionParams );
+	clonePtr->SetObjectContextRadius( m_contextRadius );
+	//clonePtr->TrackSceneModifications( m_connectedToScene );
+	//if ( m_sceneInterface->m_connectedToScene ) {
+	//	clonePtr->m_sceneInterface->SetScene(m_scene);
+	//}
+	clonePtr->m_imageAllocated = false;
+	clonePtr->m_updateFlag = UPDATEAll;
+	return clonePtr;
+}
+
+/** Set the scene to observe
+* By default, the sensor is connected to the scene, to get informed of the scene regions that are being modified
+* so it can update itself only on modified regions
+*/
+template<class TScene, class TOutputImage>
+void
+ImageSensor_Base<TScene, TOutputImage>::SetScene(SceneType *scene) { 
+	if (!m_scene) {} else {m_scene->DisconnectSensor(m_sceneInterface);}
+	m_scene = scene; Modified(); 
+	m_sceneInterface->SetScene(scene);
+	m_sceneInterface->TrackSceneModifications(true); 
+}
+
+/** Update the sensor */
+template<class TScene, class TOutputImage>
+void
+ImageSensor_Base<TScene, TOutputImage>::Update() { 
+	if (m_updateFlag==UPDATEAll) { //this means that 'geometry parameters' of the sensor have changed
+		AllocateOutputImage(); m_imageAllocated=true; //therefore, re-allocate the image
+		Update_Data(m_scene->GetSceneImageRegion());  //update both images completely
+		m_updateFlag = UPTODATE;
+	}
+	else {
+		if (m_updateFlag==UPDATEAppearanceOnly) { //-> the full appearance image must be updated --> it is probably worth updating also the label image
+			Update_Data(m_scene->GetSceneImageRegion()); //update both images completely
+			m_updateFlag = UPTODATE;
+			//maybe it could be worth updating the apperance image only ; and then test separately if the label image needs some local update...??
+			//If I separate these, I will need independent implementations of Update_AppearanceImage and Update_LabelImage
+		}
+		else { // no modifications on the sensor => now check if the scene has changed
+			if (m_sceneInterface->m_connectedToScene) {
+				//update only the regions that are marked as modified...
+				SceneRegionListType listRegions = m_sceneInterface->GetListSceneRegionsToUpdate();
+				for (unsigned i=0 ; i<listRegions.size() ; i++) { Update_Data(listRegions[i]); }
+				m_updateFlag = UPTODATE;
+			}
+			else { Update_Data(m_scene->GetSceneImageRegion());m_updateFlag = UPTODATE; } //if the sensor is not connected, update everything at each call... <= DO I really want to be disconnected at any time??
+		}
+	}
+	m_sceneInterface->ClearListRegionsToUpdate();
+}
+
+
+
+template<class TScene, class TOutputImage>
+bool
+ImageSensor_Base<TScene, TOutputImage>::SetAppearanceParameters(vnl_vector<double> p) {
+	if (!m_appearanceFunctionFlag) throw DeformableModelException("ImageSensor_Base::SetAppearanceParameters - appearance function is unknown, cannot set its parameters..."); 
+	if (m_function->SetParameters(p)) {
+		ModifiedAppearance(); 
+		return true;
+	}
+	else return false;
+}
+
+//IDEA: should (some of) these sets of parameters be managed through generic classes ; as it done for the AppearanceFunction ? or should this be handled through concrete implementation of the sensor ? => handling of OrientationParameters is hard-coded in the Simple3D2DLabelSensor = only 3 possible directions SAGITAL / HORIZONTAL / CORONAL...
+//see comments in the Simple3D2DSensor
+template<class TScene, class TOutputImage>
+bool
+ImageSensor_Base<TScene, TOutputImage>::SetPoseParameters(const vnl_vector<double> &p) {
+	if (p.size()!=GetNumberOfPoseParameters()) return false;
+	m_poseParams = p; m_orientationFlag=true; Modified();
+	return true;
+}
+	
+template<class TScene, class TOutputImage>
+bool
+ImageSensor_Base<TScene, TOutputImage>::SetDistortionParameters(const vnl_vector<double> &p) { //TODO: check validity of the parameters, if valid, set them and return true ; otherwise don't set them and return false;
+	if (p.size()!=GetNumberOfDistortionParameters()) return false;
+	m_distortionParams = p; m_distortionFlag=true; Modified();
+	return true;
+}
+
+template<class TScene, class TOutputImage>
+bool
+ImageSensor_Base<TScene, TOutputImage>::SetNoiseParameters(const vnl_vector<double> &p) {//TODO: check validity of the parameters, if valid, set them and return true ; otherwise don't set them and return false;
+	if (p.size()!=GetNumberOfNoiseParameters()) return false;
+	m_noiseParams = p; m_noiseFlag=true; ModifiedAppearance();
+	return true;
+}
+
+template<class TScene, class TOutputImage>
+bool
+ImageSensor_Base<TScene, TOutputImage>::SetResolutionParameters(const vnl_vector<double> &p) {//TODO: check validity of the parameters, if valid, set them and return true ; otherwise don't set them and return false;
+	if (p.size()!=GetNumberOfResolutionParameters()) return false;
+	m_resolutionParams = p; m_resolutionFlag=true; Modified();
+	return true;
+}
+
+template<class TScene, class TOutputImage>
+typename ImageSensor_Base<TScene, TOutputImage>::OutputLabelImageType*
+ImageSensor_Base<TScene, TOutputImage>::GetOutputLabelImage() {
+	//default implementation: convert the labelMap into a labelImage
+	m_outputLabelMapToLabelImageFilterType->SetInput(this->GetOutputLabelMap());
+	m_outputLabelMapToLabelImageFilterType->Update();
+	return m_outputLabelMapToLabelImageFilterType->GetOutput();
+}
+
+
+/** Set the radius defining the context around an object
+* this is used to: - define the pixelset indicating which pixels belong to the context of an object
+*                  - not implemented yet: invalidate the dataCost if another object comes this close to another one 
+*/
+template<class TScene, class TOutputImage>
+void
+ImageSensor_Base<TScene, TOutputImage>::SetObjectContextRadius(unsigned int nbPixels) {
+	m_contextRadius = nbPixels;
+	GenerateBallStructuringLabelObject<OutputLabelObjectType>(m_contextRadius, m_StructuringElement);
+	//TODO later: invalidate inContext cache 
+}
+
+
+/** Get the labelMap containing only the requested object (with its correct label), off context 
+* this labelMap is expressed with respect to the full sensor grid
+* returns false if the object is not visible on the sensor
+* \param objectPtr is a pointer to the object of the scene to be processed
+* \param offContextObjectLabelMap is a pointer to be filled by the function
+*/
+template<class TScene, class TOutputImage>
+inline
+bool
+ImageSensor_Base<TScene, TOutputImage>::GetInContextObjectLabelMap(ObjectInScene *objectPtr, OutputLabelMapType *inContextObjectLabelMap) {
+	inContextObjectLabelMap->ClearLabels();
+	inContextObjectLabelMap->SetSpacing(m_outputSpacing);
+	inContextObjectLabelMap->SetOrigin(m_outputOrigin);
+	inContextObjectLabelMap->SetRegions(m_outputRegion);
+	if (!this->GetOutputLabelMap()->HasLabel(objectPtr->id)) return false; //make sure the map is uptodate
+	inContextObjectLabelMap->AddLabelObject(m_outputLabelMap->GetLabelObject(objectPtr->id)); 
+	return true;
+}
+
+
+/** returns a value between 0 and 1 indicating the fraction of observed pixels, compared to the potentially observed pixels
+* a value less than 1 indicates that an object is 'shadowed' by another, either due to overlapping, or projection effects
+*/
+template<class TScene, class TOutputImage>
+double
+ImageSensor_Base<TScene, TOutputImage>::GetSingleObjectVisibilityPercentage( LabelType id ) {
+	if (!this->GetOutputLabelMap()->HasLabel(id)) return 0; //make sure the label output is uptodate
+	OutputLabelObjectType *inContextObject = m_outputLabelMap->GetLabelObject(id);
+	unsigned int nbVisiblePixels = inContextObject->Size();
+
+	OutputLabelMapType::Pointer offContextMap = OutputLabelMapType::New(); //TODO: make it a member to avoid re-instanciating it each time
+	if (!GetOffContextObjectLabelMap( m_scene->GetObject(id), offContextMap )) return 0; //...
+	OutputLabelObjectType *offContextObject = offContextMap->GetNthLabelObject(0);
+	unsigned int maxNbPixels = offContextObject->Size();
+
+	return static_cast<double>(nbVisiblePixels)/static_cast<double>(maxNbPixels);
+}
+
+
+/** Get a labelMap containing only the requested off context object, AND its surrounding (with a radius specified to the sensor)
+* The map contains 2 labelObject: the object (with its correct label), and the surroundings (with label+1)
+* this labelMap is expressed with respect to the full sensor grid
+* returns false if the object is not in the scene
+* \param objectPtr is a pointer to the object of the scene to be processed
+* \param offContextLabelMap is a pointer to be filled by the function
+*/
+template<class TScene, class TOutputImage>
+bool
+ImageSensor_Base<TScene, TOutputImage>::GetOffContextObjectAndSurroundingsLabelMap(ObjectInScene *objectPtr, OutputLabelMapType *labelMap) {
+	//Get OffContextObjectLabelMap to begin with...
+	GetOffContextObjectLabelMap(objectPtr, labelMap);
+	//then, compute its surroundings and add it to the map
+	GetOffContextObjectsSurroundings<OutputLabelMapType>(labelMap, m_StructuringElement, m_tmpSingleObjectLabelMap);
+	//make sure the map contains 2 objects, 1: the object, 2: the surrounding
+	m_tmpSingleObjectLabelMap->GetNthLabelObject(0)->SetLabel(objectPtr->id+1);
+	labelMap->AddLabelObject(m_tmpSingleObjectLabelMap->GetNthLabelObject(0));
+	return true;
+}
+
+/** Get a labelMap containing only the requested off context object, AND its surrounding (with a radius specified to the sensor)
+* The map contains 2 labelObject: the object (with its correct label), and the surroundings (with label+1)
+* this labelMap is expressed with respect to the full sensor grid
+* returns false if the object is not visible / not in the scene
+* \param objectPtr is a pointer to the object of the scene to be processed
+* \param offContextLabelMap is a pointer to be filled by the function
+*/
+template<class TScene, class TOutputImage>
+bool
+ImageSensor_Base<TScene, TOutputImage>::GetInContextObjectAndSurroundingsLabelMap(ObjectInScene *objectPtr, OutputLabelMapType *labelMap) {
+	//Get InContextObjectLabelMap to begin with...
+	if (!GetInContextObjectLabelMap(objectPtr, labelMap)) return false;
+	if (labelMap->GetNumberOfLabelObjects()==0) return false;
+	//then, compute its surroundings and add it to the map
+	GetOffContextObjectsSurroundings<OutputLabelMapType>(labelMap, m_StructuringElement, m_tmpSingleObjectLabelMap);
+	//make sure the map contains 2 objects, 1: the object, 2: the surrounding
+	m_tmpSingleObjectLabelMap->GetNthLabelObject(0)->SetLabel(objectPtr->id+1);
+	labelMap->AddLabelObject(m_tmpSingleObjectLabelMap->GetNthLabelObject(0));
+	return true;
+}
+
+} // namespace psciob
+
+#endif /* __IMAGESENSORBASE_TXX_ */
