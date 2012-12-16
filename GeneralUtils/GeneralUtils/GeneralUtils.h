@@ -137,13 +137,16 @@ template<class T> struct index_more {
 
 /** \class less_vnlvector
 * \brief implements a 'less' comparator for 2 vnl_vector
+* compares the i-th element of both vectors and returns the comparison results, unless they are equal, in which case i is incremented.
+* If the vectors are the same, return false ; unless y has more elements than x
 */
 template <class T> 
-struct less_vnlvector : public std::binary_function<T,T,bool> {
-	bool operator() (const vnl_vector<T>& x, const vnl_vector<T>& y) const {
+struct less_vnlvector : public std::binary_function<T, T,bool> {
+	bool operator() (const T& x, const T& y) const {
+		unsigned pos = 0;
 		while ( pos < std::min(x.size(), y.size()) ) {
-			if (x(pos)==y(pos)) {pos++; continue;}
-			if ( x(pos)<y(pos) ) return true;
+			if (x[pos]==y[pos]) {pos++; continue;}
+			if ( x[pos]<y[pos] ) return true;
 			else return false;
 		}
 		//all comparable elements are equal... check on size...

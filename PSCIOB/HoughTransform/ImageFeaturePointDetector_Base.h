@@ -66,17 +66,19 @@ public:
 	/** type defined to represent a feature vector */
 	typedef vnl_vector<double>                                    FeatureVectorType;
 	// ordering criterion for feature vectors, not intended for public use, but can be useful e.g. for the Hough Tranform
-	typedef less_vnlvector<double> FeatureVectorLessType;
+	typedef less_vnlvector< FeatureVectorType >                   FeatureVectorLessType;
 	/** Type defined to represent feature points */
 	typedef typename std::pair<ImageIndexType, FeatureVectorType> FeaturePointType;
 	/** Type of pixel indices in the input image */
 	typedef typename std::vector<FeaturePointType>                FeaturePointListType;
 	/** Type of pixel indices in the input image */
-	typedef typename std::vector<ImageIndexType>::const_iterator FeaturePointListConstIterator;
+	typedef typename FeaturePointListType::const_iterator         FeaturePointListConstIterator;
 
+	/** gives the dimension of the feature vector */
+	virtual unsigned GetFeatureVectorDimension() const = 0;
 	
 	/** Set the input image on which feature points need to be detected */
-	void SetInputImage(typename InputImageType *image) { m_inputImage = image; m_uptodate=false; }
+	void SetInputImage(typename InputImageType *image) { m_inputImage = image; m_uptodate=false; m_featurePointList.clear(); }
 
 	/** Set the input image on which feature points need to be detected */
 	InputImageType * GetInputImage() { return m_inputImage.GetPointer(); }

@@ -39,6 +39,7 @@
 #include "SimpleUniformSensor.h"
 
 #include "ImageFeaturePointDetector_2DCannyEdges_Orientation.h"
+#include "GeneralizedHoughTransformAlgorithm_Test.h"
 
 using namespace psciob;
 
@@ -80,21 +81,58 @@ int main(int argc, char** argv) {
 		vnl_vector<double> appParam(1); appParam(0) = 255; sensor->SetAppearanceParameters( appParam );
 			
 		Write2DGreyLevelRescaledImageToFile<ImageType>("referenceDiskImage.png", sensor->GetOutputImage());
+		//I could also clone the image... but anyway... this is just a test program...
+		ImageType::Pointer referenceImage = ReadITKImageFromFile<ImageType>("referenceDiskImage.png", 0.1);
+		referenceImage->SetOrigin( sensor->GetOutputImage()->GetOrigin() );
 
 		//test the feature detector (canny edges + orientation)
 		typedef ImageFeaturePointDetector_2DCannyEdges_Orientation<unsigned char> FeatureDetectorType;
 		FeatureDetectorType::Pointer featureDetector = FeatureDetectorType::New();
 
-		featureDetector->SetInputImage( sensor->GetOutputImage() );
+		featureDetector->SetInputImage( referenceImage );
 		featureDetector->SetCannyVariance( 2.0*2.0*sceneSpacing(0)*sceneSpacing(1) );
 		featureDetector->Update();
 
+		std::cout<<"number of feature points detected: "<<featureDetector->GetFeaturePointList().size()<<std::endl;
 		Write2DGreyLevelRescaledImageToFile<FeatureDetectorType::FloatImageType>("featurePointsImage.png", featureDetector->GetFeaturePointImage());
 		Write2DGreyLevelRescaledImageToFile<FeatureDetectorType::FloatImageType>("gradientOrientationImage.png", featureDetector->GetOrientationImage());
 		
 		//train a simple hough transform using the same / similar disk radius
+		typedef GeneralizedHoughTransformAlgorithm_Test<unsigned char, 2> GHT_AlgoType;
+		GHT_AlgoType::Pointer ghtAlgo = GHT_AlgoType::New();
+		ghtAlgo->SetInputImage( referenceImage );
+		ghtAlgo->SetFeaturePointDetector( featureDetector );
+		ghtAlgo->SetSensor( sensor );
+		
+		//generating a grid of parameters to be considered for detection, and informing the HT about it
+		diskParams(2) = 4; disk->SetParameters(diskParams);
+		std::vector< std::vector<double> > gridParams; std::vector<double> tmpVect;
+		tmpVect.push_back(0); gridParams.push_back(tmpVect); //translation x
+		gridParams.push_back(tmpVect); //translation y
+		tmpVect.clear(); tmpVect.push_back(3.5); tmpVect.push_back(4); tmpVect.push_back(4.5); gridParams.push_back(tmpVect); //disk diameters
+		ghtAlgo->SetSampleObjectAndParameterGrid(disk, gridParams);
 
+		//define bins in the feature space, to reduce the size of the training table
+		std::vector< std::vector<double> > featureBins;
+		tmpVect.clear(); for (double theta=-PI ; theta<=PI ; theta+=2.0*PI/90) tmpVect.push_back(theta);
+		tmpVect.push_back(PI+PI/10.0);//add a high value, just to prevent some size issues...
+		tmpVect.push_back(2.0*PI);//add a high value, just to prevent some size issues...
+		featureBins.push_back(tmpVect);
+		ghtAlgo->SetFeatureBins(featureBins);
+
+		//DO THE TRAINING
+		ghtAlgo->Train(true);
+
+		ghtAlgo->PrintFVStructure(std::cout );
+		std::cout<<"NOW DETECTING>>>"<<std::endl;
 		//detect the disks on the input image...
+		ghtAlgo->DetectObjectsOnImage(true);
+		ghtAlgo->PrintVotes(std::cout);
+
+		//TODO NOW: GeneralizedHoughTransformAlgorithm_Test 
+		// -> cluster votes according to a spatial criterion
+		// -> detect objects. (threshold...)
+
 	}
 	catch (DeformableModelException& e) {
 		std::cout << "Exception occured while running the test cases" << std::endl;

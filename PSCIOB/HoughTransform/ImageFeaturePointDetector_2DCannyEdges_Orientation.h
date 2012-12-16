@@ -72,7 +72,8 @@ public:
 	//typedef itk::DiscreteGaussianDerivativeImageFilter<FloatImageType, FloatImageType> DerivativeFilterType;
 	typedef itk::GradientRecursiveGaussianImageFilter<InputImageType, GradientImageType> GradientFilterType;
 	
-	
+	inline unsigned GetFeatureVectorDimension() const { return m_featureVectorDimension; }
+
 	/** Set the lower threshold value for the canny edge detector */
 	void SetCannyLowerThreshold(double t = 2) {m_lowerThreshold=t;}
 	/** Set the upper threshold value for the canny edge detector */
@@ -86,12 +87,19 @@ public:
 	*/
 	void Update() {
 		if (!m_inputImage) throw DeformableModelException("ImageFeaturePointDetector_2DCannyEdges_Orientation::Update() -- NO INPUT IMAGE!!");
+		//ITK doesn't seem to support re-use of a filter... so create them anew at each call...
+		m_castImageFilter = CastImageFilterType::New();
+		m_cannyFilter = CannyEdgeDetectionImageFilterType::New();
+		m_gradientFilter = GradientFilterType::New();
+
 		m_castImageFilter->SetInput(m_inputImage);
-		m_cannyFilter->SetInput(m_castImageFilter->GetOutput());
 		
+		m_cannyFilter->SetInput(m_castImageFilter->GetOutput());
+
 		m_cannyFilter->SetLowerThreshold(m_lowerThreshold);
 		m_cannyFilter->SetUpperThreshold(m_upperThreshold);
 		m_cannyFilter->SetVariance(m_variance);
+
 		m_cannyFilter->Update();
 
 		m_gradientFilter->SetInput(m_inputImage);
@@ -103,7 +111,7 @@ public:
 		m_orientationImage->SetOrigin(m_inputImage->GetOrigin());
 		m_orientationImage->SetRegions(m_inputImage->GetLargestPossibleRegion());
 		m_orientationImage->Allocate();
-		
+
 		typedef itk::ImageRegionIterator<FloatImageType>		FloatImageIteratorType;
 		FloatImageIteratorType itOut(m_orientationImage, m_inputImage->GetLargestPossibleRegion());
 		typedef itk::ImageRegionIteratorWithIndex<FloatImageType>		FloatImageIteratorWitIndexType;
@@ -122,7 +130,6 @@ public:
 		}
 		
 		//finally, release the memory (gradient image, etc...)...
-
 		m_uptodate = true;
 	}
 	

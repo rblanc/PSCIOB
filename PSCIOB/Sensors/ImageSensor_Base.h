@@ -103,6 +103,7 @@ public:
 	static const unsigned int OutputDimension   = TOutputImage::ImageDimension;
 
 	typedef TOutputImage                                  OutputImageType;
+	typedef typename OutputImageType::PixelType           OutputPixelType;
 	typedef itk::LabelObject<LabelType, OutputDimension>  OutputLabelObjectType;
 	typedef itk::LabelMap<OutputLabelObjectType>          OutputLabelMapType;
 	typedef itk::Image<LabelType, OutputDimension>        OutputLabelImageType;
@@ -111,7 +112,7 @@ public:
 
 
 	//a priori, I don't care about the pixel value in the scene (should just care if it is empty or not...)
-	typedef GenericParametricFunctions<double, double>		AppearanceFunctionType;
+	typedef GenericParametricFunctions<double, double>    AppearanceFunctionType;
 
 	//maybe other classes here that manage different parameters of the sensor (camera orientation, noise, etc...) could be type-defined
 
@@ -159,13 +160,13 @@ public:
 	bool SetAppearanceParameters(vnl_vector<double> p);
 	
 	/* Set the pixel 'color' for background pixels (absence of objects) */
-	bool SetBackgroundValue(typename OutputImageType::PixelType v = 0) { 
+	bool SetBackgroundValue(OutputPixelType v = 0) { 
 		if (m_backgroundValue!=v) { ModifiedAppearance(); m_backgroundValue=v; }
 		return true;
 	}
 
 	/* Get the value for background pixels */
-	typename OutputImageType::PixelType GetBackgroundValue() const {return m_backgroundValue;}
+	typename OutputPixelType GetBackgroundValue() const {return m_backgroundValue;}
 
 	//IDEA: should (some of) these sets of parameters be managed through generic classes ; as it done for the AppearanceFunction ? or should this be handled through concrete implementation of the sensor ? => handling of OrientationParameters is hard-coded in the Simple3D2DLabelSensor = only 3 possible directions SAGITAL / HORIZONTAL / CORONAL...
 	//see comments in the Simple3D2DSensor
@@ -278,6 +279,7 @@ protected:
 
 	typename AppearanceFunctionType::Pointer m_function; bool m_appearanceFunctionFlag; //TODO: use a function templated against the OutputImageType::PixelType as output (and scalar/vector input(s)...)
 	
+	OutputPixelType m_backgroundValue;
 	vnl_vector<double> m_poseParams, m_distortionParams, m_noiseParams, m_resolutionParams;
 	bool			   m_orientationFlag,   m_distortionFlag,   m_noiseFlag,   m_resolutionFlag;
 
