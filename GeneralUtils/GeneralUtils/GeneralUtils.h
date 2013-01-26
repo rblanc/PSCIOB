@@ -155,6 +155,23 @@ struct less_vnlvector : public std::binary_function<T, T,bool> {
 	}
 };
 
+/** \class less_vnlfixedvector
+* \brief lexicographical_sort for vector supposed to have the same dimension, intended for vnl_vector_fixed
+*/
+template <class T> 
+struct less_vnlfixedvector : public std::binary_function<T, T,bool> {
+	bool operator() (const T& x, const T& y) const {
+		unsigned pos = 0;
+		while ( pos < x.size() ) {
+			if (x[pos]==y[pos]) {pos++; continue;}
+			if ( x[pos]<y[pos] ) return true;
+			else return false;
+		}
+		return false;
+	}
+};
+
+
 /** \class key_iterator
 * \brief key_iterator helper classes to iterate directly on the map keys -> enables using e.g. std::set_difference( key_begin(mymap), key_end(mymap), myset.begin(), myset.end(), result_vec.begin() );
 * taken from: http://stackoverflow.com/questions/110157/how-to-retrieve-all-keys-or-values-from-a-stdmap

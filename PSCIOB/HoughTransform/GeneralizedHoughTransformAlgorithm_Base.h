@@ -48,7 +48,7 @@ namespace psciob {
 * This is the base class for implementing the Hough-transform-like algorithms
 * There are 2 main steps in the algorithm: a training phase, and an object detector.
 * The algorithm is intended to be trained on a given ParametricObject, with a grid of parameters (for multiple object types, one should create multiple instances of the HT and merge the results).
-* The training phase requires a sensor, to generate images of the objects, and computes an R-table, mapping feature descriptors with object parameters
+* The training phase requires a sensor (to generate images of the objects), and computes an R-table mapping feature descriptors with object parameters
 * The detector phase exploits the same feature detector&descriptor, and the learned R-table to produce votes, and extract object hypotheses from them.
 * 
 * It is necessary to set the input image, the sensor, the feature point detector and the sample object (+grid) before training or detecting objects
@@ -88,24 +88,48 @@ public:
 	/** Type defining a feature point - a pair containin point index & feature vector */
 	typedef typename FeaturePointDetectorType::FeaturePointType      FeaturePointType;
 
-	/** type of a precursor vote */
+protected:
+	//vote precursor: light-weight versoin used in the training phase
 	class VotePrecursorType {
 	public:
+		VotePrecursorType() : weight(0) {}
 		vnl_vector<double> parameters; //parameters: the translation params indicate the translation to apply to find the object center from the given source
 		double weight;                 // typically 1/nb of feature points for this set of shapeparameters
 	};
 
-	/** type of a vote */
-	class VoteType {
+  //useful for comparing votes based on their weight
+	struct less_PreVoteWeight : public std::binary_function<VotePrecursorType, VotePrecursorType,bool> {
+		bool operator() (const VotePrecursorType& x, const VotePrecursorType& y) const {
+      return x.weight<y.weight;
+		}
+	};
+
+	// type of a vote : a list of parameters, a weight, and a pointer to the coordinates of the feature point that generated it.
+	class VoteType : public VotePrecursorType {
 		public:
-		vnl_vector<double> parameters; // 
-		double weight;                 // 
+		VoteType() : VotePrecursorType() {}
 		ImageIndexType sourcePixel;    // coordinates of the pixel at the source of the vote - useful only in the "apply" phase... maybe...
+		bool sameAs(VoteType v) {
+			for (unsigned i=ObjectDimension ; i<parameters.size() ; i++) {
+				if ( parameters(i)!=v(i) ) return false;
+			}
+			return true;
+		}
 	};
 	
-	///** Type of the container associating a list of votes to a feature vector */
-	//typedef std::map<FeatureVectorType, std::vector<VoteType>, FeatureVectorLessType> FeatureVoteAssociationMapType;
-	
+	//useful for comparing votes based on the location they point to.
+	struct less_Vote : public std::binary_function<VoteType, VoteType,bool> {
+		bool operator() (const VoteType& x, const VoteType& y) const {
+			for (unsigned i=0 ; i<ObjectDimension ; i++) {
+				if (x.parameters(i)!=y.parameters(i)) 
+					return x.parameters(i)!=y.parameters(i);
+			}
+		}
+	};
+
+
+
+public:
 	// /**	Set the input image, on which the object(s) shall be detected */
 	void SetInputImage(InputImageType *image) {
 		m_inputImage = image;
@@ -121,7 +145,9 @@ public:
 		m_trainingDone = false;
 	}
 	
-	/** Set Sensor, necessary for the training phase... */
+	/** Set the Sensor which is used to form an image out of the objects
+	 * Necessary for the training phase.
+	*/
 	void SetSensor(SensorType *sensor) { 
 		m_trainingDone = false;
 		m_sensor = sensor->CreateClone(); 
@@ -131,7 +157,7 @@ public:
 	/** Set a sample of the object type to be detected, together with the grid of parameters (if not specified, only the parameters of the input object will be used) 
 	* the (outer) std::vector should be the same dimensionality as the number of parameters of the object.
 	* for each parameter, the (inner) std::vector indicates the list of parameter values to be considered for the detection
-	* note: translation parameters should be incorporated, but are ignored (unless using some specialized child class..., which could be useful to implement for special handling of rotation & scaling parameters... perhaps...)
+	* note: translation parameters must be incorporated in the vector, but are ignored (unless some specialized child class overloads the method..., which could perhaps be useful to implement for special handling of rotation & scaling parameters...)
 	*/
 	virtual void SetSampleObjectAndParameterGrid(BaseObjectType *sample, std::vector< std::vector<double> > grid = std::vector< std::vector<double> >() ) {
 		m_sampleObject = sample;
@@ -157,9 +183,9 @@ public:
 	*    for each feature point ('on' pixel), associate the feature vector and the corresponding vote
 	*      feature vector = given by the detector
 	*      vote = translation + rest of the parameters, weight (1/nb of feature points)
-	* -> first, generate a big list of associated features & votes (key = 'feature', value = set of votes)
-	* customizable postprocessing step: cluster features to define feature classes...
-	* -> this helper class will process that big list and turn it into 'feature bins' -> votes
+	* -> first, collect the list of associated features & votes (the actual method is pure virtual, 
+	*    and can either collect the raw list, or bin the items into predefined classes)
+	* -> a pure virtual postprocessing step is then performed, e.g. to cluster features in some optimal way...
 	*/
 	void Train(bool verbose = false) {
 		if (!m_sampleObject) throw DeformableModelException("GeneralizedHoughTransformAlgorithm_Base::Train() a sample object must be available for training, as well as a set of corresponding object parameters.");
@@ -194,7 +220,11 @@ public:
 			//synthesize the object and its image 
 			m_sampleObject->SetParameters( currentParams );
 			vnl_vector<double> objectBoundingBox = m_sampleObject->GetPhysicalBoundingBox(); double boxWidth;
-			for (unsigned i=0 ; i<ObjectDimension ; i++) { boxWidth = objectBoundingBox(2*i+1)-objectBoundingBox(2*i); objectBoundingBox( 2*i ) -= boxWidth/10; objectBoundingBox(2*i+1) += boxWidth/10; }
+			for (unsigned i=0 ; i<ObjectDimension ; i++) { 
+				boxWidth = objectBoundingBox(2*i+1)-objectBoundingBox(2*i); 
+				m_maxObjectBBox(2*i) = min( m_maxObjectBBox(2*i), objectBoundingBox(2*i)); m_maxObjectBBox(2*i+1) = max( m_maxObjectBBox(2*i+1), objectBoundingBox(2*i+1));
+				objectBoundingBox( 2*i ) -= boxWidth/10.0; objectBoundingBox(2*i+1) += boxWidth/10.0; 				
+			}
 			m_scene->SetPhysicalDimensions(objectBoundingBox, spacing.GetVnlVector()); //make sure the scene is large enough
 			m_scene->AddObject(m_sampleObject);
 			if (verbose) {
@@ -239,6 +269,7 @@ public:
 	/** Save the training table to a file 
 	* \todo find a proper way to save/load structured data in a file
 	* info to write/load: object type, parameter grid, ...
+	* => look for hdf5? as in statismo?
 	*/
 	//WARNING: remember to overload with the child class to save the learned structure...
 	void SaveTrainingDataToFile(std::string filename) {
@@ -254,12 +285,20 @@ public:
 		throw DeformableModelException("GeneralizedHoughTransformAlgorithm_Base::LoadTrainingDataToFile(), NOT IMPLEMENTED YET -- TODO.");
 	}
 	
-	/** Performs the detection, redo it if necessary */
+	/** Performs the detection, redo it if necessary 
+	* This requires that Train() has been performed first.
+	* The method works in 3 stages.
+	* First: feature points are detected on the input images, and each point casts (a) vote(s) 
+	*        by looking for similar feature vector in the training database
+	* Second: the set of votes is reduced by aggregating them on a spatial criterion
+	* Finally, the detection is performed on the set of the aggregated votes.
+	* These steps are also pure virtual.
+	*/
 	virtual void DetectObjectsOnImage(bool verbose = false) {
 		//check if the training has been performed.
 		if (!m_trainingDone) throw DeformableModelException("GeneralizedHoughTransformAlgorithm_Base::DetectObjectsOnImage() the training phase must be performed first");
-		const InputImageType::PointType &origin = m_inputImage->GetOrigin();
-		const InputImageType::SpacingType &spacing = m_inputImage->GetSpacing();
+		const typename InputImageType::PointType &origin = m_inputImage->GetOrigin();
+		const typename InputImageType::SpacingType &spacing = m_inputImage->GetSpacing();
 
 		//apply the feature point detector on the image
 		m_detector->SetInputImage( m_inputImage );
@@ -292,10 +331,12 @@ protected:
 		m_sensor = NULL;
 
 		m_uptodate = false; m_trainingDone = false;
+		m_maxObjectBBox.set_size(2*ObjectDimension); m_maxObjectBBox.fill(0);
     };
     ~GeneralizedHoughTransformAlgorithm_Base() {};
 
 	typename InputImageType::Pointer m_inputImage;
+	vnl_vector<double> m_maxObjectBBox; //0-centered bounding box that is large enough to containg any of the training object.
 	
 	typename SceneType::Pointer      m_scene;
 	typename BaseObjectType::Pointer m_sampleObject; //keep a set of sample objects
@@ -306,8 +347,9 @@ protected:
 	typename FeaturePointDetectorType::Pointer  m_detector;
 
 	bool m_uptodate, m_trainingDone;
+	
+	std::vector<VoteType> m_pollBox; //in the detection stage, all votes from feature points are collected here.
 
-	//FeatureVoteAssociationMapType m_TrainingFVMap; //map, relating a set of votes with an training feature, learned in the training phase.
 	
 	// Add a pair <featureVector - vote precursos> to the training database
 	virtual void AddTrainingFeaturePointVote(const FeatureVectorType &featureVector, const VotePrecursorType &votePrecursor) = 0;

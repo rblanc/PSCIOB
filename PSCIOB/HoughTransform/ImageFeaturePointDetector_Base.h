@@ -66,7 +66,7 @@ public:
 	/** type defined to represent a feature vector */
 	typedef vnl_vector<double>                                    FeatureVectorType;
 	// ordering criterion for feature vectors, not intended for public use, but can be useful e.g. for the Hough Tranform
-	typedef less_vnlvector< FeatureVectorType >                   FeatureVectorLessType;
+	typedef less_vnlvector< FeatureVectorType >                   FeatureVectorLessType; //TODO: look at std::lexicographical_compare
 	/** Type defined to represent feature points */
 	typedef typename std::pair<ImageIndexType, FeatureVectorType> FeaturePointType;
 	/** Type of pixel indices in the input image */

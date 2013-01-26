@@ -127,11 +127,11 @@ int main(int argc, char** argv) {
 		std::cout<<"NOW DETECTING>>>"<<std::endl;
 		//detect the disks on the input image...
 		ghtAlgo->DetectObjectsOnImage(true);
-		ghtAlgo->PrintVotes(std::cout);
+		//ghtAlgo->PrintVotes(std::cout);
 
-		//TODO NOW: GeneralizedHoughTransformAlgorithm_Test 
-		// -> cluster votes according to a spatial criterion
-		// -> detect objects. (threshold...)
+    std::cout<<"GENERATED SCENE contains "<<ghtAlgo->GetDetectedScene()->GetNumberOfObjects()<<std::endl;
+		sensor->SetScene(ghtAlgo->GetDetectedScene());			
+		Write2DGreyLevelRescaledImageToFile<ImageType>("generatedDiskImage.png", sensor->GetOutputImage());
 
 	}
 	catch (DeformableModelException& e) {
