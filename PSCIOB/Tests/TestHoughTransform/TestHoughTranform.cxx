@@ -39,7 +39,7 @@
 #include "SimpleUniformSensor.h"
 
 #include "ImageFeaturePointDetector_2DCannyEdges_Orientation.h"
-#include "GeneralizedHoughTransformAlgorithm_Test.h"
+#include "GeneralizedHoughTransformAlgorithm_SimpleBinning.h"
 
 using namespace psciob;
 
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 		Write2DGreyLevelRescaledImageToFile<FeatureDetectorType::FloatImageType>("gradientOrientationImage.png", featureDetector->GetOrientationImage());
 		
 		//train a simple hough transform using the same / similar disk radius
-		typedef GeneralizedHoughTransformAlgorithm_Test<unsigned char, 2> GHT_AlgoType;
+		typedef GeneralizedHoughTransformAlgorithm_SimpleBinning<unsigned char, 2> GHT_AlgoType;
 		GHT_AlgoType::Pointer ghtAlgo = GHT_AlgoType::New();
 		ghtAlgo->SetInputImage( referenceImage );
 		ghtAlgo->SetFeaturePointDetector( featureDetector );
@@ -115,18 +115,22 @@ int main(int argc, char** argv) {
 		//define bins in the feature space, to reduce the size of the training table
 		std::vector< std::vector<double> > featureBins;
 		tmpVect.clear(); for (double theta=-PI ; theta<=PI ; theta+=2.0*PI/90) tmpVect.push_back(theta);
-		tmpVect.push_back(PI+PI/10.0);//add a high value, just to prevent some size issues...
-		tmpVect.push_back(2.0*PI);//add a high value, just to prevent some size issues...
-		featureBins.push_back(tmpVect);
+    tmpVect.push_back(PI+2.0*PI/90);
+    featureBins.push_back(tmpVect);
 		ghtAlgo->SetFeatureBins(featureBins);
 
 		//DO THE TRAINING
+    clock_t t0 = clock();
 		ghtAlgo->Train(true);
+    std::cout<<"time spent for the training phase: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 
-		ghtAlgo->PrintFVStructure(std::cout );
+		//ghtAlgo->PrintFVStructure(std::cout );
 		std::cout<<"NOW DETECTING>>>"<<std::endl;
 		//detect the disks on the input image...
-		ghtAlgo->DetectObjectsOnImage(true);
+    t0 = clock();
+		ghtAlgo->SetDetectorGridSpacing(0.2);
+    ghtAlgo->DetectObjectsOnImage(true);
+    std::cout<<"time spent for the detection phase: "<<(clock()-t0)/((double)CLOCKS_PER_SEC)<<" s."<<std::endl;
 		//ghtAlgo->PrintVotes(std::cout);
 
     std::cout<<"GENERATED SCENE contains "<<ghtAlgo->GetDetectedScene()->GetNumberOfObjects()<<std::endl;

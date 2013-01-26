@@ -62,7 +62,7 @@ public:
 	/** Run-time type information (and related methods). */
 	itkTypeMacro(BinaryDeformableModel, ParametricObject);
 
-	/** This function creates a full copy object, including the vtkPolyData, LabelMap, and itkImage	*/
+	/** This function creates a full copy object, with the same parameters, but blank data. */
 	virtual BaseClassPointer CreateCopy() {
 		Pointer clonePtr = static_cast<Self*>(this->CreateAnother().GetPointer());
 		clonePtr->SetParameters(GetParameters()); //use set&get parameters methods, in particular because of the PoseTranformedShape, which needs to re-distribute those parameters

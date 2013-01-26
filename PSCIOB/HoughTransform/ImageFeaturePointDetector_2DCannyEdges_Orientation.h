@@ -55,13 +55,13 @@ template<class InputImagePixelType>
 class ImageFeaturePointDetector_2DCannyEdges_Orientation : public ImageFeaturePointDetector_Base<InputImagePixelType, 2> {
 public:
 	static const unsigned m_featureVectorDimension = 1;
-    /** Standard class typedefs. */
-    typedef ImageFeaturePointDetector_2DCannyEdges_Orientation    Self;
-    typedef itk::LightObject        Superclass;
-    typedef itk::SmartPointer<Self> Pointer;
-    /** Run-time type information (and related methods). */
-    itkTypeMacro(ImageFeaturePointDetector_2DCannyEdges_Orientation, ImageFeaturePointDetector_Base);
-    itkNewMacro(Self);
+  /** Standard class typedefs. */
+  typedef ImageFeaturePointDetector_2DCannyEdges_Orientation    Self;
+  typedef itk::LightObject        Superclass;
+  typedef itk::SmartPointer<Self> Pointer;
+  /** Run-time type information (and related methods). */
+  itkTypeMacro(ImageFeaturePointDetector_2DCannyEdges_Orientation, ImageFeaturePointDetector_Base);
+  itkNewMacro(Self);
 
 	typedef itk::Image<float, 2>                                               FloatImageType;
 	typedef itk::CastImageFilter<InputImageType, FloatImageType>               CastImageFilterType;
@@ -73,6 +73,19 @@ public:
 	typedef itk::GradientRecursiveGaussianImageFilter<InputImageType, GradientImageType> GradientFilterType;
 	
 	inline unsigned GetFeatureVectorDimension() const { return m_featureVectorDimension; }
+
+  /** Create an independant copy of the object, with the same parameters
+  * but the data is left blank.
+  */
+  virtual BaseClassPointer CreateCopy() {
+    Pointer clonePtr = static_cast<Self*>(this->CreateAnother().GetPointer());
+    clonePtr->SetCannyLowerThreshold(m_lowerThreshold); 
+    clonePtr->SetCannyUpperThreshold(m_upperThreshold); 
+    clonePtr->SetCannyVariance(m_variance); 
+
+		return static_cast<BaseClass*>( clonePtr );
+  }
+
 
 	/** Set the lower threshold value for the canny edge detector */
 	void SetCannyLowerThreshold(double t = 2) {m_lowerThreshold=t;}
@@ -148,21 +161,21 @@ public:
 	typename FloatImageType* GetFeaturePointImage() const {return m_cannyFilter->GetOutput();}
 
 protected:
-	ImageFeaturePointDetector_2DCannyEdges_Orientation() : ImageFeaturePointDetector_Base(), m_featureVector(m_featureVectorDimension) {
-		m_castImageFilter = CastImageFilterType::New();
-		m_cannyFilter = CannyEdgeDetectionImageFilterType::New();
-		m_gradientFilter = GradientFilterType::New();
+  ImageFeaturePointDetector_2DCannyEdges_Orientation() : ImageFeaturePointDetector_Base(), m_featureVector(m_featureVectorDimension) {
+    m_castImageFilter = CastImageFilterType::New();
+    m_cannyFilter = CannyEdgeDetectionImageFilterType::New();
+    m_gradientFilter = GradientFilterType::New();
 
-		//deafult parameter values
-		m_lowerThreshold = 2;
-		m_upperThreshold = 8;
-		m_variance = 4;
-		
-		m_orientationImage = NULL;
-    };
-    ~ImageFeaturePointDetector_2DCannyEdges_Orientation() {};
+    //deafult parameter values
+    m_lowerThreshold = 2;
+    m_upperThreshold = 8;
+    m_variance = 4;
 
-	double m_variance, m_lowerThreshold, m_upperThreshold;
+    m_orientationImage = NULL;
+  };
+  ~ImageFeaturePointDetector_2DCannyEdges_Orientation() {};
+
+  double m_variance, m_lowerThreshold, m_upperThreshold;
 
 	typename CastImageFilterType::Pointer m_castImageFilter;
 	typename CannyEdgeDetectionImageFilterType::Pointer m_cannyFilter;

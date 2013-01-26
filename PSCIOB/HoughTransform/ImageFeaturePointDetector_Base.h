@@ -52,15 +52,18 @@ namespace psciob {
 template<class InputImagePixelType, unsigned int InputImageDimension>
 class ImageFeaturePointDetector_Base : public itk::LightObject {
 public:
-    /** Standard class typedefs. */
-    typedef ImageFeaturePointDetector_Base Self;
-    typedef itk::LightObject               Superclass;
-    typedef itk::SmartPointer<Self>        Pointer;
-    /** Run-time type information (and related methods). */
-    itkTypeMacro(ImageFeaturePointDetector_Base, itk::LightObject);
+  /** Standard class typedefs. */
+  typedef ImageFeaturePointDetector_Base Self;
+  typedef itk::LightObject               Superclass;
+  typedef itk::SmartPointer<Self>        Pointer;
+  /** Base Types to which all inherited classes can refer */
+  typedef Self                          BaseClass;
+  typedef Pointer                       BaseClassPointer;
+  /** Run-time type information (and related methods). */
+  itkTypeMacro(ImageFeaturePointDetector_Base, itk::LightObject);
 
-	/** type of the image on which to perform the detection */
-	typedef itk::Image<InputImagePixelType, InputImageDimension>  InputImageType;
+  /** type of the image on which to perform the detection */
+  typedef itk::Image<InputImagePixelType, InputImageDimension>  InputImageType;
 	/** Type of pixel indices in the input image */
 	typedef typename InputImageType::IndexType                    ImageIndexType;
 	/** type defined to represent a feature vector */
@@ -73,6 +76,9 @@ public:
 	typedef typename std::vector<FeaturePointType>                FeaturePointListType;
 	/** Type of pixel indices in the input image */
 	typedef typename FeaturePointListType::const_iterator         FeaturePointListConstIterator;
+
+  /** Create an independant copy of the object	*/
+  virtual BaseClassPointer CreateCopy() = 0;
 
 	/** gives the dimension of the feature vector */
 	virtual unsigned GetFeatureVectorDimension() const = 0;
